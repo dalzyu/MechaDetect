@@ -1,0 +1,53 @@
+seed: 42
+paths:
+  data_root: /workspace/techjam26/data
+  train_manifest: manifests/ablation12k.csv
+  val_manifest: manifests/strict_unseen_probe.csv
+  output_root: /workspace/outputs
+  feature_cache: /workspace/feature-cache/gemma4
+preprocessing:
+  policy: square_jpeg95
+  version: 2
+model:
+  backbone_type: gemma4
+  encoder_id: rnagabh/gemma4-vision-encoder
+  encoder_revision: 3a8691c3fe6dc28858f5b74d54f4afd0b4cb260c
+  visual_tokens: 1120
+  image_size: 384
+  encoder_dim: 1152
+  trunk_dim: 512
+  branch_dim: 256
+  dropout: 0.1
+  freeze_encoder: true
+  trainable_last_layers: 0
+  gradient_checkpointing: false
+  spectral_expert: false
+training:
+  stage: bakeoff_frozen_gemma4
+  epochs: 1
+  physical_batch_size: 8
+  cache_batch_size: 1
+  gradient_accumulation: 8
+  num_workers: 2
+  precision: bf16
+  encoder_lr: 3.0e-6
+  heads_lr: 3.0e-4
+  weight_decay: 0.01
+  gradient_clip_norm: 1.0
+  warmup_fraction: 0.05
+  generator_balanced_sampler: true
+  checkpoint_interval: 0
+  ema:
+    enabled: false
+loss:
+  provenance_original: 1.0
+  provenance_transformed: 0.0
+  prediction_consistency: 0.0
+  feature_consistency: 0.0
+  mask_focal: 0.5
+  mask_dice: 0.5
+  ema_consistency: 0.0
+transforms:
+  families: []
+  chain_length_probabilities:
+    0: 1.0

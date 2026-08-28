@@ -19,6 +19,7 @@ from .adaptation import (
 )
 from .config import load_config
 from .dataset import PairedImageDataset, collate_pairs
+from .feature_cache import CachedFeatureDataset, collate_cached_features
 from .ema import ParameterEMA
 from .losses import LossWeights, provenance_robustness_loss
 from .model import ProvenanceModel
@@ -52,7 +53,9 @@ def build_model(config: dict[str, Any]) -> ProvenanceModel:
     model = ProvenanceModel(
         values["encoder_id"],
         encoder_revision=values.get("encoder_revision"),
-        visual_tokens=values["visual_tokens"],
+        backbone_type=values.get("backbone_type", "gemma4"),
+        visual_tokens=values.get("visual_tokens", 1120),
+        image_size=values.get("image_size", 384),
         encoder_dim=values["encoder_dim"],
         trunk_dim=values["trunk_dim"],
         branch_dim=values["branch_dim"],
@@ -125,6 +128,7 @@ def save_checkpoint(
         "step": step,
         "config": config,
         "heads": model.heads.state_dict(),
+        "token_adapter": model.token_adapter.state_dict(),
         "encoder_trainable": encoder_trainable,
         "rng_cpu": torch.get_rng_state(),
         "rng_cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [],
@@ -177,6 +181,7 @@ def restore_checkpoint(
     if payload.get("manifest_sha256") != expected_manifest:
         raise RuntimeError("Resume checkpoint was created from a different training manifest")
     model.heads.load_state_dict(payload["heads"])
+    model.token_adapter.load_state_dict(payload["token_adapter"])
     if model.spectral is not None:
         model.spectral.load_state_dict(payload["spectral"])
         model.aigc_gate.load_state_dict(payload["aigc_gate"])
@@ -213,22 +218,28 @@ def run_training(
     seed_everything(int(config["seed"]))
 
     if not torch.cuda.is_available():
-        raise RuntimeError("CUDA is required for Gemma 4 training on this project")
+        raise RuntimeError("CUDA is required for backbone training")
     device = torch.device("cuda")
     training = config["training"]
     manifest = train_manifest_override or resolve_project_path(
         config["paths"]["train_manifest"], project_root
     )
-    dataset = PairedImageDataset(
-        manifest,
-        data_root=config["paths"]["data_root"],
-        seed=int(config["seed"]),
-        chain_length_probabilities={
-            int(length): float(probability)
-            for length, probability in config["transforms"]["chain_length_probabilities"].items()
-        },
-        render_policy=config.get("preprocessing", {}).get("policy", "square_jpeg95"),
-    )
+    cache_root = config["paths"].get("feature_cache")
+    if cache_root:
+        dataset = CachedFeatureDataset(manifest, resolve_project_path(cache_root, project_root))
+        collate_fn = collate_cached_features
+    else:
+        dataset = PairedImageDataset(
+            manifest,
+            data_root=config["paths"]["data_root"],
+            seed=int(config["seed"]),
+            chain_length_probabilities={
+                int(length): float(probability)
+                for length, probability in config["transforms"]["chain_length_probabilities"].items()
+            },
+            render_policy=config.get("preprocessing", {}).get("policy", "square_jpeg95"),
+        )
+        collate_fn = collate_pairs
     use_balanced_sampler = bool(training.get("generator_balanced_sampler", True))
     sampler = (
         build_balanced_sampler(
@@ -246,12 +257,18 @@ def run_training(
         shuffle=not use_balanced_sampler,
         sampler=sampler,
         num_workers=int(training["num_workers"]),
-        collate_fn=collate_pairs,
+        collate_fn=collate_fn,
         pin_memory=True,
         generator=torch.Generator().manual_seed(int(config["seed"]) + 10_000),
     )
 
-    model = build_model(config).to(device)
+    model = build_model(config)
+    if cache_root:
+        model.backbone.to("cpu")
+        model.token_adapter.to(device)
+        model.heads.to(device)
+    else:
+        model.to(device)
     optimizer = build_optimizer(model, config)
     weights = _loss_weights(config)
     accumulation = int(training["gradient_accumulation"])
@@ -307,22 +324,37 @@ def run_training(
             )
             with autocast:
                 teacher_probabilities = None
-                if ema is not None and update_step >= int(ema_config.get("start_update", 0)):
-                    with ema.average_parameters(model), torch.no_grad():
-                        teacher_probabilities = model(batch["original"]).probabilities.detach()
-                original = model(batch["original"])
-                transformed = model(batch["transformed"])
-                token_mask_targets = [
-                    None
-                    if mask is None
-                    else mask_to_token_occupancy(mask, logits.numel(), image.size)
-                    for mask, logits, image in zip(
-                        batch["mask"],
-                        original.token_tamper_logits,
-                        batch["original"],
-                        strict=True,
-                    )
-                ]
+                if cache_root:
+                    original_tokens = [tokens.to(device) for tokens in batch["original_tokens"]]
+                    transformed_tokens = [tokens.to(device) for tokens in batch["transformed_tokens"]]
+                    if ema is not None and update_step >= int(ema_config.get("start_update", 0)):
+                        with ema.average_parameters(model), torch.no_grad():
+                            teacher_probabilities = model.forward_tokens(
+                                original_tokens
+                            ).probabilities.detach()
+                    original = model.forward_tokens(original_tokens)
+                    transformed = model.forward_tokens(transformed_tokens)
+                    token_mask_targets = [
+                        None if target is None else target.to(device)
+                        for target in batch["token_mask_targets"]
+                    ]
+                else:
+                    if ema is not None and update_step >= int(ema_config.get("start_update", 0)):
+                        with ema.average_parameters(model), torch.no_grad():
+                            teacher_probabilities = model(batch["original"]).probabilities.detach()
+                    original = model(batch["original"])
+                    transformed = model(batch["transformed"])
+                    token_mask_targets = [
+                        None
+                        if mask is None
+                        else mask_to_token_occupancy(mask, logits.numel(), image.size)
+                        for mask, logits, image in zip(
+                            batch["mask"],
+                            original.token_tamper_logits,
+                            batch["original"],
+                            strict=True,
+                        )
+                    ]
                 loss, components = provenance_robustness_loss(
                     original,
                     transformed,

@@ -280,13 +280,176 @@ class Gemma4VisionBackbone(nn.Module):
         return list(hidden.split(counts, dim=0))
 
 
+class DINOv3VisionBackbone(nn.Module):
+    def __init__(
+        self,
+        encoder_id: str,
+        *,
+        revision: str | None,
+        image_size: int = 224,
+        freeze: bool = True,
+        dtype: torch.dtype = torch.bfloat16,
+    ) -> None:
+        super().__init__()
+        try:
+            from transformers import AutoImageProcessor, DINOv3ViTModel
+        except ImportError as exc:  # pragma: no cover
+            raise RuntimeError("DINOv3 requires transformers>=5.10.1") from exc
+        self.processor = AutoImageProcessor.from_pretrained(
+            encoder_id, revision=revision, size={"height": image_size, "width": image_size}
+        )
+        self.encoder = DINOv3ViTModel.from_pretrained(
+            encoder_id, revision=revision, dtype=dtype
+        )
+        self.set_frozen(freeze)
+
+    @property
+    def device(self) -> torch.device:
+        return next(self.encoder.parameters()).device
+
+    def set_frozen(self, frozen: bool) -> None:
+        for parameter in self.encoder.parameters():
+            parameter.requires_grad = not frozen
+
+    def set_trainable_last_layers(self, count: int) -> None:
+        layers = self.encoder.model.layer
+        if not 0 <= count <= len(layers):
+            raise ValueError(f"Requested {count} trainable layers; encoder has {len(layers)}")
+        self.set_frozen(True)
+        for layer in layers[len(layers) - count :] if count else []:
+            for parameter in layer.parameters():
+                parameter.requires_grad = True
+
+    def enable_gradient_checkpointing(self) -> None:
+        self.encoder.gradient_checkpointing_enable()
+
+    def forward(self, images: Sequence[Image.Image]) -> list[Tensor]:
+        pixels = self.processor(images=list(images), return_tensors="pt")["pixel_values"].to(
+            self.device
+        )
+        frozen = not any(parameter.requires_grad for parameter in self.encoder.parameters())
+        context = torch.no_grad() if frozen else nullcontext()
+        with context:
+            hidden = self.encoder(pixel_values=pixels).last_hidden_state[:, 5:]
+        return list(hidden)
+
+
+class PESpatialVisionBackbone(nn.Module):
+    def __init__(
+        self,
+        encoder_id: str,
+        *,
+        revision: str | None,
+        image_size: int = 448,
+        freeze: bool = True,
+        dtype: torch.dtype = torch.bfloat16,
+    ) -> None:
+        super().__init__()
+        try:
+            from core.vision_encoder.pe import VisionTransformer
+            from huggingface_hub import hf_hub_download
+        except ImportError as exc:  # pragma: no cover
+            raise RuntimeError(
+                "PE-Spatial requires perception_models and huggingface-hub"
+            ) from exc
+        weights = hf_hub_download(
+            encoder_id,
+            filename="PE-Spatial-G14-448.pt",
+            revision=revision,
+        )
+        self.encoder = VisionTransformer.from_config(
+            "PE-Spatial-G14-448",
+            pretrained=True,
+            checkpoint_path=weights,
+            image_size=image_size,
+        )
+        self.encoder.to(dtype=dtype)
+        self.image_size = image_size
+        self.set_frozen(freeze)
+
+    @property
+    def device(self) -> torch.device:
+        return next(self.encoder.parameters()).device
+
+    def set_frozen(self, frozen: bool) -> None:
+        for parameter in self.encoder.parameters():
+            parameter.requires_grad = not frozen
+
+    def set_trainable_last_layers(self, count: int) -> None:
+        layers = self.encoder.transformer.resblocks
+        if not 0 <= count <= len(layers):
+            raise ValueError(f"Requested {count} trainable layers; encoder has {len(layers)}")
+        self.set_frozen(True)
+        for layer in layers[len(layers) - count :] if count else []:
+            for parameter in layer.parameters():
+                parameter.requires_grad = True
+
+    def enable_gradient_checkpointing(self) -> None:
+        raise RuntimeError("PE-Spatial gradient checkpointing is not supported safely upstream")
+
+    def forward(self, images: Sequence[Image.Image]) -> list[Tensor]:
+        arrays = []
+        for image in images:
+            resized = image.convert("RGB").resize(
+                (self.image_size, self.image_size), Image.Resampling.BILINEAR
+            )
+            data = torch.frombuffer(bytearray(resized.tobytes()), dtype=torch.uint8)
+            arrays.append(
+                data.reshape(self.image_size, self.image_size, 3).permute(2, 0, 1)
+            )
+        pixels = torch.stack(arrays).to(
+            device=self.device, dtype=next(self.encoder.parameters()).dtype
+        )
+        pixels = pixels.div_(255.0).sub_(0.5).div_(0.5)
+        frozen = not any(parameter.requires_grad for parameter in self.encoder.parameters())
+        context = torch.no_grad() if frozen else nullcontext()
+        with context:
+            hidden = self.encoder.forward_features(pixels, norm=False)
+        return list(hidden)
+
+
+def build_backbone(
+    backbone_type: str,
+    encoder_id: str,
+    *,
+    encoder_revision: str | None,
+    visual_tokens: int,
+    image_size: int,
+    freeze: bool,
+) -> nn.Module:
+    if backbone_type == "gemma4":
+        return Gemma4VisionBackbone(
+            encoder_id,
+            revision=encoder_revision,
+            visual_tokens=visual_tokens,
+            freeze=freeze,
+        )
+    if backbone_type == "dinov3":
+        return DINOv3VisionBackbone(
+            encoder_id,
+            revision=encoder_revision,
+            image_size=image_size,
+            freeze=freeze,
+        )
+    if backbone_type == "pe_spatial":
+        return PESpatialVisionBackbone(
+            encoder_id,
+            revision=encoder_revision,
+            image_size=image_size,
+            freeze=freeze,
+        )
+    raise ValueError(f"Unsupported backbone_type: {backbone_type}")
+
+
 class ProvenanceModel(nn.Module):
     def __init__(
         self,
         encoder_id: str,
         *,
         encoder_revision: str | None,
+        backbone_type: str = "gemma4",
         visual_tokens: int = 1120,
+        image_size: int = 384,
         encoder_dim: int = 1152,
         trunk_dim: int = 512,
         branch_dim: int = 256,
@@ -297,14 +460,20 @@ class ProvenanceModel(nn.Module):
         spectral_pretrained: bool = False,
     ) -> None:
         super().__init__()
-        self.backbone = Gemma4VisionBackbone(
+        self.backbone = build_backbone(
+            backbone_type,
             encoder_id,
-            revision=encoder_revision,
+            encoder_revision=encoder_revision,
             visual_tokens=visual_tokens,
+            image_size=image_size,
             freeze=freeze_encoder,
         )
+        self.token_adapter = nn.Sequential(
+            nn.LayerNorm(encoder_dim),
+            nn.Linear(encoder_dim, trunk_dim),
+        )
         self.heads = ProvenanceHead(
-            encoder_dim=encoder_dim,
+            encoder_dim=trunk_dim,
             trunk_dim=trunk_dim,
             branch_dim=branch_dim,
             dropout=dropout,
@@ -322,8 +491,12 @@ class ProvenanceModel(nn.Module):
             self.aigc_gate = nn.Linear(branch_dim * 2, 1)
             self.tamper_gate = nn.Linear(branch_dim * 2, 1)
 
+    def forward_tokens(self, token_sequences: Sequence[Tensor]) -> ProvenanceOutput:
+        adapted = [self.token_adapter(tokens.float()) for tokens in token_sequences]
+        return self.heads(adapted)
+
     def forward(self, images: Sequence[Image.Image]) -> ProvenanceOutput:
-        output = self.heads(self.backbone(images))
+        output = self.forward_tokens(self.backbone(images))
         if self.spectral is None:
             return output
         spectral = self.spectral(images)

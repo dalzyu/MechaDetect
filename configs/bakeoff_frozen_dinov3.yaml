@@ -1,0 +1,52 @@
+seed: 42
+paths:
+  data_root: /workspace/techjam26/data
+  train_manifest: manifests/ablation12k.csv
+  val_manifest: manifests/strict_unseen_probe.csv
+  output_root: /workspace/outputs
+  feature_cache: /workspace/feature-cache/dinov3
+preprocessing:
+  policy: square_jpeg95
+  version: 2
+model:
+  backbone_type: dinov3
+  encoder_id: facebook/dinov3-vith16plus-pretrain-lvd1689m
+  encoder_revision: c807c9eeea853df70aec4069e6f56b28ddc82acc
+  image_size: 224
+  encoder_dim: 1280
+  trunk_dim: 512
+  branch_dim: 256
+  dropout: 0.1
+  freeze_encoder: true
+  trainable_last_layers: 0
+  gradient_checkpointing: false
+  spectral_expert: false
+training:
+  stage: bakeoff_frozen_dinov3
+  epochs: 1
+  physical_batch_size: 8
+  cache_batch_size: 8
+  gradient_accumulation: 8
+  num_workers: 2
+  precision: bf16
+  encoder_lr: 3.0e-6
+  heads_lr: 3.0e-4
+  weight_decay: 0.01
+  gradient_clip_norm: 1.0
+  warmup_fraction: 0.05
+  generator_balanced_sampler: true
+  checkpoint_interval: 0
+  ema:
+    enabled: false
+loss:
+  provenance_original: 1.0
+  provenance_transformed: 0.0
+  prediction_consistency: 0.0
+  feature_consistency: 0.0
+  mask_focal: 0.5
+  mask_dice: 0.5
+  ema_consistency: 0.0
+transforms:
+  families: []
+  chain_length_probabilities:
+    0: 1.0
