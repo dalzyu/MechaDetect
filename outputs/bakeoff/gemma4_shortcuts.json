@@ -1,0 +1,19 @@
+{
+  "dataset_labels": [
+    "DiffusionForensics",
+    "SID-Set",
+    "WildFake"
+  ],
+  "dataset_probe": {
+    "balanced_accuracy": 0.9467918276786804,
+    "chance_balanced_accuracy": 0.3333333333333333,
+    "classes": 3,
+    "test_rows": 2400
+  },
+  "aspect_probe": {
+    "balanced_accuracy": 0.8053449988365173,
+    "chance_balanced_accuracy": 0.3333333333333333,
+    "classes": 3,
+    "test_rows": 2400
+  }
+}
