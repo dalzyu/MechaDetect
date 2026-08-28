@@ -120,10 +120,11 @@ def infer_batch_views(
         view_functions.extend((_jpeg90, _alternate_resolution))
     aigc_logits = []
     tamper_logits = []
-    for function in view_functions:
-        output = model([function(image) for image in images])
-        aigc_logits.append(output.aigc_logit.float())
-        tamper_logits.append(output.tamper_logit.float())
+    with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+        for function in view_functions:
+            output = model([function(image) for image in images])
+            aigc_logits.append(output.aigc_logit.float())
+            tamper_logits.append(output.tamper_logit.float())
     return hierarchical_probabilities(
         torch.stack(aigc_logits).mean(0), torch.stack(tamper_logits).mean(0)
     ).cpu()
