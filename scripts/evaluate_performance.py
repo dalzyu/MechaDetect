@@ -168,7 +168,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--checkpoint", type=Path, required=True)
-    parser.add_argument("--config", type=Path, default=Path("configs/performance_local.yaml"))
+    parser.add_argument("--config", type=Path, default=Path("configs/teacher_dinov3_production.yaml"))
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--three-view", action="store_true")
     parser.add_argument("--robustness", action="store_true")

@@ -1,120 +1,166 @@
-# TechJam Robust Image Provenance Detector
+# TechJam 2026: Robust Image Provenance Detection
 
-Prototype for robust three-class image provenance: `authentic`, `tampered`, and
-`fully_aigc`. Transformations are training augmentations and evaluation conditions;
-the model does not attempt to infer edit history.
+Production-ready architecture for robust three-class image provenance detection:
+1. **`authentic`**: Pristine real-world scene capture. Content-preserving transformations do not alter this class.
+2. **`tampered`**: Authentic scene containing localized semantic additions, removals, splices, or generative inpainting.
+3. **`fully_aigc`**: Visual content synthesized end-to-end by a generative model (GAN or diffusion).
 
-## Current machine
+Transformations (JPEG, blur, resize, noise, color, crop) are used as robustness augmentations and evaluation stress-tests; the model directly predicts semantic provenance rather than inferring edit history.
 
-- NVIDIA RTX 4080, 16 GB VRAM
-- Python 3.11
-- PyTorch 2.10.0 with CUDA 13.0
-- Large runtime assets should use `E:/techjam26-runtime`, not the repository drive
+---
 
-## Current implementation
+## 1. Backbone Bake-Off Winner: DINOv3 ViT-H+/16
 
-The performance-first path is operational:
+Following a 4-hour controlled tournament across 4× NVIDIA RTX 4090s on 12,000 generator-balanced images, **DINOv3 ViT-H+/16** (`facebook/dinov3-vith16plus-pretrain-lvd1689m`) was selected as the winning vision backbone.
 
-- pinned 569.5M-parameter Gemma 4 vision encoder cached on `E:`;
-- zero missing, unexpected, or mismatched checkpoint tensors;
-- separate learned-query fully-AIGC and patch-aware tamper experts;
-- optional pretrained ConvNeXt-Tiny over RGB + fixed residuals + radial FFT;
-- hierarchical probabilities that sum to one and exclude fully-AIGC samples from tamper loss;
-- SID fractional token-mask supervision with focal BCE + soft Dice;
-- frozen, last-layer, and all-attention LoRA adaptation paths;
-- generator-balanced 50/25/25 sampling and chained post-processing augmentation;
-- exact, linked-source, and perceptual near-duplicate grouping before split assignment;
-- one-view/three-view evaluation with per-dataset, per-generator, and robustness metrics.
+### 3-Way Tournament Summary
 
-The full local SID selection now contains 10,000 images per provenance class for
-training and 1,000 per class for official validation. A pinned DiffusionForensics
-mirror contributes 6,000 ADM + 6,000 authentic training images, 500 validation
-images, and 5,700 images from unseen generator families. WildFake is acquired by
-HTTP-range extraction of selected ZIP members so its multi-million-image release is
-never downloaded wholesale.
+| Dimension | DINOv3 ViT-H+/16 (Winner) | PE-Spatial-G/14 (Runner-Up) | Gemma 4 Tower (Eliminated) |
+| :--- | :---: | :---: | :---: |
+| **Parameters (Ceiling < 2B)** | **840.6M** | 1,851.9M | **569.5M** |
+| **Tokens per Image** | **196** ($14 \times 14$ grid at 224px) | 1,024 ($32 \times 32$ grid at 448px) | 1,120 soft tokens |
+| **Strict-Unseen AUROC (480 img)** | **0.9794** [0.9689, 0.9899] | **0.9946** [0.9899, 0.9981] | 0.9548 [0.9331, 0.9721] |
+| **TechJam Proxy AUROC (COCO vs DALL·E 3)** | **0.9978** [0.9955, 0.9995] | 0.9538 [0.9344, 0.9692] | 0.9235 [0.8942, 0.9455] |
+| **DALL·E 3 Generator Recall** | **96.5%** (193/200 correct) | 48.5% (82 misclassified as tampered) | 65.5% (64 misclassified) |
+| **Compound Robustness (Crop+Resize+JPEG)** | **0.9712 AUROC** | 0.9400 AUROC | 0.8140 AUROC |
+| **Aspect Ratio Shortcut Accuracy (Chance=33%)**| **54.66%** (Near-chance / invariant) | **86.61%** (Severe shortcut leak) | **80.53%** (Severe shortcut leak) |
+| **Adaptation Speed (Time per Update)** | **~1.8 seconds** | ~35.0 seconds (19.4× slower) | ~14.0 seconds |
 
-Full-resolution GPU gates pass on the RTX 4080:
+Full empirical findings, 16-condition robustness tables, and failure analyses:
+- Comprehensive findings: [`docs/backbone_bakeoff_findings.md`](docs/backbone_bakeoff_findings.md)
+- Executive decision & checkpoint handoff: [`docs/backbone_bakeoff_decision.md`](docs/backbone_bakeoff_decision.md)
 
-- frozen Gemma + spectral expert: 1.97 GiB peak allocated VRAM;
-- all-layer rank-8 LoRA + spectral expert: 4.21 GiB peak allocated VRAM;
-- all 108 LoRA attention projections receive the expected first-step gradients;
-- real 16-image/two-view optimizer update and resumable checkpoint save pass.
+---
 
-The first raw-source run scored 92% but was invalidated by a severe dataset
-shortcut: authentic images were JPEG/non-square while fully-AIGC images were
-PNG/square. A trivial format rule nearly reproduced the binary AUROC.
+## 2. Model Architecture
 
-That result is retained only as the obsolete baseline. The replacement model is
-currently being trained and must be judged on the leakage-safe combined manifests;
-no performance claim is made from a smoke checkpoint.
+The architecture decouples global generative artifact detection from localized patch tampering:
 
-## Environment
-
-```powershell
-Copy-Item .env.example .env
-uv venv E:/techjam26-runtime/.venv --python 3.11 --system-site-packages --seed
-uv pip install --python E:/techjam26-runtime/.venv/Scripts/python.exe `
-    transformers==5.10.1 python-dotenv pytest ruff
-uv pip install --python E:/techjam26-runtime/.venv/Scripts/python.exe --no-deps -e .
+```
+[ Input RGB Image ]
+       │
+       ▼
+[ Vision Backbone: DINOv3 ViT-H+/16 ]
+       │  (Output: B × N × 1280 patch tokens)
+       ▼
+[ Token Adapter: LayerNorm + Linear(1280 → 512) ]
+       │  (Output: B × N × 512 adapted tokens)
+       ├───────────────────────────────────────────────┐
+       ▼                                               ▼
+[ AIGC Query Pool Head ]                    [ Token-Aware Tamper Head ]
+• 4 learned query vectors                   • Token-level linear classifier
+• Multi-head cross-attention over tokens    • Top-5% patch pooling
+• Mean + Std summary pooling                • Softmax attention pooling
+• MLP projection → aigc_logit               • MLP projection → tamper_logit
+       │                                               │
+       └───────────────────────┬───────────────────────┘
+                               ▼
+            [ Hierarchical Probabilities Engine ]
+            • P(fully_aigc) = sigmoid(aigc_logit)
+            • P(tampered)   = (1 - P(fully_aigc)) * sigmoid(tamper_logit)
+            • P(authentic)  = (1 - P(fully_aigc)) * (1 - sigmoid(tamper_logit))
+            • Probabilities sum to 1.0; fully-AIGC samples do not incur tamper loss
 ```
 
-The current system `transformers` package is too old for Gemma 4. This project pins
-`transformers==5.10.1`, the first supported runtime used by the official examples.
+### Optional Dual-Stream Spectral Expert
+For frequency-domain residual detection, an optional ConvNeXt-Tiny stream processes RGB + fixed high-pass spatial residuals (`conv2d` with discrete derivative kernels) augmented with a 32-bin radial 2D FFT energy projection, dynamically fused via learned sigmoid gates.
 
-## Verified commands
+---
 
-```powershell
-$python = 'E:/techjam26-runtime/.venv/Scripts/python.exe'
+## 3. Quickstart & Usage
 
-# Unit tests and static checks
-& $python -m pytest -q
-& $python -m ruff check src tests scripts
-
-# Build the selected SID pool
-& $python scripts/prepare_sid.py `
-    --per-class 10000 `
-    --validation-per-class 1000 `
-    --shuffle-buffer 10000
-
-# Selectively acquire WildFake without downloading its full archives
-& $python scripts/acquire_wildfake_subset.py
-
-# Acquire the pinned DiffusionForensics subset
-& $python scripts/acquire_diffusionforensics_subset.py
-
-# Build leakage-safe combined manifests
-& $python scripts/build_performance_manifests.py `
-    metadata/sid_sanity.csv `
-    metadata/wildfake_subset.csv `
-    metadata/diffusionforensics_subset.csv `
-    --output-dir splits/performance `
-    --compute-hashes `
-    --allow-shortfall
-
-# Full combined-model forward/backward integration tests
-& $python scripts/smoke_performance_model.py --config configs/performance_local.yaml
-& $python scripts/smoke_performance_model.py --config configs/performance_lora_smoke.yaml
-
-# Training; use --max-steps for a bounded test
-& $python -m aigc_detector.train --config configs/performance_local.yaml --max-steps 1
+### 3.1 Installation
+```bash
+git clone https://github.com/dalzyu/techjam26.git
+cd techjam26
+pip install -e .
 ```
 
-## Configuration
+Requires PyTorch $\ge 2.0$, torchvision, and `transformers>=5.10.1`.
 
-The current performance configuration is `configs/performance_local.yaml`.
-Machine-local roots are supplied by:
+### 3.2 Environment Setup
+Copy `.env.example` to `.env` and set machine-local storage paths:
+```bash
+TECHJAM_DATA_ROOT=E:/techjam26-runtime/data
+TECHJAM_HF_HOME=E:/techjam26-runtime/huggingface
+TECHJAM_OUTPUT_ROOT=E:/techjam26-runtime/outputs
+```
+
+### 3.3 Training the Winning DINOv3 Model
+To train the adapted DINOv3 model (final 25% transformer blocks unfrozen with layerwise learning rate decay 0.85):
+```bash
+python -m aigc_detector.train --config configs/bakeoff_adapt_dinov3.yaml
+```
+
+To run full teacher training with synthetic multi-transform augmentation and EMA guidance:
+```bash
+python -m aigc_detector.train --config configs/teacher_dinov3_production.yaml
+```
+
+### 3.4 Evaluating a Checkpoint
+Run evaluation on clean probe images or across the 16-condition single-transform robustness grid:
+```bash
+# Clean evaluation on the strict-unseen benchmark (480 images)
+python scripts/evaluate_performance.py \
+  --manifest manifests/strict_unseen_probe.csv \
+  --checkpoint outputs/bakeoff/adapt_dinov3/checkpoint-step-188.pt \
+  --config configs/bakeoff_adapt_dinov3.yaml \
+  --output outputs/eval_results.json \
+  --batch-size 8
+
+# 16-condition single-transform robustness evaluation
+python scripts/evaluate_performance.py \
+  --manifest manifests/strict_unseen_probe.csv \
+  --checkpoint outputs/bakeoff/adapt_dinov3/checkpoint-step-188.pt \
+  --config configs/bakeoff_adapt_dinov3.yaml \
+  --output outputs/eval_robustness.json \
+  --limit 120 \
+  --robustness \
+  --batch-size 8
+```
+
+### 3.5 Predicting on an Image Directory
+Generate predictions (`pred = P(fully_aigc)`) for test submissions:
+```bash
+python -m aigc_detector.predict \
+  --input-dir /path/to/images \
+  --output predictions.json \
+  --config configs/bakeoff_adapt_dinov3.yaml \
+  --checkpoint outputs/bakeoff/adapt_dinov3/checkpoint-step-188.pt
+```
+
+### 3.6 Running Tests
+```bash
+python -m pytest tests/ -q
+```
+
+---
+
+## 4. Repository Layout
 
 ```text
-TECHJAM_DATA_ROOT
-TECHJAM_HF_HOME
-TECHJAM_OUTPUT_ROOT
+techjam26/
+├── configs/                       # Production and experiment configurations
+│   ├── bakeoff_adapt_dinov3.yaml  # Winning DINOv3 adaptation config (8 layers unfrozen)
+│   ├── teacher_dinov3_production.yaml # Production robust teacher training config
+│   └── ...
+├── docs/                          # Tournament decisions, findings, and design history
+│   ├── backbone_bakeoff_findings.md # Complete 3-way empirical report
+│   ├── backbone_bakeoff_decision.md # Executive winner decision & catalog
+│   └── archive/                   # Historical execution and PoC plans
+├── outputs/bakeoff/               # Exfiltrated evaluation results and raw JSON metrics
+├── scripts/                       # Essential CLI tools (training, eval, prediction)
+│   ├── evaluate_performance.py    # Standardized provenance & robustness evaluator
+│   ├── cache_backbone_features.py # Fast multi-GPU token extraction
+│   └── probe_feature_shortcuts.py # Linear shortcut audit probe (aspect ratio & dataset)
+├── src/aigc_detector/             # Modular core library
+│   ├── model.py                   # Backbones, token adapter, dual-task provenance heads
+│   ├── train.py                   # Optimization loop, layerwise decay, EMA, checkpointing
+│   ├── predict.py                 # Batch inference and submission export
+│   ├── losses.py                  # Hierarchical cross-entropy, focal BCE, Dice loss
+│   ├── transforms.py              # Perturbation pipeline (JPEG, blur, noise, resize, crop)
+│   ├── sampling.py                # Generator-balanced stratified sampling
+│   ├── preprocessing.py           # Standardized geometry and image normalization
+│   └── metrics.py                 # AUROC, AUPRC, balanced accuracy, confusion matrix
+└── tests/                         # Unit and integration test suite
 ```
-
-## Safety rails
-
-- Always use 1120 visual tokens for the main experiment.
-- Keep SID's official splits intact.
-- Never put private evaluation images into training or public source control.
-- Keep the required `pred` output as `P(fully_aigc)`.
-- Use transformations only to train and evaluate provenance robustness.
-- Do not infer transformation families, severities, or edit history.

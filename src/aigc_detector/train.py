@@ -1,5 +1,27 @@
 from __future__ import annotations
 
+"""Training and adaptation pipeline for robust image provenance detection.
+
+Key features:
+1. Dual Data Modes:
+   - Live Dataset: `PairedImageDataset` applies on-the-fly geometric preprocessing
+     and synthetic transform augmentations (JPEG, blur, resize, noise, crop).
+   - Cached Features: `CachedFeatureDataset` loads pre-extracted backbone tokens
+     from disk, accelerating frozen-screening epochs by 10-20x.
+2. Generator-Balanced Stratified Sampling:
+   - Enforces 50% fully AIGC, 25% authentic, 25% tampered class proportions.
+   - Weights individual generators inversely by frequency to avoid generator dominance.
+3. Layer-Wise Learning Rate Decay (LLRD):
+   - Decays learning rate geometrically from top layers to bottom layers (decay = 0.85).
+   - Task heads train at a higher learning rate (e.g. 1e-4), while deep backbone layers
+     adapt conservatively (e.g. 3e-6) to preserve pre-trained feature stability.
+4. Dual-Stream Supervised Losses:
+   - Hierarchical Cross-Entropy (AIGC + conditional tampering).
+   - Localized Tamper Mask Supervision (Focal BCE + soft Dice loss on patch occupancy).
+   - Transformation Consistency (MSE on probabilities, cosine on feature embeddings).
+   - Exponential Moving Average (EMA) teacher distillation with confidence gating.
+"""
+
 import argparse
 import json
 import math
@@ -8,6 +30,7 @@ from pathlib import Path
 from typing import Any
 
 import torch
+import torch.nn as nn
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import DataLoader
@@ -22,13 +45,14 @@ from .dataset import PairedImageDataset, collate_pairs
 from .ema import ParameterEMA
 from .feature_cache import CachedFeatureDataset, collate_cached_features
 from .losses import LossWeights, provenance_robustness_loss
-from .model import ProvenanceModel
+from .model import ProvenanceModel, ProvenanceOutput
 from .preprocessing import mask_to_token_occupancy
 from .runtime import load_local_environment, resolve_project_path, seed_everything
 from .sampling import EpochWeightedSampler, build_balanced_sampler
 
 
 def _to_device(batch: dict[str, Any], device: torch.device) -> dict[str, Any]:
+    """Move tensor values in a batch dictionary to the specified torch device."""
     return {
         key: value.to(device) if isinstance(value, torch.Tensor) else value
         for key, value in batch.items()
@@ -36,6 +60,7 @@ def _to_device(batch: dict[str, Any], device: torch.device) -> dict[str, Any]:
 
 
 def _loss_weights(config: dict[str, Any]) -> LossWeights:
+    """Extract loss component weights from the configuration mapping."""
     values = config["loss"]
     return LossWeights(
         provenance_original=values["provenance_original"],
@@ -49,6 +74,7 @@ def _loss_weights(config: dict[str, Any]) -> LossWeights:
 
 
 def build_model(config: dict[str, Any]) -> ProvenanceModel:
+    """Instantiate a ProvenanceModel configured for screening, adaptation, or full training."""
     values = config["model"]
     model = ProvenanceModel(
         values["encoder_id"],
@@ -66,11 +92,17 @@ def build_model(config: dict[str, Any]) -> ProvenanceModel:
         spectral_pretrained=values.get("spectral_pretrained", False),
         use_token_adapter=values.get("use_token_adapter", False),
     )
+
+    # Controlled backbone adaptation: unfreeze the final N transformer blocks
     trainable_last_layers = int(values.get("trainable_last_layers", 0))
     if trainable_last_layers:
         model.backbone.set_trainable_last_layers(trainable_last_layers)
+
+    # Activation checkpointing saves memory during backward pass through large vision backbones
     if values.get("gradient_checkpointing") and trainable_last_layers:
         model.backbone.enable_gradient_checkpointing()
+
+    # Optional parameter-efficient fine-tuning via attention LoRA
     lora = values.get("lora", {})
     if lora.get("enabled"):
         model.backbone.set_frozen(True)
@@ -82,10 +114,12 @@ def build_model(config: dict[str, Any]) -> ProvenanceModel:
         )
         if values.get("gradient_checkpointing"):
             model.backbone.enable_gradient_checkpointing()
+
     return model
 
 
 def _encoder_layer_index(name: str) -> int | None:
+    """Parse the zero-indexed layer depth from parameter names across different ViT architectures."""
     for marker in (".layers.", ".resblocks.", ".layer."):
         if marker in name:
             value = name.split(marker, 1)[1].split(".", 1)[0]
@@ -94,9 +128,17 @@ def _encoder_layer_index(name: str) -> int | None:
 
 
 def build_optimizer(model: ProvenanceModel, config: dict[str, Any]) -> AdamW:
+    """Build an AdamW optimizer supporting separate head LR and layer-wise LR decay (LLRD).
+
+    Heads and linear adapter train at `heads_lr` (e.g. 1e-4).
+    Trainable backbone blocks receive geometrically decayed learning rates:
+        lr_layer = encoder_lr * (layerwise_lr_decay ** depth_from_top)
+    This prevents catastrophic disruption to low-level pre-trained visual representations.
+    """
     training = config["training"]
-    encoder_parameters: list[tuple[int | None, torch.nn.Parameter]] = []
-    task_parameters = []
+    encoder_parameters: list[tuple[int | None, nn.Parameter]] = []
+    task_parameters: list[nn.Parameter] = []
+
     for name, parameter in model.named_parameters():
         if not parameter.requires_grad:
             continue
@@ -104,31 +146,36 @@ def build_optimizer(model: ProvenanceModel, config: dict[str, Any]) -> AdamW:
             encoder_parameters.append((_encoder_layer_index(name), parameter))
         else:
             task_parameters.append(parameter)
+
     groups: list[dict[str, Any]] = [{"params": task_parameters, "lr": training["heads_lr"]}]
+
     if encoder_parameters:
         decay = float(training.get("layerwise_lr_decay", 1.0))
         last_layer = max(index for index, _ in encoder_parameters if index is not None)
-        by_depth: dict[int, list[torch.nn.Parameter]] = {}
+        by_depth: dict[int, list[nn.Parameter]] = {}
         for index, parameter in encoder_parameters:
             depth = 0 if index is None else last_layer - index
             by_depth.setdefault(depth, []).append(parameter)
+
         groups.extend(
             {
                 "params": parameters,
-                "lr": float(training["encoder_lr"]) * decay**depth,
+                "lr": float(training["encoder_lr"]) * (decay**depth),
             }
             for depth, parameters in sorted(by_depth.items())
         )
+
     return AdamW(groups, weight_decay=training["weight_decay"])
 
 
 def build_scheduler(optimizer: AdamW, total_updates: int, warmup_fraction: float) -> LambdaLR:
-    warmup = max(1, round(total_updates * warmup_fraction))
+    """Cosine learning rate decay schedule with linear warmup."""
+    warmup_steps = max(1, round(total_updates * warmup_fraction))
 
     def schedule(step: int) -> float:
-        if step < warmup:
-            return max(1e-3, step / warmup)
-        progress = (step - warmup) / max(1, total_updates - warmup)
+        if step < warmup_steps:
+            return max(1e-3, step / warmup_steps)
+        progress = (step - warmup_steps) / max(1, total_updates - warmup_steps)
         return 0.5 * (1.0 + math.cos(math.pi * min(1.0, progress)))
 
     return LambdaLR(optimizer, schedule)
@@ -146,8 +193,10 @@ def save_checkpoint(
     epoch: int = 0,
     micro_step: int = 0,
 ) -> Path:
+    """Serialize model weights, optimizer, scheduler, and RNG state to a checkpoint file."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    encoder_trainable = any(parameter.requires_grad for parameter in model.backbone.parameters())
+    encoder_trainable = any(p.requires_grad for p in model.backbone.parameters())
+
     payload: dict[str, Any] = {
         "step": step,
         "config": config,
@@ -159,28 +208,34 @@ def save_checkpoint(
         "epoch": epoch,
         "micro_step": micro_step,
     }
+
     if model.spectral is not None:
         payload["spectral"] = model.spectral.state_dict()
         payload["aigc_gate"] = model.aigc_gate.state_dict()
         payload["tamper_gate"] = model.tamper_gate.state_dict()
+
     if encoder_trainable:
         payload["encoder_trainable_state"] = trainable_encoder_state(model.backbone.encoder)
+
     if optimizer is not None:
         payload["optimizer"] = optimizer.state_dict()
     if scheduler is not None:
         payload["scheduler"] = scheduler.state_dict()
+
     if manifest_path is not None:
         import hashlib
-
         payload["manifest_sha256"] = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+
     if ema is not None:
         payload["ema"] = ema.state_dict()
+
     path = output_dir / f"checkpoint-step-{step}.pt"
     torch.save(payload, path)
     return path
 
 
 def cpu_rng_states(states: list[torch.Tensor]) -> list[torch.Tensor]:
+    """Ensure CUDA RNG states are properly formatted as CPU ByteTensors."""
     normalized = []
     for state in states:
         if not isinstance(state, torch.Tensor) or state.dtype is not torch.uint8:
@@ -198,32 +253,100 @@ def restore_checkpoint(
     manifest_path: Path,
     device: torch.device,
 ) -> tuple[int, int, int]:
+    """Restore training state from a previously saved checkpoint."""
     import hashlib
 
     payload = torch.load(path, map_location=device, weights_only=False)
     expected_manifest = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
     if payload.get("manifest_sha256") != expected_manifest:
         raise RuntimeError("Resume checkpoint was created from a different training manifest")
+
     model.heads.load_state_dict(payload["heads"])
     adapter_state = payload.get("token_adapter", {})
     if model.token_adapter.state_dict() or adapter_state:
         model.token_adapter.load_state_dict(adapter_state)
+
     if model.spectral is not None:
         model.spectral.load_state_dict(payload["spectral"])
         model.aigc_gate.load_state_dict(payload["aigc_gate"])
         model.tamper_gate.load_state_dict(payload["tamper_gate"])
+
     if payload.get("encoder_trainable"):
         load_trainable_encoder_state(model.backbone.encoder, payload["encoder_trainable_state"])
+
     optimizer.load_state_dict(payload["optimizer"])
     scheduler.load_state_dict(payload["scheduler"])
+
     if ema is not None:
         if "ema" not in payload:
-            raise RuntimeError("EMA is enabled but the checkpoint has no EMA state")
+            raise RuntimeError("EMA is enabled in config but checkpoint has no EMA state")
         ema.load_state_dict(payload["ema"])
+
     torch.set_rng_state(payload["rng_cpu"].cpu())
     if torch.cuda.is_available() and payload.get("rng_cuda"):
         torch.cuda.set_rng_state_all(cpu_rng_states(payload["rng_cuda"]))
+
     return int(payload["step"]), int(payload.get("epoch", 0)), int(payload.get("micro_step", 0))
+
+
+def _compute_micro_step_loss(
+    model: ProvenanceModel,
+    batch: dict[str, Any],
+    device: torch.device,
+    weights: LossWeights,
+    is_cached: bool,
+    clean_only: bool,
+    ema: ParameterEMA | None,
+    update_step: int,
+    ema_start_step: int,
+    confidence_threshold: float,
+) -> tuple[Tensor, dict[str, Tensor]]:
+    """Compute model predictions and robustness loss for a single micro-batch."""
+    teacher_probabilities = None
+
+    if is_cached:
+        original_tokens = [t.to(device) for t in batch["original_tokens"]]
+        transformed_tokens = [t.to(device) for t in batch["transformed_tokens"]]
+
+        if ema is not None and update_step >= ema_start_step:
+            with ema.average_parameters(model), torch.no_grad():
+                teacher_probabilities = model.forward_tokens(original_tokens).probabilities.detach()
+
+        original = model.forward_tokens(original_tokens)
+        transformed = original if clean_only else model.forward_tokens(transformed_tokens)
+        token_mask_targets = [
+            None if target is None else target.to(device)
+            for target in batch["token_mask_targets"]
+        ]
+    else:
+        if ema is not None and update_step >= ema_start_step:
+            with ema.average_parameters(model), torch.no_grad():
+                teacher_probabilities = model(batch["original"]).probabilities.detach()
+
+        original = model(batch["original"])
+        transformed = original if clean_only else model(batch["transformed"])
+        token_mask_targets = [
+            None
+            if mask is None
+            else mask_to_token_occupancy(mask, logits.numel(), image.size)
+            for mask, logits, image in zip(
+                batch["mask"],
+                original.token_tamper_logits,
+                batch["original"],
+                strict=True,
+            )
+        ]
+
+    loss, components = provenance_robustness_loss(
+        original,
+        transformed,
+        provenance=batch["provenance"],
+        weights=weights,
+        token_mask_targets=token_mask_targets,
+        teacher_probabilities=teacher_probabilities,
+        teacher_confidence_threshold=confidence_threshold,
+    )
+    return loss, components
 
 
 def run_training(
@@ -234,24 +357,32 @@ def run_training(
     render_policy_override: str | None = None,
     stage_override: str | None = None,
 ) -> Path:
+    """Execute the end-to-end training pipeline for the provenance detector."""
     project_root = config_path.resolve().parent.parent
     load_local_environment(project_root)
     config = load_config(config_path)
+
     if render_policy_override is not None:
         config.setdefault("preprocessing", {})["policy"] = render_policy_override
     if stage_override is not None:
         config["training"]["stage"] = stage_override
+
     seed_everything(int(config["seed"]))
 
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is required for backbone training")
     device = torch.device("cuda")
+
     training = config["training"]
     manifest = train_manifest_override or resolve_project_path(
         config["paths"]["train_manifest"], project_root
     )
+
+    # 1. Dataset Selection: Cached Feature Dataset vs. Live Paired Image Dataset
     cache_root = config["paths"].get("feature_cache")
-    if cache_root:
+    is_cached = bool(cache_root)
+
+    if is_cached:
         dataset = CachedFeatureDataset(manifest, resolve_project_path(cache_root, project_root))
         collate_fn = collate_cached_features
     else:
@@ -260,14 +391,14 @@ def run_training(
             data_root=config["paths"]["data_root"],
             seed=int(config["seed"]),
             chain_length_probabilities={
-                int(length): float(probability)
-                for length, probability in config["transforms"][
-                    "chain_length_probabilities"
-                ].items()
+                int(length): float(prob)
+                for length, prob in config["transforms"]["chain_length_probabilities"].items()
             },
             render_policy=config.get("preprocessing", {}).get("policy", "square_jpeg95"),
         )
         collate_fn = collate_pairs
+
+    # 2. Generator-Balanced Stratified Sampler
     use_balanced_sampler = bool(training.get("generator_balanced_sampler", True))
     sampler = (
         build_balanced_sampler(
@@ -279,6 +410,7 @@ def run_training(
         if use_balanced_sampler
         else None
     )
+
     loader = DataLoader(
         dataset,
         batch_size=int(training["physical_batch_size"]),
@@ -290,13 +422,16 @@ def run_training(
         generator=torch.Generator().manual_seed(int(config["seed"]) + 10_000),
     )
 
+    # 3. Model & Optimizer Construction
     model = build_model(config)
-    if cache_root:
-        model.backbone.to("cpu")
+    if is_cached:
+        model.backbone.to("cpu")  # Backbone unneeded on GPU when tokens are cached
         model.token_adapter.to(device)
         model.heads.to(device)
     else:
         model.to(device)
+
+    # Load initial checkpoint weights (e.g. starting adaptation from best frozen checkpoint)
     initial_checkpoint = config["paths"].get("initial_checkpoint")
     if initial_checkpoint and resume_path is None:
         payload = torch.load(
@@ -308,24 +443,35 @@ def run_training(
         if model.token_adapter.state_dict() or adapter_state:
             model.token_adapter.load_state_dict(adapter_state)
         model.heads.load_state_dict(payload["heads"])
+
     optimizer = build_optimizer(model, config)
     weights = _loss_weights(config)
+
+    # Clean-only mode optimizes forward pass when transform losses are disabled
     clean_only = (
         weights.provenance_transformed == 0.0
         and weights.prediction_consistency == 0.0
         and weights.feature_consistency == 0.0
     )
+
+    # 4. Schedule & EMA Setup
     accumulation = int(training["gradient_accumulation"])
     micro_steps_per_epoch = len(loader)
     total_updates = math.ceil(micro_steps_per_epoch / accumulation) * int(training["epochs"])
     stop_step = min(total_updates, max_steps) if max_steps is not None else total_updates
+
     scheduler = build_scheduler(optimizer, total_updates, float(training["warmup_fraction"]))
+
     ema_config = training.get("ema", {})
     ema = (
         ParameterEMA(model, decay=float(ema_config.get("decay", 0.999)))
         if ema_config.get("enabled")
         else None
     )
+    ema_start = int(ema_config.get("start_update", 0))
+    ema_threshold = float(ema_config.get("confidence_threshold", 0.8))
+
+    # 5. Checkpoint Resume if specified
     update_step = 0
     start_epoch = 0
     resume_micro_step = 0
@@ -344,99 +490,65 @@ def run_training(
         if update_step >= stop_step:
             return resume_path
 
+    # Persist resolved configuration for provenance audit
     output_dir = Path(config["paths"]["output_root"]) / training["stage"]
     output_dir.mkdir(parents=True, exist_ok=True)
     with (output_dir / "resolved-config.json").open("w", encoding="utf-8") as handle:
         json.dump(config, handle, indent=2)
 
+    # 6. Main Training Loop
     optimizer.zero_grad(set_to_none=True)
     window_loss = 0.0
     window_components: dict[str, float] = {}
     window_micro_steps = 0
     model.train()
+
     for epoch in range(start_epoch, int(training["epochs"])):
         dataset.set_epoch(epoch)
-        resumed_micro_steps = resume_micro_step if epoch == start_epoch else 0
         if isinstance(sampler, EpochWeightedSampler):
             sampler.set_epoch(epoch)
-            sampler.set_start_offset(resumed_micro_steps * int(training["physical_batch_size"]))
-        enumerate_start = (
-            resumed_micro_steps + 1 if isinstance(sampler, EpochWeightedSampler) else 1
-        )
-        last_micro_step = resumed_micro_steps + len(loader)
-        for micro_step, raw_batch in enumerate(loader, start=enumerate_start):
-            if (
-                not isinstance(sampler, EpochWeightedSampler)
-                and epoch == start_epoch
-                and micro_step <= resume_micro_step
-            ):
+
+        for micro_step, raw_batch in enumerate(loader, start=1):
+            if epoch == start_epoch and micro_step <= resume_micro_step:
                 continue
+
             batch = _to_device(raw_batch, device)
             autocast = (
                 torch.autocast(device_type="cuda", dtype=torch.bfloat16)
                 if training["precision"] == "bf16"
                 else nullcontext()
             )
+
             with autocast:
-                teacher_probabilities = None
-                if cache_root:
-                    original_tokens = [tokens.to(device) for tokens in batch["original_tokens"]]
-                    transformed_tokens = [
-                        tokens.to(device) for tokens in batch["transformed_tokens"]
-                    ]
-                    if ema is not None and update_step >= int(ema_config.get("start_update", 0)):
-                        with ema.average_parameters(model), torch.no_grad():
-                            teacher_probabilities = model.forward_tokens(
-                                original_tokens
-                            ).probabilities.detach()
-                    original = model.forward_tokens(original_tokens)
-                    transformed = (
-                        original if clean_only else model.forward_tokens(transformed_tokens)
-                    )
-                    token_mask_targets = [
-                        None if target is None else target.to(device)
-                        for target in batch["token_mask_targets"]
-                    ]
-                else:
-                    if ema is not None and update_step >= int(ema_config.get("start_update", 0)):
-                        with ema.average_parameters(model), torch.no_grad():
-                            teacher_probabilities = model(batch["original"]).probabilities.detach()
-                    original = model(batch["original"])
-                    transformed = original if clean_only else model(batch["transformed"])
-                    token_mask_targets = [
-                        None
-                        if mask is None
-                        else mask_to_token_occupancy(mask, logits.numel(), image.size)
-                        for mask, logits, image in zip(
-                            batch["mask"],
-                            original.token_tamper_logits,
-                            batch["original"],
-                            strict=True,
-                        )
-                    ]
-                loss, components = provenance_robustness_loss(
-                    original,
-                    transformed,
-                    provenance=batch["provenance"],
+                loss, components = _compute_micro_step_loss(
+                    model=model,
+                    batch=batch,
+                    device=device,
                     weights=weights,
-                    token_mask_targets=token_mask_targets,
-                    teacher_probabilities=teacher_probabilities,
-                    teacher_confidence_threshold=float(ema_config.get("confidence_threshold", 0.8)),
+                    is_cached=is_cached,
+                    clean_only=clean_only,
+                    ema=ema,
+                    update_step=update_step,
+                    ema_start_step=ema_start,
+                    confidence_threshold=ema_threshold,
                 )
                 scaled_loss = loss / accumulation
+
             scaled_loss.backward()
             window_loss += loss.detach().item()
             for name, value in components.items():
                 window_components[name] = window_components.get(name, 0.0) + value.detach().item()
             window_micro_steps += 1
 
-            if micro_step % accumulation == 0 or micro_step == last_micro_step:
+            # Optimizer step on gradient accumulation boundaries
+            if micro_step % accumulation == 0 or micro_step == micro_steps_per_epoch:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), training["gradient_clip_norm"])
                 optimizer.step()
                 scheduler.step()
                 if ema is not None:
                     ema.update(model)
                 optimizer.zero_grad(set_to_none=True)
+
                 update_step += 1
                 divisor = float(window_micro_steps)
                 component_text = " ".join(
@@ -450,6 +562,7 @@ def run_training(
                 window_loss = 0.0
                 window_components = {}
                 window_micro_steps = 0
+
                 checkpoint_interval = int(training.get("checkpoint_interval", 0))
                 if checkpoint_interval and update_step % checkpoint_interval == 0:
                     saved = save_checkpoint(
@@ -465,6 +578,7 @@ def run_training(
                         micro_step,
                     )
                     print(f"checkpoint={saved}", flush=True)
+
                 if max_steps is not None and update_step >= stop_step:
                     return save_checkpoint(
                         model,
@@ -478,6 +592,8 @@ def run_training(
                         epoch,
                         micro_step,
                     )
+
+    # Save final model checkpoint at end of training
     return save_checkpoint(
         model,
         config,
@@ -488,22 +604,21 @@ def run_training(
         manifest,
         ema,
         max(0, int(training["epochs"]) - 1),
-        micro_steps_per_epoch,
+        len(loader),
     )
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=Path, default=Path("configs/poc.yaml"))
-    parser.add_argument("--max-steps", type=int)
-    parser.add_argument("--train-manifest", type=Path)
-    parser.add_argument("--resume", type=Path)
-    parser.add_argument(
-        "--render-policy",
-        choices=["square_jpeg95", "aspect_jpeg95", "aspect_randomized"],
-    )
-    parser.add_argument("--stage")
+    """CLI entrypoint for running training via python -m aigc_detector.train."""
+    parser = argparse.ArgumentParser(description="Train or adapt the robust provenance detection model.")
+    parser.add_argument("--config", type=Path, default=Path("configs/teacher_dinov3_production.yaml"))
+    parser.add_argument("--max-steps", type=int, help="Optional update step limit (for fast testing).")
+    parser.add_argument("--train-manifest", type=Path, help="Override training manifest CSV path.")
+    parser.add_argument("--resume", type=Path, help="Resume training from an existing checkpoint.")
+    parser.add_argument("--render-policy", choices=["square_jpeg95", "aspect_jpeg95", "aspect_randomized"])
+    parser.add_argument("--stage", type=str, help="Override output experiment stage directory name.")
     args = parser.parse_args()
+
     checkpoint = run_training(
         args.config,
         max_steps=args.max_steps,
@@ -512,7 +627,7 @@ def main() -> None:
         render_policy_override=args.render_policy,
         stage_override=args.stage,
     )
-    print(f"Saved {checkpoint}")
+    print(f"Training complete. Saved checkpoint: {checkpoint}")
 
 
 if __name__ == "__main__":

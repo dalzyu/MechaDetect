@@ -5,6 +5,7 @@ from io import BytesIO
 from math import log
 from random import Random
 
+import numpy as np
 import torch
 from PIL import Image
 from torch import Tensor
@@ -93,9 +94,10 @@ def mask_to_token_occupancy(
     width, height = image_size
     grid_height, grid_width = infer_token_grid(token_count, width / height)
     grayscale = mask.convert("L").resize((grid_width, grid_height), Image.Resampling.BOX)
-    values = torch.tensor(list(grayscale.getdata()), dtype=torch.float32).div_(255.0)
+    array = np.asarray(grayscale, dtype=np.float32).flatten()
+    values = torch.from_numpy(array).div_(255.0)
     if values.numel() != token_count:
-        raise RuntimeError("Mask occupancy does not match Gemma token count")
+        raise RuntimeError(f"Mask occupancy tokens ({values.numel()}) does not match expected token count ({token_count})")
     return values
 
 

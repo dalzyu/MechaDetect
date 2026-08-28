@@ -8,6 +8,10 @@ from torch import Tensor, nn
 
 
 class LoRALinear(nn.Module):
+    """Low-Rank Adaptation (LoRA) layer wrapping a frozen base linear projection.
+
+    Computes: output = base(x) + (dropout(x) @ lora_a.T @ lora_b.T) * (alpha / rank).
+    """
     def __init__(
         self,
         base: nn.Linear,
@@ -41,6 +45,7 @@ def apply_attention_lora(
     alpha: float = 16.0,
     dropout: float = 0.05,
 ) -> list[str]:
+    """Recursively wrap attention projection linear layers with LoRALinear adapters."""
     targets = {"q_proj", "k_proj", "v_proj", "o_proj"}
     replaced = []
     for name, module in list(encoder.named_modules()):
@@ -52,16 +57,18 @@ def apply_attention_lora(
         module.linear = LoRALinear(linear, rank=rank, alpha=alpha, dropout=dropout)
         replaced.append(f"{name}.linear")
     if not replaced:
-        raise RuntimeError("No Gemma attention projections accepted LoRA")
+        raise RuntimeError("No attention projections accepted LoRA")
     return replaced
 
 
 def trainable_encoder_state(encoder: nn.Module) -> dict[str, Tensor]:
+    """Extract state dict containing only parameters with requires_grad=True."""
     trainable = {name for name, parameter in encoder.named_parameters() if parameter.requires_grad}
     return {name: value for name, value in encoder.state_dict().items() if name in trainable}
 
 
 def load_trainable_encoder_state(encoder: nn.Module, state: dict[str, Tensor]) -> None:
+    """Load saved weights into only the trainable parameters of an encoder."""
     current = encoder.state_dict()
     unexpected = sorted(set(state) - set(current))
     if unexpected:
