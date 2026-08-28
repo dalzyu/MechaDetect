@@ -17,7 +17,9 @@ def balanced_accuracy(target: torch.Tensor, prediction: torch.Tensor, classes: i
     return float(torch.stack(recalls).mean())
 
 
-def fit_probe(features: torch.Tensor, target: torch.Tensor, train: torch.Tensor, test: torch.Tensor) -> dict[str, float]:
+def fit_probe(
+    features: torch.Tensor, target: torch.Tensor, train: torch.Tensor, test: torch.Tensor
+) -> dict[str, float]:
     classes = int(target.max()) + 1
     mean = features[train].mean(0, keepdim=True)
     std = features[train].std(0, keepdim=True).clamp_min(1e-6)
@@ -40,7 +42,9 @@ def fit_probe(features: torch.Tensor, target: torch.Tensor, train: torch.Tensor,
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Linear shortcut probes over frozen backbone tokens.")
+    parser = argparse.ArgumentParser(
+        description="Linear shortcut probes over frozen backbone tokens."
+    )
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--cache", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)

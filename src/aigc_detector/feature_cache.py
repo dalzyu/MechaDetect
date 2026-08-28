@@ -37,7 +37,9 @@ class CachedFeatureDataset(Dataset[dict[str, Any]]):
         del epoch
 
     def __getitem__(self, index: int) -> dict[str, Any]:
-        return torch.load(self.cache_root / f"{index:05d}.pt", map_location="cpu", weights_only=False)
+        return torch.load(
+            self.cache_root / f"{index:05d}.pt", map_location="cpu", weights_only=False
+        )
 
 
 def collate_cached_features(samples: list[dict[str, Any]]) -> dict[str, Any]:

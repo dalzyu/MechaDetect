@@ -15,6 +15,7 @@ model:
   image_size: 448
   encoder_dim: 1536
   trunk_dim: 512
+  use_token_adapter: true
   branch_dim: 256
   dropout: 0.1
   freeze_encoder: true

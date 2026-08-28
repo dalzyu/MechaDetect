@@ -56,16 +56,22 @@ class EpochWeightedSampler(Sampler[int]):
         self.samples = samples
         self.seed = seed
         self.epoch = 0
+        self.start_offset = 0
 
     def set_epoch(self, epoch: int) -> None:
         self.epoch = epoch
+
+    def set_start_offset(self, offset: int) -> None:
+        if not 0 <= offset <= self.samples:
+            raise ValueError(f"Sampler offset {offset} is outside [0, {self.samples}]")
+        self.start_offset = offset
 
     def __iter__(self):
         generator = torch.Generator().manual_seed(self.seed + self.epoch)
         indices = torch.multinomial(
             self.weights, self.samples, replacement=True, generator=generator
         )
-        return iter(indices.tolist())
+        return iter(indices[self.start_offset :].tolist())
 
     def __len__(self) -> int:
-        return self.samples
+        return self.samples - self.start_offset

@@ -26,7 +26,9 @@ def _load_checkpoint(model: torch.nn.Module, path: Path) -> None:
     incompatible = model.heads.load_state_dict(payload["heads"], strict=False)
     if incompatible.missing_keys:
         raise RuntimeError(f"Checkpoint is missing provenance weights: {incompatible.missing_keys}")
-    model.token_adapter.load_state_dict(payload["token_adapter"])
+    adapter_state = payload.get("token_adapter", {})
+    if model.token_adapter.state_dict() or adapter_state:
+        model.token_adapter.load_state_dict(adapter_state)
     if payload.get("encoder_trainable"):
         if "encoder_trainable_state" in payload:
             load_trainable_encoder_state(model.backbone.encoder, payload["encoder_trainable_state"])

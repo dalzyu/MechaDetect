@@ -23,7 +23,9 @@ def main() -> None:
     model = build_model(config)
     total_parameters = sum(parameter.numel() for parameter in model.parameters())
     backbone_parameters = sum(parameter.numel() for parameter in model.backbone.parameters())
-    trainable_parameters = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
+    trainable_parameters = sum(
+        parameter.numel() for parameter in model.parameters() if parameter.requires_grad
+    )
     if total_parameters >= 2_000_000_000:
         raise RuntimeError(f"Parameter ceiling exceeded: {total_parameters:,}")
 

@@ -19,8 +19,8 @@ from .adaptation import (
 )
 from .config import load_config
 from .dataset import PairedImageDataset, collate_pairs
-from .feature_cache import CachedFeatureDataset, collate_cached_features
 from .ema import ParameterEMA
+from .feature_cache import CachedFeatureDataset, collate_cached_features
 from .losses import LossWeights, provenance_robustness_loss
 from .model import ProvenanceModel
 from .preprocessing import mask_to_token_occupancy
@@ -64,6 +64,7 @@ def build_model(config: dict[str, Any]) -> ProvenanceModel:
         spectral_expert=values.get("spectral_expert", False),
         spectral_image_size=values.get("spectral_image_size", 384),
         spectral_pretrained=values.get("spectral_pretrained", False),
+        use_token_adapter=values.get("use_token_adapter", False),
     )
     trainable_last_layers = int(values.get("trainable_last_layers", 0))
     if trainable_last_layers:
@@ -106,9 +107,7 @@ def build_optimizer(model: ProvenanceModel, config: dict[str, Any]) -> AdamW:
     groups: list[dict[str, Any]] = [{"params": task_parameters, "lr": training["heads_lr"]}]
     if encoder_parameters:
         decay = float(training.get("layerwise_lr_decay", 1.0))
-        last_layer = max(
-            index for index, _ in encoder_parameters if index is not None
-        )
+        last_layer = max(index for index, _ in encoder_parameters if index is not None)
         by_depth: dict[int, list[torch.nn.Parameter]] = {}
         for index, parameter in encoder_parameters:
             depth = 0 if index is None else last_layer - index
@@ -206,7 +205,9 @@ def restore_checkpoint(
     if payload.get("manifest_sha256") != expected_manifest:
         raise RuntimeError("Resume checkpoint was created from a different training manifest")
     model.heads.load_state_dict(payload["heads"])
-    model.token_adapter.load_state_dict(payload["token_adapter"])
+    adapter_state = payload.get("token_adapter", {})
+    if model.token_adapter.state_dict() or adapter_state:
+        model.token_adapter.load_state_dict(adapter_state)
     if model.spectral is not None:
         model.spectral.load_state_dict(payload["spectral"])
         model.aigc_gate.load_state_dict(payload["aigc_gate"])
@@ -260,7 +261,9 @@ def run_training(
             seed=int(config["seed"]),
             chain_length_probabilities={
                 int(length): float(probability)
-                for length, probability in config["transforms"]["chain_length_probabilities"].items()
+                for length, probability in config["transforms"][
+                    "chain_length_probabilities"
+                ].items()
             },
             render_policy=config.get("preprocessing", {}).get("policy", "square_jpeg95"),
         )
@@ -301,7 +304,9 @@ def run_training(
             map_location=device,
             weights_only=False,
         )
-        model.token_adapter.load_state_dict(payload["token_adapter"])
+        adapter_state = payload.get("token_adapter", {})
+        if model.token_adapter.state_dict() or adapter_state:
+            model.token_adapter.load_state_dict(adapter_state)
         model.heads.load_state_dict(payload["heads"])
     optimizer = build_optimizer(model, config)
     weights = _loss_weights(config)
@@ -311,7 +316,8 @@ def run_training(
         and weights.feature_consistency == 0.0
     )
     accumulation = int(training["gradient_accumulation"])
-    total_updates = math.ceil(len(loader) / accumulation) * int(training["epochs"])
+    micro_steps_per_epoch = len(loader)
+    total_updates = math.ceil(micro_steps_per_epoch / accumulation) * int(training["epochs"])
     stop_step = min(total_updates, max_steps) if max_steps is not None else total_updates
     scheduler = build_scheduler(optimizer, total_updates, float(training["warmup_fraction"]))
     ema_config = training.get("ema", {})
@@ -327,7 +333,7 @@ def run_training(
         update_step, start_epoch, resume_micro_step = restore_checkpoint(
             resume_path, model, optimizer, scheduler, ema, manifest, device
         )
-        if resume_micro_step >= len(loader):
+        if resume_micro_step >= micro_steps_per_epoch:
             start_epoch += 1
             resume_micro_step = 0
         print(
@@ -350,10 +356,20 @@ def run_training(
     model.train()
     for epoch in range(start_epoch, int(training["epochs"])):
         dataset.set_epoch(epoch)
+        resumed_micro_steps = resume_micro_step if epoch == start_epoch else 0
         if isinstance(sampler, EpochWeightedSampler):
             sampler.set_epoch(epoch)
-        for micro_step, raw_batch in enumerate(loader, start=1):
-            if epoch == start_epoch and micro_step <= resume_micro_step:
+            sampler.set_start_offset(resumed_micro_steps * int(training["physical_batch_size"]))
+        enumerate_start = (
+            resumed_micro_steps + 1 if isinstance(sampler, EpochWeightedSampler) else 1
+        )
+        last_micro_step = resumed_micro_steps + len(loader)
+        for micro_step, raw_batch in enumerate(loader, start=enumerate_start):
+            if (
+                not isinstance(sampler, EpochWeightedSampler)
+                and epoch == start_epoch
+                and micro_step <= resume_micro_step
+            ):
                 continue
             batch = _to_device(raw_batch, device)
             autocast = (
@@ -365,7 +381,9 @@ def run_training(
                 teacher_probabilities = None
                 if cache_root:
                     original_tokens = [tokens.to(device) for tokens in batch["original_tokens"]]
-                    transformed_tokens = [tokens.to(device) for tokens in batch["transformed_tokens"]]
+                    transformed_tokens = [
+                        tokens.to(device) for tokens in batch["transformed_tokens"]
+                    ]
                     if ema is not None and update_step >= int(ema_config.get("start_update", 0)):
                         with ema.average_parameters(model), torch.no_grad():
                             teacher_probabilities = model.forward_tokens(
@@ -412,7 +430,7 @@ def run_training(
                 window_components[name] = window_components.get(name, 0.0) + value.detach().item()
             window_micro_steps += 1
 
-            if micro_step % accumulation == 0 or micro_step == len(loader):
+            if micro_step % accumulation == 0 or micro_step == last_micro_step:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), training["gradient_clip_norm"])
                 optimizer.step()
                 scheduler.step()
@@ -470,7 +488,7 @@ def run_training(
         manifest,
         ema,
         max(0, int(training["epochs"]) - 1),
-        len(loader),
+        micro_steps_per_epoch,
     )
 
 

@@ -139,3 +139,11 @@ def test_epoch_sampler_reproduces_order_without_stored_iterator_state() -> None:
     assert first == list(sampler)
     sampler.set_epoch(4)
     assert first != list(sampler)
+
+
+def test_epoch_sampler_skips_resumed_samples_without_loading_them() -> None:
+    sampler = EpochWeightedSampler(torch.tensor([0.2, 0.3, 0.5]), samples=20, seed=42)
+    full = list(sampler)
+    sampler.set_start_offset(7)
+    assert list(sampler) == full[7:]
+    assert len(sampler) == 13

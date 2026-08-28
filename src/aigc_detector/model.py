@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from math import ceil
 
 import torch
-import torch.utils.checkpoint as checkpointing
 import torch.nn.functional as F
+import torch.utils.checkpoint as checkpointing
 from PIL import Image
 from torch import Tensor, nn
 
@@ -299,9 +299,7 @@ class DINOv3VisionBackbone(nn.Module):
         self.processor = AutoImageProcessor.from_pretrained(
             encoder_id, revision=revision, size={"height": image_size, "width": image_size}
         )
-        self.encoder = DINOv3ViTModel.from_pretrained(
-            encoder_id, revision=revision, dtype=dtype
-        )
+        self.encoder = DINOv3ViTModel.from_pretrained(encoder_id, revision=revision, dtype=dtype)
         self.set_frozen(freeze)
 
     @property
@@ -350,9 +348,7 @@ class PESpatialVisionBackbone(nn.Module):
             from core.vision_encoder.pe import VisionTransformer
             from huggingface_hub import hf_hub_download
         except ImportError as exc:  # pragma: no cover
-            raise RuntimeError(
-                "PE-Spatial requires perception_models and huggingface-hub"
-            ) from exc
+            raise RuntimeError("PE-Spatial requires perception_models and huggingface-hub") from exc
         weights = hf_hub_download(
             encoder_id,
             filename="PE-Spatial-G14-448.pt",
@@ -413,9 +409,7 @@ class PESpatialVisionBackbone(nn.Module):
                 (self.image_size, self.image_size), Image.Resampling.BILINEAR
             )
             data = torch.frombuffer(bytearray(resized.tobytes()), dtype=torch.uint8)
-            arrays.append(
-                data.reshape(self.image_size, self.image_size, 3).permute(2, 0, 1)
-            )
+            arrays.append(data.reshape(self.image_size, self.image_size, 3).permute(2, 0, 1))
         pixels = torch.stack(arrays).to(
             device=self.device, dtype=next(self.encoder.parameters()).dtype
         )
@@ -477,6 +471,7 @@ class ProvenanceModel(nn.Module):
         spectral_expert: bool = False,
         spectral_image_size: int = 384,
         spectral_pretrained: bool = False,
+        use_token_adapter: bool = False,
     ) -> None:
         super().__init__()
         self.backbone = build_backbone(
@@ -487,12 +482,17 @@ class ProvenanceModel(nn.Module):
             image_size=image_size,
             freeze=freeze_encoder,
         )
-        self.token_adapter = nn.Sequential(
-            nn.LayerNorm(encoder_dim),
-            nn.Linear(encoder_dim, trunk_dim),
+        self.token_adapter = (
+            nn.Sequential(
+                nn.LayerNorm(encoder_dim),
+                nn.Linear(encoder_dim, trunk_dim),
+            )
+            if use_token_adapter
+            else nn.Identity()
         )
+        head_dim = trunk_dim if use_token_adapter else encoder_dim
         self.heads = ProvenanceHead(
-            encoder_dim=trunk_dim,
+            encoder_dim=head_dim,
             trunk_dim=trunk_dim,
             branch_dim=branch_dim,
             dropout=dropout,

@@ -64,6 +64,26 @@ def _finite(value: float) -> float | None:
 def summarize(target: torch.Tensor, probabilities: torch.Tensor) -> dict[str, object]:
     prediction = probabilities.argmax(-1)
     matrix = confusion_matrix(target, prediction)
+    binary_target = target == int(Provenance.FULLY_AIGC)
+    binary_prediction = probabilities[:, 2] >= 0.5
+    true_positive = int((binary_target & binary_prediction).sum())
+    false_negative = int((binary_target & ~binary_prediction).sum())
+    true_negative = int((~binary_target & ~binary_prediction).sum())
+    false_positive = int((~binary_target & binary_prediction).sum())
+    positive_total = true_positive + false_negative
+    negative_total = true_negative + false_positive
+    binary_recall = true_positive / positive_total if positive_total else None
+    binary_specificity = true_negative / negative_total if negative_total else None
+    binary_precision = (
+        true_positive / (true_positive + false_positive) if true_positive + false_positive else None
+    )
+    binary_f1 = (
+        2 * binary_precision * binary_recall / (binary_precision + binary_recall)
+        if binary_precision is not None
+        and binary_recall is not None
+        and binary_precision + binary_recall
+        else None
+    )
     non_aigc = target != int(Provenance.FULLY_AIGC)
     authentic_total = int((target == int(Provenance.AUTHENTIC)).sum())
     authentic_correct = int(
@@ -72,6 +92,20 @@ def summarize(target: torch.Tensor, probabilities: torch.Tensor) -> dict[str, ob
     return {
         "n": len(target),
         "accuracy": float((prediction == target).float().mean()),
+        "binary_accuracy": (true_positive + true_negative) / len(target),
+        "binary_balanced_accuracy": (
+            (binary_recall + binary_specificity) / 2
+            if binary_recall is not None and binary_specificity is not None
+            else None
+        ),
+        "binary_recall": binary_recall,
+        "binary_specificity": binary_specificity,
+        "binary_precision": binary_precision,
+        "binary_f1": binary_f1,
+        "binary_confusion_matrix": [
+            [true_negative, false_positive],
+            [false_negative, true_positive],
+        ],
         "balanced_accuracy": balanced_accuracy(matrix),
         "macro_f1": macro_f1(matrix),
         "fully_aigc_auroc": _finite(
@@ -141,6 +175,11 @@ def main() -> None:
     parser.add_argument("--limit", type=int)
     parser.add_argument("--per-class", type=int)
     parser.add_argument("--batch-size", type=int, default=2)
+    parser.add_argument(
+        "--state",
+        type=Path,
+        help="Append completed rows here so a long evaluation can resume after interruption",
+    )
     args = parser.parse_args()
 
     project_root = args.config.resolve().parent.parent
@@ -171,9 +210,56 @@ def main() -> None:
     targets = []
     output_rows = []
     records = frame.to_dict(orient="records")
+    state_path = args.state
+    completed: dict[int, dict[str, object]] = {}
+    state_handle = None
+    if state_path is not None and state_path.exists():
+        with state_path.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                item = json.loads(line)
+                if "_meta" in item:
+                    expected = {
+                        "manifest": str(args.manifest.resolve()),
+                        "conditions": list(conditions),
+                        "rows": len(records),
+                    }
+                    if item["_meta"] != expected:
+                        raise RuntimeError("Evaluation state does not match this manifest/config")
+                else:
+                    completed[int(item["_index"])] = item["row"]
+        for index in sorted(completed):
+            row = completed[index]
+            output_rows.append(row)
+            target = PROVENANCE_NAMES.index(str(row["target"]))
+            targets.append(target)
+            for condition in conditions:
+                condition_probabilities[condition].append(
+                    torch.tensor(row["probabilities"][condition], dtype=torch.float32)
+                )
+    if state_path is not None:
+        state_path.parent.mkdir(parents=True, exist_ok=True)
+        state_handle = state_path.open("a", encoding="utf-8")
+        if not completed:
+            state_handle.write(
+                json.dumps(
+                    {
+                        "_meta": {
+                            "manifest": str(args.manifest.resolve()),
+                            "conditions": list(conditions),
+                            "rows": len(records),
+                        }
+                    }
+                )
+                + "\n"
+            )
+            state_handle.flush()
     for batch_start in range(0, len(records), args.batch_size):
         batch_rows = records[batch_start : batch_start + args.batch_size]
+        batch_indices = range(batch_start, batch_start + len(batch_rows))
+        if state_path is not None and all(index in completed for index in batch_indices):
+            continue
         rendered_images = []
+        new_state_rows = []
         for offset, row in enumerate(batch_rows):
             path = Path(str(row["image_path"]))
             if not path.is_absolute():
@@ -203,15 +289,19 @@ def main() -> None:
             }
             target = int(parse_provenance(row["label"], str(row["dataset"])))
             targets.append(target)
-            output_rows.append(
-                {
-                    "image_path": str(row["image_path"]),
-                    "dataset": str(row["dataset"]),
-                    "generator": str(row.get("generator_family", row.get("generator", ""))),
-                    "target": PROVENANCE_NAMES[target],
-                    "probabilities": row_probabilities,
-                }
-            )
+            output_row = {
+                "image_path": str(row["image_path"]),
+                "dataset": str(row["dataset"]),
+                "generator": str(row.get("generator_family", row.get("generator", ""))),
+                "target": PROVENANCE_NAMES[target],
+                "probabilities": row_probabilities,
+            }
+            output_rows.append(output_row)
+            new_state_rows.append({"_index": batch_start + offset, "row": output_row})
+        if state_handle is not None:
+            for item in new_state_rows:
+                state_handle.write(json.dumps(item) + "\n")
+            state_handle.flush()
         progress = min(batch_start + args.batch_size, len(records))
         if progress % 50 < args.batch_size or progress == len(frame):
             print(f"evaluated {progress}/{len(frame)}", flush=True)
@@ -288,6 +378,8 @@ def main() -> None:
     metrics["three_view"] = args.three_view
     metrics["checkpoint"] = str(args.checkpoint)
     metrics["rows"] = output_rows
+    if state_handle is not None:
+        state_handle.close()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     print(json.dumps(metrics["conditions"], indent=2))

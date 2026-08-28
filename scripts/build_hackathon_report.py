@@ -24,14 +24,16 @@ def main() -> None:
         "",
         "## Clean and transformed performance",
         "",
-        "| Condition | Fully-AIGC AUROC | AUROC drop | Accuracy | Macro-F1 |",
+        "| Condition | Fully-AIGC AUROC | AUROC drop | Binary accuracy | "
+        "Binary balanced accuracy |",
         "|---|---:|---:|---:|---:|",
     ]
     for name, values in conditions.items():
         lines.append(
             f"| {name} | {percent(values['fully_aigc_auroc'])} | "
             f"{percent(values['fully_aigc_auroc_drop'])} | "
-            f"{percent(values['accuracy'])} | {percent(values['macro_f1'])} |"
+            f"{percent(values['binary_accuracy'])} | "
+            f"{percent(values['binary_balanced_accuracy'])} |"
         )
 
     lines.extend(
