@@ -72,15 +72,20 @@ def main() -> None:
 
     with torch.inference_mode(), torch.autocast(device_type="cuda", dtype=torch.bfloat16):
         for batch in loader:
-            sequences = model.backbone(batch["original"])
-            for index, image, mask, provenance, tokens in zip(
-                batch["indices"],
-                batch["original"],
-                batch["mask"],
-                batch["provenance"],
-                sequences,
-                strict=True,
-            ):
+            missing = [
+                i for i, idx in enumerate(batch["indices"])
+                if not (args.output / f"{idx:05d}.pt").exists()
+            ]
+            if not missing:
+                processed += len(batch["indices"])
+                continue
+            images = [batch["original"][i] for i in missing]
+            sequences = model.backbone(images)
+            for i, tokens in zip(missing, sequences, strict=True):
+                index = batch["indices"][i]
+                mask = batch["mask"][i]
+                provenance = batch["provenance"][i]
+                image = batch["original"][i]
                 target = (
                     None
                     if mask is None
