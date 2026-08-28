@@ -1,0 +1,53 @@
+seed: 42
+
+paths:
+  data_root: ${TECHJAM_DATA_ROOT}
+  train_manifest: splits/train_canonical.csv
+  val_manifest: splits/val_canonical.csv
+  output_root: ${TECHJAM_OUTPUT_ROOT}
+
+model:
+  # Standalone extraction of the 31B checkpoint's 569.6M vision tower.
+  # The revision is pinned until we independently extract/verify official weights.
+  encoder_id: rnagabh/gemma4-vision-encoder
+  encoder_revision: 3a8691c3fe6dc28858f5b74d54f4afd0b4cb260c
+  visual_tokens: 1120
+  encoder_dim: 1152
+  trunk_dim: 512
+  branch_dim: 256
+  dropout: 0.1
+  freeze_encoder: true
+  trainable_last_layers: 0
+  gradient_checkpointing: true
+
+training:
+  stage: sanity_canonical_chains
+  epochs: 3
+  physical_batch_size: 1
+  gradient_accumulation: 16
+  num_workers: 0
+  precision: bf16
+  encoder_lr: 1.0e-5
+  heads_lr: 3.0e-4
+  weight_decay: 0.01
+  gradient_clip_norm: 1.0
+  warmup_fraction: 0.05
+
+loss:
+  provenance_original: 1.0
+  provenance_transformed: 1.0
+  prediction_consistency: 0.5
+  feature_consistency: 0.1
+
+transforms:
+  families: [jpeg, blur, resize, noise, color, crop]
+  chain_length_probabilities:
+    1: 0.4
+    2: 0.4
+    3: 0.2
+  jpeg: [90, 70, 50, 30]
+  blur: [0.5, 1.0, 2.0]
+  resize: [0.5, 0.25]
+  noise: [0.02, 0.05, 0.10]
+  color: [0.2]
+  crop: [0.8]

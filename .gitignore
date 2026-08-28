@@ -1,0 +1,33 @@
+.venv/
+.env
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Local data and generated artifacts
+data/*
+!data/README.md
+metadata/*.csv
+splits/*.csv
+splits/**/*.csv
+checkpoints/
+artifacts/
+cache/
+debug_transforms/
+validation/
+predictions.json
+*.pt
+*.pth
+*.ckpt
+
+# Local reference material; the archive exceeds GitHub's normal file limit
+TikTok TechJam 2026 Information Document.zip
+
+# Model and dataset caches must live outside the repository
+.cache/
+
+# Private evaluation samples and local reference extraction
+newer image model data(do not use for training)/
+tmp/

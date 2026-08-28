@@ -1,0 +1,41 @@
+{
+  "seed": 42,
+  "manifest_sha256": "9f049f716d7e98495c3dbb5a6bb9ccaf08037f6fc052b454e0886c669115ca56",
+  "selected_training_rows": 1799,
+  "all_rows": 2250,
+  "warnings": [
+    "sid/authentic: need 10000, found 600",
+    "sid/tampered: need 10000, found 600",
+    "sid/fully_aigc: need 10000, found 599",
+    "wildfake/authentic: need 7500, found 0",
+    "wildfake/fully_aigc: need 7500, found 0",
+    "diffusionforensics/authentic: need 7500, found 0",
+    "diffusionforensics/fully_aigc: need 7500, found 0"
+  ],
+  "counts": {
+    "train": {
+      "SID-Set/authentic": 600,
+      "SID-Set/fully_aigc": 599,
+      "SID-Set/tampered": 600
+    },
+    "validation": {
+      "SID-Set/authentic": 150,
+      "SID-Set/fully_aigc": 151,
+      "SID-Set/tampered": 150
+    },
+    "test": {},
+    "test_unseen": {}
+  },
+  "generator_registry": [
+    {
+      "dataset": "SID-Set",
+      "generator_family": "sid_set_unknown",
+      "split": "train"
+    },
+    {
+      "dataset": "SID-Set",
+      "generator_family": "sid_set_unknown",
+      "split": "validation"
+    }
+  ]
+}

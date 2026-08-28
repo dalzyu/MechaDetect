@@ -1,0 +1,66 @@
+seed: 42
+
+paths:
+  data_root: ${TECHJAM_DATA_ROOT}
+  train_manifest: splits/performance/ablation12k.csv
+  val_manifest: splits/performance/validation.csv
+  output_root: ${TECHJAM_OUTPUT_ROOT}
+
+preprocessing:
+  policy: square_jpeg95
+  version: 2
+
+model:
+  encoder_id: rnagabh/gemma4-vision-encoder
+  encoder_revision: 3a8691c3fe6dc28858f5b74d54f4afd0b4cb260c
+  visual_tokens: 1120
+  encoder_dim: 1152
+  trunk_dim: 512
+  branch_dim: 256
+  dropout: 0.1
+  freeze_encoder: true
+  trainable_last_layers: 0
+  gradient_checkpointing: true
+  spectral_expert: true
+  spectral_image_size: 384
+  spectral_pretrained: true
+  lora:
+    enabled: true
+    rank: 8
+    alpha: 16
+    dropout: 0.05
+
+training:
+  stage: combined_lora_single_transform
+  epochs: 1
+  physical_batch_size: 2
+  gradient_accumulation: 8
+  num_workers: 0
+  precision: bf16
+  encoder_lr: 1.0e-4
+  heads_lr: 1.0e-4
+  weight_decay: 0.01
+  gradient_clip_norm: 1.0
+  warmup_fraction: 0.05
+  generator_balanced_sampler: true
+  checkpoint_interval: 50
+  ema:
+    enabled: true
+    decay: 0.999
+    confidence_threshold: 0.80
+    start_update: 25
+
+loss:
+  provenance_original: 1.0
+  provenance_transformed: 1.0
+  prediction_consistency: 0.5
+  feature_consistency: 0.0
+  mask_focal: 0.5
+  mask_dice: 0.5
+  ema_consistency: 0.5
+
+transforms:
+  families: [jpeg, blur, resize, noise, color, crop]
+  chain_length_probabilities:
+    0: 0.25
+    1: 0.75
