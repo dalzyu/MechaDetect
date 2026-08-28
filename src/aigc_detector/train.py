@@ -269,8 +269,22 @@ def run_training(
         model.heads.to(device)
     else:
         model.to(device)
+    initial_checkpoint = config["paths"].get("initial_checkpoint")
+    if initial_checkpoint and resume_path is None:
+        payload = torch.load(
+            resolve_project_path(initial_checkpoint, project_root),
+            map_location=device,
+            weights_only=False,
+        )
+        model.token_adapter.load_state_dict(payload["token_adapter"])
+        model.heads.load_state_dict(payload["heads"])
     optimizer = build_optimizer(model, config)
     weights = _loss_weights(config)
+    clean_only = (
+        weights.provenance_transformed == 0.0
+        and weights.prediction_consistency == 0.0
+        and weights.feature_consistency == 0.0
+    )
     accumulation = int(training["gradient_accumulation"])
     total_updates = math.ceil(len(loader) / accumulation) * int(training["epochs"])
     stop_step = min(total_updates, max_steps) if max_steps is not None else total_updates
@@ -333,7 +347,9 @@ def run_training(
                                 original_tokens
                             ).probabilities.detach()
                     original = model.forward_tokens(original_tokens)
-                    transformed = model.forward_tokens(transformed_tokens)
+                    transformed = (
+                        original if clean_only else model.forward_tokens(transformed_tokens)
+                    )
                     token_mask_targets = [
                         None if target is None else target.to(device)
                         for target in batch["token_mask_targets"]
@@ -343,7 +359,7 @@ def run_training(
                         with ema.average_parameters(model), torch.no_grad():
                             teacher_probabilities = model(batch["original"]).probabilities.detach()
                     original = model(batch["original"])
-                    transformed = model(batch["transformed"])
+                    transformed = original if clean_only else model(batch["transformed"])
                     token_mask_targets = [
                         None
                         if mask is None

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from math import ceil
 
 import torch
+import torch.utils.checkpoint as checkpointing
 import torch.nn.functional as F
 from PIL import Image
 from torch import Tensor, nn
@@ -385,7 +386,25 @@ class PESpatialVisionBackbone(nn.Module):
                 parameter.requires_grad = True
 
     def enable_gradient_checkpointing(self) -> None:
-        raise RuntimeError("PE-Spatial gradient checkpointing is not supported safely upstream")
+        transformer = self.encoder.transformer
+        transformer.grad_checkpointing = True
+
+        def checkpointed_forward(
+            hidden: Tensor, attention_mask: Tensor | None = None, layer_idx: int = -1
+        ) -> Tensor:
+            stop_idx = (transformer.layers + layer_idx) % transformer.layers
+            for index, block in enumerate(transformer.resblocks):
+                hidden = checkpointing.checkpoint(
+                    block,
+                    hidden,
+                    attention_mask,
+                    use_reentrant=False,
+                )
+                if index == stop_idx:
+                    break
+            return hidden
+
+        transformer.forward = checkpointed_forward
 
     def forward(self, images: Sequence[Image.Image]) -> list[Tensor]:
         arrays = []
