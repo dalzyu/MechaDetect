@@ -12,11 +12,22 @@ from aigc_detector.preprocessing import mask_to_token_occupancy
 from aigc_detector.runtime import load_local_environment, resolve_project_path, seed_everything
 from aigc_detector.train import build_model
 
-class IndexedShard(Dataset):
-    def __init__(self, dataset: PairedImageDataset, shard_index: int, num_shards: int) -> None:
-        self.dataset = dataset
-        self.indices = list(range(shard_index, len(dataset), num_shards))
 
+class IndexedShard(Dataset):
+    def __init__(
+        self,
+        dataset: PairedImageDataset,
+        shard_index: int,
+        num_shards: int,
+        cache_dir: Path | None = None,
+    ) -> None:
+        self.dataset = dataset
+        all_indices = list(range(shard_index, len(dataset), num_shards))
+        if cache_dir is not None and cache_dir.exists():
+            existing = {int(p.stem) for p in cache_dir.glob("*.pt")}
+            self.indices = [idx for idx in all_indices if idx not in existing]
+        else:
+            self.indices = all_indices
     def __len__(self) -> int:
         return len(self.indices)
 
@@ -30,8 +41,6 @@ def collate_indexed(samples):
     batch = collate_pairs(list(records))
     batch["indices"] = list(indices)
     return batch
-
-
 
 
 def main() -> None:
@@ -56,7 +65,9 @@ def main() -> None:
     )
     if not 0 <= args.shard_index < args.num_shards:
         raise ValueError("shard-index must be in [0, num-shards)")
-    shard = IndexedShard(dataset, args.shard_index, args.num_shards)
+    args.output.mkdir(parents=True, exist_ok=True)
+    shard = IndexedShard(dataset, args.shard_index, args.num_shards, cache_dir=args.output)
+    print(f"shard {args.shard_index}/{args.num_shards} missing items to compute: {len(shard)}", flush=True)
     loader = DataLoader(
         shard,
         batch_size=int(config["training"].get("cache_batch_size", 1)),
@@ -73,7 +84,8 @@ def main() -> None:
     with torch.inference_mode(), torch.autocast(device_type="cuda", dtype=torch.bfloat16):
         for batch in loader:
             missing = [
-                i for i, idx in enumerate(batch["indices"])
+                i
+                for i, idx in enumerate(batch["indices"])
                 if not (args.output / f"{idx:05d}.pt").exists()
             ]
             if not missing:
@@ -89,7 +101,9 @@ def main() -> None:
                 target = (
                     None
                     if mask is None
-                    else mask_to_token_occupancy(mask, tokens.shape[0], image.size).to(torch.bfloat16)
+                    else mask_to_token_occupancy(mask, tokens.shape[0], image.size).to(
+                        torch.bfloat16
+                    )
                 )
                 torch.save(
                     {
