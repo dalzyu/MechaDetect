@@ -84,17 +84,42 @@ def build_model(config: dict[str, Any]) -> ProvenanceModel:
     return model
 
 
+def _encoder_layer_index(name: str) -> int | None:
+    for marker in (".layers.", ".resblocks.", ".layer."):
+        if marker in name:
+            value = name.split(marker, 1)[1].split(".", 1)[0]
+            return int(value)
+    return None
+
+
 def build_optimizer(model: ProvenanceModel, config: dict[str, Any]) -> AdamW:
     training = config["training"]
-    encoder_parameters = []
+    encoder_parameters: list[tuple[int | None, torch.nn.Parameter]] = []
     task_parameters = []
     for name, parameter in model.named_parameters():
         if not parameter.requires_grad:
             continue
-        (encoder_parameters if name.startswith("backbone.") else task_parameters).append(parameter)
+        if name.startswith("backbone."):
+            encoder_parameters.append((_encoder_layer_index(name), parameter))
+        else:
+            task_parameters.append(parameter)
     groups: list[dict[str, Any]] = [{"params": task_parameters, "lr": training["heads_lr"]}]
     if encoder_parameters:
-        groups.append({"params": encoder_parameters, "lr": training["encoder_lr"]})
+        decay = float(training.get("layerwise_lr_decay", 1.0))
+        last_layer = max(
+            index for index, _ in encoder_parameters if index is not None
+        )
+        by_depth: dict[int, list[torch.nn.Parameter]] = {}
+        for index, parameter in encoder_parameters:
+            depth = 0 if index is None else last_layer - index
+            by_depth.setdefault(depth, []).append(parameter)
+        groups.extend(
+            {
+                "params": parameters,
+                "lr": float(training["encoder_lr"]) * decay**depth,
+            }
+            for depth, parameters in sorted(by_depth.items())
+        )
     return AdamW(groups, weight_decay=training["weight_decay"])
 
 

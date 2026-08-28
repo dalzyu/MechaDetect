@@ -29,6 +29,7 @@ training:
   num_workers: 4
   precision: bf16
   encoder_lr: 3.0e-6
+  layerwise_lr_decay: 0.85
   heads_lr: 1.0e-4
   weight_decay: 0.01
   gradient_clip_norm: 1.0
