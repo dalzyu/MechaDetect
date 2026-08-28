@@ -1,0 +1,5337 @@
+{
+  "conditions": {
+    "clean": {
+      "n": 400,
+      "accuracy": 0.550000011920929,
+      "balanced_accuracy": 0.3666666666666667,
+      "macro_f1": 0.4058602998654048,
+      "fully_aigc_auroc": 0.997837483882904,
+      "tamper_auroc": null,
+      "authentic_recall": 0.135,
+      "confusion_matrix": [
+        [
+          27,
+          172,
+          1
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          7,
+          193
+        ]
+      ],
+      "fully_aigc_auroc_95ci": [
+        0.9955094456672668,
+        0.9994993805885315
+      ],
+      "fully_aigc_auroc_drop": 0.0
+    }
+  },
+  "per_dataset": {
+    "OrganizerDemo-COCO-val2017": {
+      "n": 200,
+      "accuracy": 0.13500000536441803,
+      "balanced_accuracy": 0.045000000000000005,
+      "macro_f1": 0.07929515341917674,
+      "fully_aigc_auroc": null,
+      "tamper_auroc": null,
+      "authentic_recall": 0.135,
+      "confusion_matrix": [
+        [
+          27,
+          172,
+          1
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "OrganizerDemo-WildFake": {
+      "n": 200,
+      "accuracy": 0.9649999737739563,
+      "balanced_accuracy": 0.32166666666666666,
+      "macro_f1": 0.32739609479904175,
+      "fully_aigc_auroc": null,
+      "tamper_auroc": null,
+      "authentic_recall": null,
+      "confusion_matrix": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          7,
+          193
+        ]
+      ]
+    }
+  },
+  "per_aigc_generator": {
+    "dalle3_advanced": {
+      "n": 400,
+      "accuracy": 0.550000011920929,
+      "balanced_accuracy": 0.3666666666666667,
+      "macro_f1": 0.4058602998654048,
+      "fully_aigc_auroc": 0.997837483882904,
+      "tamper_auroc": null,
+      "authentic_recall": 0.135,
+      "confusion_matrix": [
+        [
+          27,
+          172,
+          1
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          7,
+          193
+        ]
+      ]
+    }
+  },
+  "selection_summary": {
+    "mean_generator_auroc": 0.997837483882904,
+    "worst_generator_auroc": 0.997837483882904,
+    "mean_transformed_auroc": null,
+    "worst_transformed_auroc": null,
+    "secondary_chain_auroc": null
+  },
+  "efficiency": {
+    "images": 400,
+    "views_on_clean": 1,
+    "conditions": 1,
+    "inference_seconds": 35.42253323298064,
+    "images_per_second": 11.292247151527109,
+    "milliseconds_per_image": 88.5563330824516,
+    "peak_allocated_vram_gib": 1.6622843742370605
+  },
+  "three_view": false,
+  "checkpoint": "/workspace/outputs/bakeoff_frozen_dinov3/checkpoint-step-188.pt",
+  "rows": [
+    {
+      "image_path": "organizer_demo/coco/val2017/000000170545.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.12053520232439041,
+          0.8768331408500671,
+          0.0026316740550100803
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000463647.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3935850262641907,
+          0.6060349941253662,
+          0.0003799845289904624
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000453166.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8718840479850769,
+          0.09189588576555252,
+          0.03622005507349968
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000323709.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.01540657039731741,
+          0.9834239482879639,
+          0.0011695103021338582
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000394328.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.015036235563457012,
+          0.9597849249839783,
+          0.02517884224653244
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000541291.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6834589242935181,
+          0.297417014837265,
+          0.01912403479218483
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000050331.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8909761309623718,
+          0.0953870341181755,
+          0.013636835850775242
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000478721.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.018206287175416946,
+          0.9786210060119629,
+          0.003172682598233223
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000509403.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.12257115542888641,
+          0.8182185888290405,
+          0.05921025574207306
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000572956.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.38654959201812744,
+          0.6128976345062256,
+          0.000552778656128794
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000404839.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.03806892782449722,
+          0.9516028761863708,
+          0.010328153148293495
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000227765.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.08130519092082977,
+          0.916063129901886,
+          0.0026316740550100803
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000125072.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.030884305015206337,
+          0.9312232732772827,
+          0.037892427295446396
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000360951.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.04452996328473091,
+          0.9520934224128723,
+          0.0033766122069209814
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000447169.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.01567569375038147,
+          0.9698207378387451,
+          0.014503579586744308
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000133343.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.2914353907108307,
+          0.7073580622673035,
+          0.0012065897462889552
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000531135.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.006238684523850679,
+          0.9552950859069824,
+          0.0384661927819252
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000390902.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.37509024143218994,
+          0.6208395957946777,
+          0.00407013762742281
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000325991.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.03709932789206505,
+          0.9568031430244446,
+          0.0060975621454417706
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000199310.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.2175043523311615,
+          0.7591648697853088,
+          0.023330770432949066
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000308587.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.013998769223690033,
+          0.9813916683197021,
+          0.004609572235494852
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000108244.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9387289881706238,
+          0.060955971479415894,
+          0.0003150386910419911
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000035279.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.07917509227991104,
+          0.9203806519508362,
+          0.0004442183708306402
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000329319.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8193997740745544,
+          0.165175661444664,
+          0.015424552373588085
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000015338.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.029298819601535797,
+          0.9702428579330444,
+          0.000458312890259549
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000291664.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.23121680319309235,
+          0.7581307291984558,
+          0.01065251138061285
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000285894.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.01494611892849207,
+          0.9843217134475708,
+          0.0007321811863221228
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000027620.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.08261459320783615,
+          0.9163848757743835,
+          0.0010005044750869274
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000574702.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3982885479927063,
+          0.6014155149459839,
+          0.0002959570847451687
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000431545.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.012190265581011772,
+          0.9683903455734253,
+          0.019419347867369652
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000568710.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.12931086122989655,
+          0.8699795007705688,
+          0.0007096704212017357
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000558854.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.021281762048602104,
+          0.9784570336341858,
+          0.0002611903182696551
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000509699.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.03777950257062912,
+          0.9592394828796387,
+          0.0029810327105224133
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000184324.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.10821893811225891,
+          0.864611804485321,
+          0.027169233188033104
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000302536.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.13816307485103607,
+          0.8529895544052124,
+          0.008847354911267757
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000186637.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.010969368740916252,
+          0.9874328374862671,
+          0.001597845577634871
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000333402.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.0036445227451622486,
+          0.9794405698776245,
+          0.016914913430809975
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000038070.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.06019487604498863,
+          0.9126359224319458,
+          0.027169233188033104
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000323151.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.04132230207324028,
+          0.9553011059761047,
+          0.0033766122069209814
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000218249.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.657904326915741,
+          0.341316282749176,
+          0.0007793660624884069
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000309391.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.03112098202109337,
+          0.9681468605995178,
+          0.0007321811863221228
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000388903.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.14996422827243805,
+          0.8496052026748657,
+          0.00043055712012574077
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000190236.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.0663827508687973,
+          0.9308162927627563,
+          0.0028009270317852497
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000140076.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.49565044045448303,
+          0.5021668076515198,
+          0.002182716503739357
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000189078.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.28609901666641235,
+          0.7136555910110474,
+          0.00024536947603337467
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000408112.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.17971357703208923,
+          0.8181037306785583,
+          0.002182716503739357
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000190923.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.04514352232217789,
+          0.9502468705177307,
+          0.004609572235494852
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000522156.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.028304927051067352,
+          0.9670854806900024,
+          0.004609572235494852
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000150726.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.008149290457367897,
+          0.9718272686004639,
+          0.020023440942168236
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000351096.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.016834469512104988,
+          0.9784103035926819,
+          0.004755199886858463
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000562229.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.013496043160557747,
+          0.9761757850646973,
+          0.010328153148293495
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000486438.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.024672668427228928,
+          0.9702669978141785,
+          0.005060331895947456
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000575500.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5363398790359497,
+          0.4569673240184784,
+          0.006692850962281227
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000106235.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.06748518347740173,
+          0.931603729724884,
+          0.0009110511746257544
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000357748.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.04103407263755798,
+          0.9486377835273743,
+          0.010328153148293495
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000127660.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.1890808492898941,
+          0.8085960149765015,
+          0.002323162741959095
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000018737.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6771367192268372,
+          0.3211086094379425,
+          0.0017546144081279635
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000290833.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.11062334477901459,
+          0.8838217258453369,
+          0.005554925184696913
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000407650.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.03683607652783394,
+          0.9065114855766296,
+          0.05665242671966553
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000449312.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.0073431734926998615,
+          0.9922998547554016,
+          0.0003569706459529698
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000088951.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.07044681906700134,
+          0.9279553294181824,
+          0.001597845577634871
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000347544.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.037854354828596115,
+          0.9462392330169678,
+          0.01590639166533947
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000262487.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.0140379648655653,
+          0.9538613557815552,
+          0.03210070729255676
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000542073.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.046014465391635895,
+          0.924225389957428,
+          0.029760092496871948
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000430056.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.013193892315030098,
+          0.984623372554779,
+          0.002182716503739357
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000391140.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.4756990075111389,
+          0.5239859819412231,
+          0.0003150386910419911
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000249643.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.06457303464412689,
+          0.9341821074485779,
+          0.0012448433553799987
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000146358.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5094806551933289,
+          0.48496440052986145,
+          0.005554925184696913
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000490171.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.04833735153079033,
+          0.9410101771354675,
+          0.01065251138061285
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000557172.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.0660325288772583,
+          0.9259054660797119,
+          0.008061991073191166
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000172946.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3277290165424347,
+          0.6594497561454773,
+          0.012821214273571968
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000579655.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6360794901847839,
+          0.36384567618370056,
+          7.484622619813308e-05
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000314709.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.01833641715347767,
+          0.9703318476676941,
+          0.011331753805279732
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000055002.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.06681177765130997,
+          0.9080093502998352,
+          0.02517884224653244
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000032334.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.4352279305458069,
+          0.5643278360366821,
+          0.0004442183708306402
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000259382.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.015839606523513794,
+          0.979961633682251,
+          0.004198795650154352
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000564280.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.05103319138288498,
+          0.9479970335960388,
+          0.0009697519708424807
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000028993.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.06359221786260605,
+          0.9344810843467712,
+          0.0019267346942797303
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000432898.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.17871873080730438,
+          0.8199562430381775,
+          0.0013250223128125072
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000048555.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.02692272514104843,
+          0.891557514667511,
+          0.08151976019144058
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000170278.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.877098798751831,
+          0.11870241165161133,
+          0.004198795650154352
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000439525.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.43865999579429626,
+          0.558867335319519,
+          0.0024726230185478926
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000273617.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.1761767715215683,
+          0.8210222721099854,
+          0.0028009270317852497
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000393093.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.04271455481648445,
+          0.9571059346199036,
+          0.00017952796770259738
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000212166.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.07410857826471329,
+          0.9170440435409546,
+          0.008847354911267757
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000102411.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.12078212946653366,
+          0.8786294460296631,
+          0.0005884087877348065
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000277689.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.041218239814043045,
+          0.5262390971183777,
+          0.43254271149635315
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000206271.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.03678276389837265,
+          0.8637470602989197,
+          0.09947021305561066
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000096549.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.03166292607784271,
+          0.954700231552124,
+          0.013636835850775242
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000267946.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.474666565656662,
+          0.5241268277168274,
+          0.0012065897462889552
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000272049.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.7776152491569519,
+          0.217629536986351,
+          0.004755199886858463
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000051938.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.003787342691794038,
+          0.9865041971206665,
+          0.009708477184176445
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000314182.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.03357154503464699,
+          0.9658926725387573,
+          0.0005357805639505386
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000310980.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.045887868851423264,
+          0.950939416885376,
+          0.003172682598233223
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000568147.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.14207565784454346,
+          0.856825590133667,
+          0.001098731067031622
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000239041.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.0071337162517011166,
+          0.9639953970909119,
+          0.028870904818177223
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000544811.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.20180164277553558,
+          0.7857667207717896,
+          0.012431650422513485
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000464144.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.00928111094981432,
+          0.9467002749443054,
+          0.04401864856481552
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000255718.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.17648926377296448,
+          0.8224785327911377,
+          0.0010322310263291001
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000376284.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.024762071669101715,
+          0.9737828373908997,
+          0.0014550630003213882
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000185472.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.04534145072102547,
+          0.9544131755828857,
+          0.00024536947603337467
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000534394.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.14123405516147614,
+          0.8584306240081787,
+          0.00033535013790242374
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000159684.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.15570838749408722,
+          0.45055699348449707,
+          0.3937346339225769
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000007278.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.02385849319398403,
+          0.9382491111755371,
+          0.037892427295446396
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000492758.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.23073410987854004,
+          0.7684618234634399,
+          0.0008040859247557819
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000068409.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.37270888686180115,
+          0.26070141792297363,
+          0.3665897250175476
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000292415.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.0027650301344692707,
+          0.984413743019104,
+          0.012821214273571968
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000214869.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.4439794719219208,
+          0.5423837304115295,
+          0.013636835850775242
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000520264.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.09255700558423996,
+          0.9060326218605042,
+          0.0014103584690019488
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000155451.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.022605162113904953,
+          0.9763298630714417,
+          0.0010649627074599266
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000051008.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9351677298545837,
+          0.06464113295078278,
+          0.000191104321856983
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000303908.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.2081069052219391,
+          0.7915470600128174,
+          0.00034599160426296294
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000377882.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.12485268712043762,
+          0.8734465837478638,
+          0.0017007222631946206
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000125062.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.1536521315574646,
+          0.8437162041664124,
+          0.0026316740550100803
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000166768.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6467533111572266,
+          0.34081506729125977,
+          0.012431650422513485
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000032861.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.20638002455234528,
+          0.6927413940429688,
+          0.10087862610816956
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000176701.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.016899004578590393,
+          0.9821610450744629,
+          0.0009399438858963549
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000229747.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.10261828452348709,
+          0.5170832276344299,
+          0.38029852509498596
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000125778.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.07150208204984665,
+          0.9272530674934387,
+          0.0012448433553799987
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000066231.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.026194622740149498,
+          0.9677078127861023,
+          0.0060975621454417706
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000577584.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.024162955582141876,
+          0.9651845693588257,
+          0.01065251138061285
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000388258.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5723662972450256,
+          0.42368826270103455,
+          0.0039454069919884205
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000226154.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.022590775042772293,
+          0.975708544254303,
+          0.0017007222631946206
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000575357.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.09031647443771362,
+          0.27174997329711914,
+          0.6379335522651672
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000398742.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6423666477203369,
+          0.051106370985507965,
+          0.3065270483493805
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000262895.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6200969815254211,
+          0.37757986783981323,
+          0.002323162741959095
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000137246.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.06369077414274216,
+          0.9359292387962341,
+          0.0003799845289904624
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000010363.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9127333760261536,
+          0.08623436838388443,
+          0.0010322310263291001
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000215072.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.03447349742054939,
+          0.9613277316093445,
+          0.004198795650154352
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000484978.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.013584733009338379,
+          0.9825907945632935,
+          0.0038244836032390594
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000521601.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.09112606942653656,
+          0.9060729742050171,
+          0.0028009270317852497
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000359540.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.027574393898248672,
+          0.9720335602760315,
+          0.0003920417802873999
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000348481.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.1496461182832718,
+          0.847802996635437,
+          0.0025509123224765062
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000397327.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.05080730468034744,
+          0.929169237613678,
+          0.020023440942168236
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000325114.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.011819710955023766,
+          0.9687609076499939,
+          0.019419347867369652
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000070158.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.2704634964466095,
+          0.7015290260314941,
+          0.028007520362734795
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000039480.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.042675282806158066,
+          0.9562259912490845,
+          0.001098731067031622
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000324258.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.02185894548892975,
+          0.9740709066390991,
+          0.00407013762742281
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000236166.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8044599890708923,
+          0.19408497214317322,
+          0.0014550630003213882
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000574520.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.011432702653110027,
+          0.9082098007202148,
+          0.08035746961832047
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000194471.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.003157608909532428,
+          0.992087185382843,
+          0.004755199886858463
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000418696.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.028799552470445633,
+          0.9687278270721436,
+          0.0024726230185478926
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000156278.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.023288803175091743,
+          0.9597963094711304,
+          0.016914913430809975
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000138115.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.43277525901794434,
+          0.5666544437408447,
+          0.000570315751247108
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000530820.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.06271582841873169,
+          0.9361146688461304,
+          0.0011695103021338582
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000184400.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.018795665353536606,
+          0.9792165756225586,
+          0.001987774157896638
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000360564.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.02538870833814144,
+          0.9677074551582336,
+          0.006903838831931353
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000209757.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.0032055526971817017,
+          0.9761485457420349,
+          0.020645929500460625
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000133819.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.0022471859119832516,
+          0.9957020282745361,
+          0.0020507434383034706
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000065485.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.967633068561554,
+          0.010418707504868507,
+          0.021948253735899925
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000123585.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.014406468719244003,
+          0.9789007306098938,
+          0.006692850962281227
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000379842.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.4835312068462372,
+          0.5149676203727722,
+          0.0015011823270469904
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000394206.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8259586095809937,
+          0.1731303185224533,
+          0.0009110511746257544
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000477623.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.21864698827266693,
+          0.7812507152557373,
+          0.00010229986219201237
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000005193.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.022356493398547173,
+          0.965589702129364,
+          0.0120537793263793
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000267940.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3726430833339691,
+          0.6216266751289368,
+          0.005730246659368277
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000438907.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.02226928062736988,
+          0.9769752621650696,
+          0.0007554056355729699
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000278353.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.1514516919851303,
+          0.8316333889961243,
+          0.016914913430809975
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000447342.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.21320560574531555,
+          0.785990297794342,
+          0.0008040859247557819
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000208363.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.2711998522281647,
+          0.7286090850830078,
+          0.000191104321856983
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000095069.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3267557621002197,
+          0.6347780227661133,
+          0.0384661927819252
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000082846.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.06851448863744736,
+          0.9311501979827881,
+          0.00033535013790242374
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000303566.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.1942962408065796,
+          0.8053354620933533,
+          0.00036829791497439146
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000259640.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.07683393359184265,
+          0.9215176105499268,
+          0.0016484829830005765
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000297595.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.009918777272105217,
+          0.9504424333572388,
+          0.03963883966207504
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000312406.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.1267288327217102,
+          0.8728269338607788,
+          0.0004442183708306402
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000304560.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9850779175758362,
+          0.011649004183709621,
+          0.003273064736276865
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000549055.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.011537374928593636,
+          0.9756414294242859,
+          0.012821214273571968
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000052891.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.864120364189148,
+          0.13355650007724762,
+          0.002323162741959095
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000313588.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.22832827270030975,
+          0.5673298239707947,
+          0.20434190332889557
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000361571.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6959320902824402,
+          0.09717389196157455,
+          0.20689405500888824
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000438876.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.15708735585212708,
+          0.8425976037979126,
+          0.0003150386910419911
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000231879.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3225451707839966,
+          0.5886345505714417,
+          0.08882029354572296
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000481567.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.29069867730140686,
+          0.7083315253257751,
+          0.0009697519708424807
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000192047.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.05106741562485695,
+          0.8773413896560669,
+          0.07159119844436646
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000021879.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.016363652423024178,
+          0.9510465860366821,
+          0.03258974477648735
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000123131.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.21567071974277496,
+          0.4222627580165863,
+          0.36206647753715515
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000255824.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.016383836045861244,
+          0.9824466705322266,
+          0.0011695103021338582
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000554002.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.24920785427093506,
+          0.5464502573013306,
+          0.20434190332889557
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000267191.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.06720588356256485,
+          0.8992046117782593,
+          0.03358950838446617
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000499313.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.11095751821994781,
+          0.886491596698761,
+          0.0025509123224765062
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000113867.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.188765287399292,
+          0.7465811967849731,
+          0.06465348601341248
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000390826.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.21749436855316162,
+          0.7473607659339905,
+          0.03514484688639641
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000054164.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.022314833477139473,
+          0.891361653804779,
+          0.08632347732782364
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000325483.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.08738423883914948,
+          0.9105650186538696,
+          0.0020507434383034706
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000540280.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.4289376139640808,
+          0.5704739689826965,
+          0.0005884087877348065
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000180751.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.34128084778785706,
+          0.6578361392021179,
+          0.0008830457809381187
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000442306.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.2809560000896454,
+          0.7174462080001831,
+          0.001597845577634871
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000403817.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.4167589843273163,
+          0.5831506848335266,
+          9.028038039105013e-05
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000255165.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.030169248580932617,
+          0.9683295488357544,
+          0.0015011823270469904
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000076625.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.4660952687263489,
+          0.5338593125343323,
+          4.539786823443137e-05
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000341973.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.652836799621582,
+          0.34671899676322937,
+          0.0004442183708306402
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000489842.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.507721483707428,
+          0.44414177536964417,
+          0.048136770725250244
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000094614.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.014771129935979843,
+          0.9727972745895386,
+          0.012431650422513485
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000323263.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.13366837799549103,
+          0.8317127823829651,
+          0.034618835896253586
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000556158.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.018780061975121498,
+          0.9632337093353271,
+          0.01798621006309986
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000002157.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.04948406293988228,
+          0.9484001994132996,
+          0.002115703420713544
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000127624.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.0040495069697499275,
+          0.9908902049064636,
+          0.005060331895947456
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000129322.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.024578757584095,
+          0.9665738940238953,
+          0.008847354911267757
+        ]
+      }
+    },
+    {
+      "image_path": "organizer_demo/coco/val2017/000000240049.jpg",
+      "dataset": "OrganizerDemo-COCO-val2017",
+      "generator": "coco_val2017",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.01902420073747635,
+          0.9757556915283203,
+          0.005220125429332256
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f2184be76e3e6bb87702.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0009697616333141923,
+          0.03261978179216385,
+          0.9664104580879211
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/5af969e8f9cdfd6920fa.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0004318246792536229,
+          0.014525245875120163,
+          0.985042929649353
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/124ab5dea63736865704.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0005561913712881505,
+          0.0031510386615991592,
+          0.996292769908905
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/9139d82f21bdbdccf48d.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.12351448833942413,
+          0.6371362209320068,
+          0.23934932053089142
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/413f357c6dfe02706b24.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00034032200346700847,
+          0.008506974205374718,
+          0.9911527037620544
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/4c27ce210ab72a128aa1.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.17220573127269745,
+          0.1052672490477562,
+          0.722527027130127
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/bcc445481e2bf952c1df.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00013101784861646593,
+          0.0006011060322634876,
+          0.9992678761482239
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/88bccb11211ec48bcc8d.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.008561218157410622,
+          0.10268006473779678,
+          0.8887587189674377
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/3a1ef2f7cf7f3fc94fa1.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.448599040391855e-05,
+          0.0010442660422995687,
+          0.9989012479782104
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/9827f45687f71b3be806.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0006219247006811202,
+          0.004283418413251638,
+          0.9950946569442749
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/21d02c8194bf951c1ec2.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.004260294605046511,
+          0.0404205396771431,
+          0.9553191661834717
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/cb5010aa0ba3ecd2806f.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.23169279098510742,
+          0.5870440006256104,
+          0.18126320838928223
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f9f4e2a48d9a4302ee0c.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.112384628271684e-05,
+          0.0046840752474963665,
+          0.9952448010444641
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/a05433d13ee4e1b76f9b.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.005353501066565514,
+          0.03253896161913872,
+          0.9621075391769409
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/a26b2d9664920527cfb7.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.202044849283993e-05,
+          0.0030234004370868206,
+          0.9969245791435242
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/84bfa015d8c7aaa7e196.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00017271045362576842,
+          0.005047345068305731,
+          0.9947799444198608
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/42b095001535924ff474.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0031396374106407166,
+          0.01657954603433609,
+          0.9802808165550232
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/dc4d7d2e0b8f29bee94e.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.003528736298903823,
+          0.0105348601937294,
+          0.9859364032745361
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/84e22e42f1bf3d62a0e2.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0014151997165754437,
+          0.006646865047514439,
+          0.9919379353523254
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/e2a648c722ac72ce9f4f.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.9434191421605647e-05,
+          0.0012856366811320186,
+          0.9986749291419983
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/71bd866a1ebd69d0ecd3.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0003800674166996032,
+          0.010272474959492683,
+          0.9893474578857422
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/325b3003073ffcf4dbad.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0004988483269698918,
+          0.007563216146081686,
+          0.9919379353523254
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/1807749b33e2a0d6037c.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.045514658093452454,
+          0.036005061119794846,
+          0.9184802770614624
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/18b02f41a2671add381e.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.000392985442886129,
+          0.002157914452254772,
+          0.9974491000175476
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/b9d5a167e402e3004546.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.008175116032361984,
+          0.011848349124193192,
+          0.9799765348434448
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/787869538e6d09b83e49.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00012066543422406539,
+          0.009004924446344376,
+          0.9908744096755981
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/620cc3eb194c107da3b1.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00011645344784483314,
+          0.005438401363790035,
+          0.9944451451301575
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/75e5222c79f4fe7f1b98.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0007972056046128273,
+          0.006780034862458706,
+          0.9924227595329285
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/72a66400b4db0045207e.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0002426340797683224,
+          0.0066611929796636105,
+          0.9930961728096008
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/837153f02b6ee747e071.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0006200059433467686,
+          0.004440309014171362,
+          0.9949396848678589
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f2dbed5b95df7d9450a9.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          8.345050446223468e-06,
+          0.00038367469096556306,
+          0.9996079802513123
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/ccbc77a5d138ab70c8d5.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0004735466791316867,
+          0.0015771511243656278,
+          0.9979493021965027
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/0e21247653bfb91d070e.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00032513600308448076,
+          0.005585856735706329,
+          0.9940890073776245
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/bde7e93fe80904451c08.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.1964298209932167e-05,
+          0.000323371437843889,
+          0.9996646642684937
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/b862cedfebe54a14b85d.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0007921918877400458,
+          0.006329192314296961,
+          0.9928786158561707
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/b659ac97c3c33cbe9bf1.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0002496347879059613,
+          0.0019330873619765043,
+          0.9978172779083252
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/18ff156dae4884ed6020.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00027379856328479946,
+          0.003550673834979534,
+          0.9961755275726318
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/0fd85afb8a4d8265bb4e.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00039226998342201114,
+          0.0019308209884911776,
+          0.9976769089698792
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/703436096a8c7e7d629c.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00043826166074723005,
+          0.0040301792323589325,
+          0.9955315589904785
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/cc7a0c489ded1b138b50.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0002729289699345827,
+          0.012548268772661686,
+          0.9871788024902344
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/5dd8035e100e938b6623.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.02958914451301098,
+          0.05193057656288147,
+          0.9184802770614624
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/e0697b23e7cd8462cbc3.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00454372726380825,
+          0.03630196675658226,
+          0.9591543078422546
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f290d55f14dc47290cfe.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.004347329959273338,
+          0.11567830294370651,
+          0.879974365234375
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/1c23ea17345ffe05f4e5.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0026199084240943193,
+          0.01020128931850195,
+          0.9871788024902344
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/444122d047a05f05d66e.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0017964403377845883,
+          0.010257347486913204,
+          0.9879462122917175
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/32d08de9c167afe72f5d.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00015130282554309815,
+          0.0024803613778203726,
+          0.997368335723877
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/97a394c481f3d51cc1db.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.8171225494588725e-05,
+          0.0012167313834652305,
+          0.9987550973892212
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/7d894eace81223067d40.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0010500896023586392,
+          0.0022230399772524834,
+          0.9967268705368042
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/23ed528a1ae847e0e0f2.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0009021590230986476,
+          0.009111480787396431,
+          0.9899863600730896
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/75a0c39a3dd377f71c00.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0007499055936932564,
+          0.001300792209804058,
+          0.9979493021965027
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/30514f5228a72509a8a0.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0006138916942290962,
+          0.0030933383386582136,
+          0.996292769908905
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/8251af03acf55e235ee7.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.22182417626027e-05,
+          0.0017024233238771558,
+          0.998245358467102
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/44a77cf28c3c7f6e3e35.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.1241250831517391e-05,
+          0.0003038289141841233,
+          0.9996849298477173
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f696c8265e18f8672f8f.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00988348200917244,
+          0.1894245594739914,
+          0.8006919622421265
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/134ff11ec4ed0ffa1f76.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0041160075925290585,
+          0.05337720364332199,
+          0.9425067901611328
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/7c1bb9ba2860883e6ea8.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.02032581716775894,
+          0.004097304306924343,
+          0.9755768775939941
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/e2beca6e4874c6884731.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.01863372139632702,
+          0.013956013135612011,
+          0.9674102663993835
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f28e700d12383c4be583.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.009784456342458725,
+          0.07173526287078857,
+          0.9184802770614624
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f12dbf0ff20d95e1f8c1.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.22455516457557678,
+          0.45717164874076843,
+          0.3182732164859772
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/9add55b608fcf6942438.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.006360598839819431,
+          0.00462632579728961,
+          0.9890130758285522
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/18f968d45e16dde5d3eb.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.005947026889771223,
+          0.02426758036017418,
+          0.9697853922843933
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/0d660006f237918c3256.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.023947348818182945,
+          0.25745826959609985,
+          0.7185943722724915
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/b84205d806ce7596f461.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.954791024327278e-05,
+          0.002911399584263563,
+          0.9970190525054932
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/986d57d2c83e472e1863.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0074049136601388454,
+          0.003247628454118967,
+          0.9893474578857422
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/ebdf4b3b98ddf6b8b6e6.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.006844477262347937,
+          0.8964497447013855,
+          0.09670579433441162
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/04b113a1be33a5f654f0.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.5431765859830193e-05,
+          0.0009850321803241968,
+          0.9989995360374451
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/17c8e2cd5698272d2ce3.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.79149501491338e-05,
+          0.00045486909220926464,
+          0.9995272159576416
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/d2c791a12b555cfdd397.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.887979619321413e-05,
+          0.00034115940798074007,
+          0.9996199607849121
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/ef767a4547516c3b02f6.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0647137314081192,
+          0.0404968187212944,
+          0.894789457321167
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/40da936b1ae66a89547e.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00026255540433339775,
+          0.0024524361360818148,
+          0.997285008430481
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/2b63a17cfacebee8cbb7.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.004118188284337521,
+          0.055968478322029114,
+          0.9399133324623108
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/7178f728b9a2aa9d0f1b.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.22543559782207e-05,
+          0.0011172483209520578,
+          0.9988304972648621
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/88c8d6a847450e318c79.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0005928997416049242,
+          0.007222997955977917,
+          0.9921841025352478
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/86c1a9f58fdffe6e55eb.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00010879829642362893,
+          0.0005790392751805484,
+          0.999312162399292
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/3a0d24e7e2705c6e3c0a.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          4.739870928460732e-05,
+          0.0028422344475984573,
+          0.9971103668212891
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f30154dec62f11a2ed55.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0006283732363954186,
+          0.013435223139822483,
+          0.9859364032745361
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/6fa92b6d35970998ac7a.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.8861854843853507e-06,
+          0.0005674706771969795,
+          0.9994296431541443
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/fe9f52130f012e9861c3.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.004018553998321295,
+          0.20935861766338348,
+          0.7866228222846985
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/0ef3d54f7b6d52cd3e16.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.008489130064845085,
+          0.051597535610198975,
+          0.9399133324623108
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/2ac48d95f44ef289d2e7.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0009211835567839444,
+          0.0020597639959305525,
+          0.9970190525054932
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/69826c646ad5a6cd7d66.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.004085451364517212,
+          0.10870996117591858,
+          0.8872045874595642
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/00a71d5c775076c2c49c.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0012540912721306086,
+          0.011177590116858482,
+          0.9875683188438416
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/6ca7a3f7de6bbb3bb655.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0006413423689082265,
+          0.007936183363199234,
+          0.9914224743843079
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/484e7fba4377f4cbb071.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0005902099655941129,
+          0.012230987660586834,
+          0.9871788024902344
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/dc1ac23642ae7ab2f270.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00278069986961782,
+          0.005035197362303734,
+          0.9921841025352478
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/dc840c4ad310c731dd4e.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.04198378697037697,
+          0.2612319588661194,
+          0.696784257888794
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/7f63c006cf0f99cfdc61.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0009576286538504064,
+          0.00685826875269413,
+          0.9921841025352478
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/4dd9e3f97a8792cf4102.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.053060900419950485,
+          0.030829481780529022,
+          0.9161096215248108
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/75cb0bb995fd7344f601.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.7469636077294126e-05,
+          0.00035088707227259874,
+          0.9996316432952881
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/c50b70f112d26fe8f604.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.1672740583890118e-05,
+          0.000249574426561594,
+          0.9997387528419495
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/cd1ccdb1e0e37f5369fa.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.006027327850461006,
+          0.002034736331552267,
+          0.9919379353523254
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/dbf0e38369d62eeb7f52.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0007455736631527543,
+          0.008667012676596642,
+          0.9905874133110046
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/9c4345e9129b27f81fb7.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.005274333991110325,
+          0.003851256100460887,
+          0.9908744096755981
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/ba6ab81575be9728c9ea.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.01128910668194294,
+          0.01313401572406292,
+          0.9755768775939941
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/ca300ccdf9f00372b08b.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.03881733492016792,
+          0.2033882886171341,
+          0.7577943801879883
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/89078811f19cf40fc3bd.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.327895243884996e-05,
+          0.0010702821891754866,
+          0.9988664388656616
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/27c5d0173c83f4325af1.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          4.060831997776404e-05,
+          0.002674383344128728,
+          0.997285008430481
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/323d54ffdafb2d7e3cc7.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0002925765875261277,
+          0.004038893152028322,
+          0.9956685304641724
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/5072d3f5ed40a6853f47.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0005980440764687955,
+          0.0054995110258460045,
+          0.9939024448394775
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/3b3f7804e013351f5283.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0012938411673530936,
+          0.001878854469396174,
+          0.9968273043632507
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/0eeb412ac9e75362835b.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0005329042905941606,
+          0.013530692085623741,
+          0.9859364032745361
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/a34c14a400ceef2458e5.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00034847442293539643,
+          0.002202425617724657,
+          0.9974491000175476
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/ce3a4ec5e38b5366c914.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00918169692158699,
+          0.009942334145307541,
+          0.9808759689331055
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/98a524513339a19903b1.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.01405072771012783,
+          0.6876623630523682,
+          0.29828691482543945
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/0fd8ed0f63b89427e82c.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00028334016678854823,
+          0.007778724655508995,
+          0.9919379353523254
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/d15150ca9045c749c6eb.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00032445346005260944,
+          0.0013239725958555937,
+          0.9983515739440918
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/55543302ba0da781b004.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0019614645279943943,
+          0.014953440055251122,
+          0.9830850958824158
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/0e9da3043f765c99aad5.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0008264436037279665,
+          0.003372405655682087,
+          0.9958011507987976
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/0d5de755dec094dde882.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.003839910728856921,
+          0.03700578212738037,
+          0.9591543078422546
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/a4dbc2e802d5ef0045d4.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          9.982293704524636e-05,
+          0.0009324103011749685,
+          0.9989677667617798
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/85b9681cfaff44dd4e26.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.005387541837990284,
+          0.0024283556267619133,
+          0.9921841025352478
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/8e5565db7271104ef794.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0011340767377987504,
+          0.001262685633264482,
+          0.9976032376289368
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f03f40de0b18fd66bc47.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.5075760529725812e-05,
+          0.0006310981698334217,
+          0.99935382604599
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/967669d11515a937d66c.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00011905370774911717,
+          0.0005905992002226412,
+          0.9992903470993042
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/28691e0698942556fee4.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.4721626030222978e-05,
+          0.0003003485326189548,
+          0.9996849298477173
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/0e9372801f5a094cbbe4.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0014105552108958364,
+          0.018008757382631302,
+          0.9805806875228882
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/8fea7e37596beaf4ce08.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00013632043555844575,
+          0.0015121055766940117,
+          0.9983515739440918
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/14562bce59bf80be8329.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0073795621283352375,
+          0.005052119493484497,
+          0.9875683188438416
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f018504df1e593666c06.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0013579262886196375,
+          0.004739629104733467,
+          0.9939024448394775
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/30e55aebe505221e31dd.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.9703296857187524e-05,
+          0.0003603359218686819,
+          0.9996199607849121
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/119443ec59aefced8437.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0024560948368161917,
+          0.01118079200387001,
+          0.9863631129264832
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/a79bd44da661962ba28a.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0013405003119260073,
+          0.008673139847815037,
+          0.9899863600730896
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/119048ac0e9b3dd6089b.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.007131389807909727,
+          0.007372148800641298,
+          0.985496461391449
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/bebbe927a9bd4c478272.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00012144541688030586,
+          0.0006826808676123619,
+          0.9991958737373352
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f292e6380556fb404124.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.3654147982597351,
+          0.6048250794410706,
+          0.029760092496871948
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/4099b61f27f3b11b11de.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.001191461575217545,
+          0.01521155796945095,
+          0.9835969805717468
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/70b2d3a09d30c5bc38e9.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0016462116036564112,
+          0.021684596315026283,
+          0.976669192314148
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/1efde560366066381439.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.2763963241013698e-05,
+          0.00024848320754244924,
+          0.9997387528419495
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/fc237ae92a92e8f5335c.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0002535516396164894,
+          0.00435603316873312,
+          0.9953904151916504
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/9fa6a33276f6d722e25e.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.09046098589897156,
+          0.034604404121637344,
+          0.8749346137046814
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/4378fd31e20266e605b6.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          4.1584680730011314e-05,
+          0.001023371471092105,
+          0.9989350438117981
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/a346439c634fe728c3b2.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.001019835937768221,
+          0.004535018932074308,
+          0.9944451451301575
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/a77723874d7b5d75dc08.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.011641735211014748,
+          0.01594347320497036,
+          0.9724147915840149
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/0ac14e3bcea1c18eb938.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0012698782375082374,
+          0.0073076472617685795,
+          0.9914224743843079
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/af0893d0fcdb9fb313b0.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0001388958189636469,
+          0.0026620456483215094,
+          0.9971990585327148
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/14e0b7f1ddc981711093.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00012237761984579265,
+          0.0013788249343633652,
+          0.998498797416687
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/74eed64fef67df12d55c.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.22310234606266022,
+          0.10456596314907074,
+          0.672331690788269
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/b929d8090a8bb175b9e2.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.1460962923592888e-05,
+          0.00034557085018604994,
+          0.9996429681777954
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/a494c7d77b08859cd949.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00022235905635170639,
+          0.0033712645526975393,
+          0.9964063763618469
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/9eaee49739909b7e7a6c.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          4.4040749344276264e-05,
+          0.0015047263586893678,
+          0.9984512329101562
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/93ba883fa4dcade9a0ec.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0020443713292479515,
+          0.013862022198736668,
+          0.9840936064720154
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/5657a6763fbc75a7f72a.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00045389641309157014,
+          0.005276374984532595,
+          0.9942697286605835
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/478dd408952d3e8d33ea.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0002499068796169013,
+          0.0033437167294323444,
+          0.9964063763618469
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/36cb7dea2c643e4e0049.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00023200335272122175,
+          0.004377581644803286,
+          0.9953904151916504
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/bcf232134844e0215d5d.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.000526648829691112,
+          0.002454298548400402,
+          0.9970190525054932
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/c9a4e7f98516277e7ac1.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          8.858442743076012e-05,
+          0.008227217011153698,
+          0.9916841983795166
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/5569912eaf40961517aa.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0038396220188587904,
+          0.0030642051715403795,
+          0.9930961728096008
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/418831252e088e5e8a14.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00032174636726267636,
+          0.006166517268866301,
+          0.9935117363929749
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/48504845a23f288d26d2.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00036699301563203335,
+          0.005922965705394745,
+          0.9937100410461426
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/6e85f6d8bce809b41051.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0006748588057234883,
+          0.0037935820873826742,
+          0.9955315589904785
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/217c2912182a89969d5f.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.004616669844835997,
+          0.019436903297901154,
+          0.9759464263916016
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/bd799cfd8ddb4ab5834a.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00046502347686327994,
+          0.013171863742172718,
+          0.9863631129264832
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/b63a8333dcef7b0c1418.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0005012208130210638,
+          0.00834607519209385,
+          0.9911527037620544
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/5126d04fe144715bd1de.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0011346160899847746,
+          0.013822454027831554,
+          0.985042929649353
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/8006c469b6bff63dea91.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0008270852849818766,
+          0.004233229905366898,
+          0.9949396848678589
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/d24c74a27a85873d0aa3.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0017439007060602307,
+          0.004167092032730579,
+          0.9940890073776245
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/12a1ae62690cdbf62d3d.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          8.681076724315062e-05,
+          0.002309951698407531,
+          0.9976032376289368
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/034c739c2a2bb70e6fce.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.007016495801508427,
+          0.02606944553554058,
+          0.9669140577316284
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/80c38869779a44a341af.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0014075494837015867,
+          0.009924187324941158,
+          0.9886682629585266
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/af93fd2137a43e777712.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00010270677739754319,
+          0.000563971174415201,
+          0.9993333220481873
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/9e18461b5a86d3eee8e4.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.09369927644729614,
+          0.06762099266052246,
+          0.8386797308921814
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/195eb0ad67cf50f373c5.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0058978707529604435,
+          0.04223889857530594,
+          0.9518632292747498
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/12feae5e70478427f261.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00020222114108037204,
+          0.006490605417639017,
+          0.9933071732521057
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/97eb9e9d056f8b2e3b36.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.001606896286830306,
+          0.005970344413071871,
+          0.9924227595329285
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/39f9caa9416304e39c47.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.702256698394194e-05,
+          0.0015714034670963883,
+          0.9983515739440918
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/8f4714e8ebdc1eefe139.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.4622439266531728e-05,
+          0.0006315514910966158,
+          0.99935382604599
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/21e60ae66ead987a2a02.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0006128439563326538,
+          0.007702957838773727,
+          0.9916841983795166
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/60e0ffc70fd4f51a60f2.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.920959221024532e-05,
+          0.0003980825131293386,
+          0.9995827078819275
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f95f5f50c2278e3115fa.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00045123769086785614,
+          0.0034942321944981813,
+          0.9960545301437378
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/119c4aff19ebb1cd691b.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00024530463269911706,
+          0.013818291947245598,
+          0.9859364032745361
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f8937ca5e3e6ef89dfb7.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0068326424807310104,
+          0.0679374486207962,
+          0.9252299070358276
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/431953a61a189824f8c7.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0003865282633341849,
+          0.0069592674262821674,
+          0.9926542043685913
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/6682675abbbf5f43e88c.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          4.90343154524453e-05,
+          0.0037754380609840155,
+          0.9961755275726318
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/4dd85e170b4ddd07c8e7.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.2438354790210724e-05,
+          0.0006872145459055901,
+          0.9992903470993042
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/288211740ddbc196b6e3.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00017313790158368647,
+          0.005557133350521326,
+          0.9942697286605835
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/7a9a5285c833272d5c1d.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.015581205487251282,
+          0.05396054685115814,
+          0.9304582476615906
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/eb1160d2e74602462cbb.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00010900841880356893,
+          0.0011358942138031125,
+          0.9987550973892212
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/98eddb8e7f3c58a61ff1.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.005805647931993008,
+          0.3823484480381012,
+          0.6118459105491638
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/c6be51ba03228898cd26.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.018041353672742844,
+          0.11856706440448761,
+          0.8633915781974792
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/52126515d0c56049751c.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0002502135175745934,
+          0.0012509890366345644,
+          0.998498797416687
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/ac7fc03d8d56a8e6e5ea.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.3241964855697e-05,
+          0.002042424865067005,
+          0.9978843331336975
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/e27db1625c488f1b26f8.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.006407476961612701,
+          0.03894510120153427,
+          0.954647421836853
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/b86f18a9380c40acd0d8.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.085503173380857e-06,
+          0.0006817521061748266,
+          0.999312162399292
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/959b5a4675cb37eeda74.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0013787506613880396,
+          0.00323083414696157,
+          0.9953904151916504
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/02a4e054f4fbf1e7443e.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0005271915579214692,
+          0.004082393366843462,
+          0.9953904151916504
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/bc3f730b9268b39d5096.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.017941618338227272,
+          0.812102198600769,
+          0.169956237077713
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/e5ad2d39e05df40b81d7.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00043065744102932513,
+          0.002458975650370121,
+          0.9971103668212891
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/9c259b6468e6a3cfbdc5.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.03548930585384369,
+          0.029164209961891174,
+          0.9353464841842651
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/51049cc0658a0c8c0e36.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00011413842730689794,
+          0.0014346286188811064,
+          0.9984512329101562
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/bb0c596388671d1e9e44.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          8.849701771396212e-06,
+          0.0009609178523533046,
+          0.9990302324295044
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/1a8cc9ace0f0054aab9c.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00039870667387731373,
+          0.00717853382229805,
+          0.9924227595329285
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/f7ee6464d55fd9503674.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.799452315433882e-05,
+          0.0018887852784246206,
+          0.9980732202529907
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/223232782d1de4ed03d8.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00010869935067603365,
+          0.002288063056766987,
+          0.9976032376289368
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/483d3f659ac578bc7989.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0008769729756750166,
+          0.004853298421949148,
+          0.9942697286605835
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/1dfae0e178a3d112a397.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.012882493436336517,
+          0.11304030567407608,
+          0.8740772008895874
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/fc07a16b353107b80f03.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.12039708346128464,
+          0.004668301437050104,
+          0.8749346137046814
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/1b8f03aa772f61d9b0be.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.002599552506580949,
+          0.014842972159385681,
+          0.982557475566864
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/cfd07f91e2f4b526c5b3.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0009777065133675933,
+          0.007338094990700483,
+          0.9916841983795166
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/9bdb3a066b4c7f596796.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0018003443256020546,
+          0.005545451305806637,
+          0.9926542043685913
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/dalle3_advanced_demo/27e2f46bfc06bc182132.jpg",
+      "dataset": "OrganizerDemo-WildFake",
+      "generator": "dalle3_advanced",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.008220942690968513,
+          0.07213649153709412,
+          0.9196425676345825
+        ]
+      }
+    }
+  ]
+}

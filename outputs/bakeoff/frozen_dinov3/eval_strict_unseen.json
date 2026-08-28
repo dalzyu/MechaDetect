@@ -1,0 +1,6689 @@
+{
+  "conditions": {
+    "clean": {
+      "n": 480,
+      "accuracy": 0.8645833134651184,
+      "balanced_accuracy": 0.5763888888888888,
+      "macro_f1": 0.6039366920789083,
+      "fully_aigc_auroc": 0.9781944155693054,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          10,
+          2,
+          228
+        ]
+      ],
+      "fully_aigc_auroc_95ci": [
+        0.9663602709770203,
+        0.990408718585968
+      ],
+      "fully_aigc_auroc_drop": 0.0
+    }
+  },
+  "per_dataset": {
+    "DiffusionForensics": {
+      "n": 300,
+      "accuracy": 0.9166666865348816,
+      "balanced_accuracy": 0.5943181818181819,
+      "macro_f1": 0.6032750010490417,
+      "fully_aigc_auroc": 0.9665057063102722,
+      "tamper_auroc": null,
+      "authentic_recall": 0.8375,
+      "confusion_matrix": [
+        [
+          67,
+          6,
+          7
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          10,
+          2,
+          208
+        ]
+      ]
+    },
+    "SID-Set": {
+      "n": 80,
+      "accuracy": 0.5,
+      "balanced_accuracy": 0.16666666666666666,
+      "macro_f1": 0.22222222884496054,
+      "fully_aigc_auroc": null,
+      "tamper_auroc": null,
+      "authentic_recall": 0.5,
+      "confusion_matrix": [
+        [
+          40,
+          38,
+          2
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "WildFake": {
+      "n": 100,
+      "accuracy": 1.0,
+      "balanced_accuracy": 0.6666666666666666,
+      "macro_f1": 0.6666666666666666,
+      "fully_aigc_auroc": 1.0,
+      "tamper_auroc": null,
+      "authentic_recall": 1.0,
+      "confusion_matrix": [
+        [
+          80,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          20
+        ]
+      ]
+    }
+  },
+  "per_aigc_generator": {
+    "dalle2": {
+      "n": 260,
+      "accuracy": 0.7692307829856873,
+      "balanced_accuracy": 0.4763888888888889,
+      "macro_f1": 0.4949294527371724,
+      "fully_aigc_auroc": 0.7988541722297668,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          5,
+          2,
+          13
+        ]
+      ]
+    },
+    "iddpm": {
+      "n": 260,
+      "accuracy": 0.7961538434028625,
+      "balanced_accuracy": 0.5930555555555556,
+      "macro_f1": 0.5640682578086853,
+      "fully_aigc_auroc": 1.0,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          20
+        ]
+      ]
+    },
+    "if": {
+      "n": 260,
+      "accuracy": 0.7923076748847961,
+      "balanced_accuracy": 0.5763888888888888,
+      "macro_f1": 0.5551661451657613,
+      "fully_aigc_auroc": 0.9941666722297668,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          19
+        ]
+      ]
+    },
+    "ldm": {
+      "n": 260,
+      "accuracy": 0.7961538434028625,
+      "balanced_accuracy": 0.5930555555555556,
+      "macro_f1": 0.5640682578086853,
+      "fully_aigc_auroc": 1.0,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          20
+        ]
+      ]
+    },
+    "midjourney": {
+      "n": 260,
+      "accuracy": 0.7961538434028625,
+      "balanced_accuracy": 0.5930555555555556,
+      "macro_f1": 0.5640682578086853,
+      "fully_aigc_auroc": 0.9995833039283752,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          20
+        ]
+      ]
+    },
+    "pndm": {
+      "n": 260,
+      "accuracy": 0.7961538434028625,
+      "balanced_accuracy": 0.5930555555555556,
+      "macro_f1": 0.5640682578086853,
+      "fully_aigc_auroc": 1.0,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          20
+        ]
+      ]
+    },
+    "sdv1": {
+      "n": 260,
+      "accuracy": 0.7923076748847961,
+      "balanced_accuracy": 0.5763888888888888,
+      "macro_f1": 0.5551661451657613,
+      "fully_aigc_auroc": 0.9820833206176758,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          19
+        ]
+      ]
+    },
+    "sdv1_new1": {
+      "n": 260,
+      "accuracy": 0.7961538434028625,
+      "balanced_accuracy": 0.5930555555555556,
+      "macro_f1": 0.5640682578086853,
+      "fully_aigc_auroc": 0.9913541674613953,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          20
+        ]
+      ]
+    },
+    "sdv1_new2": {
+      "n": 260,
+      "accuracy": 0.7961538434028625,
+      "balanced_accuracy": 0.5930555555555556,
+      "macro_f1": 0.5640682578086853,
+      "fully_aigc_auroc": 0.9922916889190674,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          20
+        ]
+      ]
+    },
+    "sdv2": {
+      "n": 260,
+      "accuracy": 0.7846153974533081,
+      "balanced_accuracy": 0.5430555555555555,
+      "macro_f1": 0.5362992882728577,
+      "fully_aigc_auroc": 0.9800000190734863,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          17
+        ]
+      ]
+    },
+    "vqdiffusion": {
+      "n": 260,
+      "accuracy": 0.7961538434028625,
+      "balanced_accuracy": 0.5930555555555556,
+      "macro_f1": 0.5640682578086853,
+      "fully_aigc_auroc": 1.0,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          20
+        ]
+      ]
+    },
+    "vqdm": {
+      "n": 260,
+      "accuracy": 0.7961538434028625,
+      "balanced_accuracy": 0.5930555555555556,
+      "macro_f1": 0.5640682578086853,
+      "fully_aigc_auroc": 1.0,
+      "tamper_auroc": null,
+      "authentic_recall": 0.7791666666666667,
+      "confusion_matrix": [
+        [
+          187,
+          44,
+          9
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          20
+        ]
+      ]
+    }
+  },
+  "selection_summary": {
+    "mean_generator_auroc": 0.9781944453716278,
+    "worst_generator_auroc": 0.7988541722297668,
+    "mean_transformed_auroc": null,
+    "worst_transformed_auroc": null,
+    "secondary_chain_auroc": null
+  },
+  "efficiency": {
+    "images": 480,
+    "views_on_clean": 1,
+    "conditions": 1,
+    "inference_seconds": 39.602222859015455,
+    "images_per_second": 12.120531761785385,
+    "milliseconds_per_image": 82.5046309562822,
+    "peak_allocated_vram_gib": 1.6622843742370605
+  },
+  "three_view": false,
+  "checkpoint": "/workspace/outputs/bakeoff_frozen_dinov3/checkpoint-step-188.pt",
+  "rows": [
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/7d69044cc5defeb5787d.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00018457529949955642,
+          0.000619550934061408,
+          0.9991958737373352
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/95a75c632d6994e89cf8.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.7628698945045471,
+          0.0006139065371826291,
+          0.23651622235774994
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/1d558d01e88520eb.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.7870796918869019,
+          0.02339925989508629,
+          0.18952108919620514
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/f4dbc6a89756ef55.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.30135366320610046,
+          0.6979366540908813,
+          0.0007096704212017357
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/ff4cbc1ea0ceddd4508f.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9625040292739868,
+          0.022992391139268875,
+          0.014503579586744308
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/3909dd8f0f6c1f91180e.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00016680343833286315,
+          0.0015338958473876119,
+          0.9982993006706238
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/7dbd8224f6481d91.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.03845616802573204,
+          0.9612826704978943,
+          0.0002611903182696551
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/b3b60148ddb0dd171378.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.7269861698150635,
+          0.23786893486976624,
+          0.03514484688639641
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/81e9df95220cf2c2c97c.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.3834221439028624e-06,
+          0.00014150897914078087,
+          0.9998511075973511
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/00fb40be0e56f3c9.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.7540770769119263,
+          0.24101752042770386,
+          0.004905405919998884
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/295d319a48fbf9a7bbaa.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.03692125156521797,
+          0.03571547567844391,
+          0.9273632764816284
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/b0e90178fd9d1fba9e34.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9627209901809692,
+          0.0010589349549263716,
+          0.03622005507349968
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/410c3fb79291dbba.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5776185393333435,
+          0.41930606961250305,
+          0.0030753696337342262
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/6fb36c932d47e415.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6865870952606201,
+          0.31311696767807007,
+          0.0002959570847451687
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/ec100a3f2c2f7b954aef.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.008449634537100792,
+          0.0009629519772715867,
+          0.9905874133110046
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/9c0c67212305b38c6ec7.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0024740213993936777,
+          0.00693856505677104,
+          0.9905874133110046
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/a11537a8be42c431970a.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.014952409081161022,
+          0.1463678628206253,
+          0.8386797308921814
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/db7b4878d54e27374696.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.7319449186325073,
+          0.26717206835746765,
+          0.0008830457809381187
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/3806107c6cbe6c74194b.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.06448622792959213,
+          0.029523948207497597,
+          0.9059898257255554
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/a5e3d3d616fdc5ca1add.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          4.881254062638618e-05,
+          0.00016773113748058677,
+          0.999783456325531
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/9184991b115d2d7ea5f6.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.002179161412641406,
+          0.005166634451597929,
+          0.9926542043685913
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/60c58c63f18fba155473.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9981216788291931,
+          0.001168680377304554,
+          0.0007096704212017357
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/c20e9037412be585f03b.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.441514086764073e-05,
+          0.0002021285326918587,
+          0.999783456325531
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/e2bffba8026c403c3675.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.863960862159729,
+          0.03795979171991348,
+          0.09807931631803513
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/3692fdaaed984d5409ad.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.28463608026504517,
+          0.06400901824235916,
+          0.6513549089431763
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/d371b79b041d4c54b35b.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.07201368361711502,
+          0.9194088578224182,
+          0.008577484637498856
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/6af3ccc717d27313.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.13553087413311005,
+          0.8632996082305908,
+          0.0011695103021338582
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/97ccb9cbf31529c0dcee.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9939472079277039,
+          0.003937059547752142,
+          0.002115703420713544
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/d31f7e5cbfb8980e.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.42701786756515503,
+          0.558025062084198,
+          0.014957086183130741
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/2bd33ee53d5875be756c.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.10166504234075546,
+          0.4213898479938507,
+          0.47694510221481323
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/66a30d1e677dd026.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.09368269890546799,
+          0.902833878993988,
+          0.0034834241960197687
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/36b7c4ae5c361cb44431.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.2120365580776706e-05,
+          0.000518236483912915,
+          0.9994296431541443
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/67f340829fbbbb4b1dd1.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8341641426086426,
+          0.09213963150978088,
+          0.07369627058506012
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/99791f7d07dba955.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.33250877261161804,
+          0.6664589643478394,
+          0.0010322310263291001
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/262a94a487f002e1137b.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9956973195075989,
+          0.0031690860632807016,
+          0.0011335690505802631
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/b352c2dd1bb2593e55cd.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.3735392689704895,
+          0.08141712844371796,
+          0.5450435876846313
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/a0f098ce3cc924a471ce.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9984350204467773,
+          0.0007090630242601037,
+          0.0008559006964787841
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/b7b83338491ae10fb11b.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.1848232134070713e-05,
+          0.0002493989304639399,
+          0.9997387528419495
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/b4c8de485f069002fe91.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.998210072517395,
+          0.00033486218308098614,
+          0.0014550630003213882
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/a539f78c63f0c89660b7.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.819612174993381e-05,
+          0.0027627453673630953,
+          0.9971990585327148
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/e90497ef6b3bed94586c.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9734132289886475,
+          0.0006294295890256763,
+          0.02595735713839531
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/c9bfb6c95b7777252099.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.403217412298545e-06,
+          0.00017306636436842382,
+          0.9998205304145813
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/6f7e6f3157400e3229dd.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0004888233379460871,
+          0.005422169342637062,
+          0.9940890073776245
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/04ae741be2345372c1e4.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0013880603946745396,
+          0.006674004253000021,
+          0.9919379353523254
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/001b10184c56a676922f.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.851046908996068e-05,
+          0.00033852134947665036,
+          0.9996429681777954
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/8b2f7c5ebc68f4c3895f.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9989094734191895,
+          0.0007551523158326745,
+          0.00033535013790242374
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/6823ba187e048341c0e4.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9455260038375854,
+          0.008440076373517513,
+          0.04603390023112297
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/63c6681f79304c19bfb3.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.047335218638181686,
+          0.01187508087605238,
+          0.9407896995544434
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/888020038f86570f5660.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0004343574692029506,
+          0.00017277545703109354,
+          0.9993928670883179
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/dd9ff8554c9ec576cf0a.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.5925221305224113e-05,
+          0.0003300201497040689,
+          0.9996540546417236
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/0f124c6d0e6c674bca36.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.567617654800415,
+          0.033039309084415436,
+          0.3993430435657501
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/bb5140cbf56f3bd9.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.03840664029121399,
+          0.9600446224212646,
+          0.0015487611526623368
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/254f7ce438a1cc28.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.22369103133678436,
+          0.7626721262931824,
+          0.013636835850775242
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/bff90ec1c060b3aa4ff1.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9465099573135376,
+          0.0074560921639204025,
+          0.04603390023112297
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/e475c4074af55f82cc11.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9984509348869324,
+          0.0011690659448504448,
+          0.0003799845289904624
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/0b34e0e400b0ef1c5537.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9080774188041687,
+          0.022380825132131577,
+          0.06954174488782883
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/2a8e1eab06460aa7f344.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.3305595833517145e-06,
+          0.0001721390290185809,
+          0.9998205304145813
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/fc37b23f25f23530b1af.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.219518243393395e-06,
+          0.0001346129720332101,
+          0.9998601675033569
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/4e58261fb2ac72270225.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9967209100723267,
+          0.0010963327949866652,
+          0.002182716503739357
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/c5b86c78712ce3c63bc3.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          9.792494893190451e-06,
+          0.00019363815954420716,
+          0.9997965693473816
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/3356fc9a4fae324a.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6242707371711731,
+          0.3742280602455139,
+          0.0015011823270469904
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/06a4c99e2b01db26.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8095601797103882,
+          0.18930625915527344,
+          0.0011335690505802631
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/c54e1f7c9b28a0580b73.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.802870641171467e-06,
+          0.0001832300185924396,
+          0.9998089671134949
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/332e459be0bb9b6fd2e0.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.886420331080444e-05,
+          0.0002764715172816068,
+          0.9996646642684937
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/f155cfb9e8ebda9029bd.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.8868116736412048,
+          0.09346924722194672,
+          0.01971912756562233
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/982d38daee796b2e.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.38512563705444336,
+          0.6142281889915466,
+          0.0006462032906711102
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/dc453a916be756c9.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6726422309875488,
+          0.09920129179954529,
+          0.22815649211406708
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/4e68e248e1d1bbd4dcc5.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.008097168989479542,
+          0.0022310048807412386,
+          0.9896718263626099
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/a5a715a4f5313251439b.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.9648638963699341,
+          0.034600287675857544,
+          0.0005357805639505386
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/e4c8ebafe91aa5a6fca3.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00019502508803270757,
+          0.001353741972707212,
+          0.9984512329101562
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/0763ec75aab4b46e.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.7308352589607239,
+          0.006322963163256645,
+          0.2628418207168579
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/b4913f8c8c10261161d0.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.11033810675144196,
+          0.04992793872952461,
+          0.8397339582443237
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/fe1cb1b1f8dccdac8e24.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.006596594117581844,
+          0.00980642531067133,
+          0.9835969805717468
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/aa72ce06d95026f0d297.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.017204152420163155,
+          0.03861899673938751,
+          0.9441768527030945
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/99a7065ac4534b836c0d.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.2486086638527922e-06,
+          0.00011274203279754147,
+          0.9998840093612671
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/61a2bd2ea7bf3c0aba94.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.15258319675922394,
+          0.14488671720027924,
+          0.7025300860404968
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/0c3bbc450d586a15eb22.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3391348123550415,
+          0.2960876226425171,
+          0.3647775650024414
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/46941d48fcdec374.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.2050568014383316,
+          0.7922282218933105,
+          0.0027149852830916643
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/b743810b696d8267.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.2508010268211365,
+          0.737145185470581,
+          0.0120537793263793
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/e320f7e4dad1087dc1c6.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00015072310634423047,
+          0.0009828379843384027,
+          0.9988664388656616
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/f2f508b9657bdbf1.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5178947448730469,
+          0.017446639016270638,
+          0.46465864777565
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/759d29a27b445b489860.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.663720781332813e-05,
+          0.00039388713776133955,
+          0.9995694756507874
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/19aa24ae1861f2c7bcde.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.005462926812469959,
+          0.012801307253539562,
+          0.9817357659339905
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/9a9ffd8605942b2b3404.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.978663980960846,
+          0.018785089254379272,
+          0.0025509123224765062
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/f6a54eb5d3d9860d1578.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00021578749874606729,
+          0.0015944652259349823,
+          0.9981897473335266
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/364721834bc91f535db2.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9615921378135681,
+          0.03787212446331978,
+          0.0005357805639505386
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/7c09bade6be63c258e17.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9976549744606018,
+          0.0018092410173267126,
+          0.0005357805639505386
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/347bb37bc7a6df1f2154.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0016090342542156577,
+          0.01841443032026291,
+          0.9799765348434448
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/d5be333e06f77c6e.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6103435754776001,
+          0.388716459274292,
+          0.0009399438858963549
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/58f84e3b86fbb131c522.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.12659677863121033,
+          0.2864067852497101,
+          0.5869964361190796
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/a288c3e522c2d190eec5.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.018842782825231552,
+          0.042132411152124405,
+          0.939024806022644
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/58fec4dea06844806f67.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.006206788122653961,
+          8.317100582644343e-05,
+          0.9937100410461426
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/ab3be101cae79e05b5ed.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.020071448758244514,
+          0.11021393537521362,
+          0.869714617729187
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/e12f1414bfb97a5142d1.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6483654975891113,
+          0.34976691007614136,
+          0.0018675660248845816
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/320f90059b8d8a7c87de.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.113962055882439e-06,
+          0.00017235561972483993,
+          0.9998205304145813
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/45c0d400b101fb6ba8f4.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9630674123764038,
+          0.03453586623072624,
+          0.0023967307060956955
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/45878714c3aceb9316e5.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.11548691987991333,
+          0.10992967337369919,
+          0.7745833992958069
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/6b4135804e5e465e13f0.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.04656916856765747,
+          0.0162200964987278,
+          0.937210738658905
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/8f147a022d3398948c80.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9977689385414124,
+          0.0010974855395033956,
+          0.0011335690505802631
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/1bc1c6933fa65e5f6e55.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.04049326106905937,
+          0.23854868113994598,
+          0.7209580540657043
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/bc5d6c6ef0da1570f5ff.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.2498854398727417,
+          0.19347399473190308,
+          0.5566405653953552
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/081ae71f10297462.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8107842206954956,
+          0.18811705708503723,
+          0.001098731067031622
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/0a445b05a0c9e1d3b51e.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.031873516738414764,
+          0.012145171873271465,
+          0.9559813141822815
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/64e602de2c52dfa1.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6340799331665039,
+          0.33283403515815735,
+          0.03308597952127457
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/e18b0bd299a5868df17b.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.6010619219741784e-05,
+          0.000610255403444171,
+          0.999373733997345
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/f4172a242dee21eb3bfd.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.4016651221027132e-05,
+          0.00040327548049390316,
+          0.9995827078819275
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/68f8bb452504fbfb.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5435464382171631,
+          0.005852478090673685,
+          0.45060110092163086
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/9516e3d61f7f1ffa9ae2.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00040153914596885443,
+          0.000767963589169085,
+          0.9988304972648621
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/15e1f440c3539644a60d.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9678263664245605,
+          0.009196313098073006,
+          0.022977370768785477
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/285ecd3b848f56b6de45.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.4354603990796022e-05,
+          0.00015432653890457004,
+          0.9998313188552856
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/46721a4e858c190b256c.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0019507179968059063,
+          0.0023807515390217304,
+          0.9956685304641724
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/054a70d795a469c2.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8357916474342346,
+          0.1620256006717682,
+          0.002182716503739357
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/751834d7b8911a4bce73.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.3863117348810192e-06,
+          9.989526006393135e-05,
+          0.9998977184295654
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/b74a9a2b86af2c986ef2.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8715630769729614,
+          0.02322636917233467,
+          0.10521054267883301
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/826e89438481f5bdffba.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9934263825416565,
+          0.0022420932073146105,
+          0.004331501666456461
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/2c5dd73234120ccb6090.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.2267826795578003,
+          0.07478500157594681,
+          0.6984323263168335
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/c59c000dbd2b51d52277.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.006254729814827442,
+          0.013768735341727734,
+          0.9799765348434448
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/ebfa09df4ae85362c1e3.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8854951858520508,
+          0.11257807910442352,
+          0.0019267346942797303
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/3cfe74cb7451832c033c.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8512006998062134,
+          0.12751197814941406,
+          0.021287351846694946
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/4b84762281ba5d217ed9.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.3817680776119232,
+          0.17342595756053925,
+          0.44480594992637634
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/7be92f9067988757d9aa.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.296800423413515e-05,
+          0.00037144951056689024,
+          0.999595582485199
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/b9754e92a32e6ee8e841.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.049163877964019775,
+          0.034726496785879135,
+          0.9161096215248108
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/7906652557c58e90a4ef.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9778623580932617,
+          0.018192218616604805,
+          0.0039454069919884205
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/f200ad4b397261e8dbe0.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.004268242511898279,
+          0.027832435443997383,
+          0.9678993225097656
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/0e3174bff9d45e1e952a.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0367998443543911,
+          0.010626023635268211,
+          0.9525741338729858
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/fae43f3815d76ed1c9ee.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0006250924780033529,
+          0.0031993798911571503,
+          0.9961755275726318
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/dde1325f34c005ad6757.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00010321292938897386,
+          0.0019474849104881287,
+          0.9979493021965027
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/36f3e7ce822bbb49.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.2282518744468689,
+          0.6708695292472839,
+          0.10087862610816956
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/af9b0843979e455c0340.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9955797791481018,
+          0.0008266079821623862,
+          0.0035936026833951473
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/10fb5f22c8189f38.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5077276825904846,
+          0.46591702103614807,
+          0.026355354115366936
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/d70246f73187576a11fa.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.902562406845391e-06,
+          0.0002394897601334378,
+          0.9997546076774597
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/264f5ef8e38c1c4eb469.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9995408058166504,
+          0.0003569341206457466,
+          0.00010229986219201237
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/b16bb24eec03c111c3db.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00027060569846071303,
+          0.0007298582349903882,
+          0.9989995360374451
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/1e26053a70ca816d917b.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.025103790685534477,
+          7.50589751987718e-05,
+          0.974821150302887
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/e78616fd8f47e72a0133.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.7966225743293762,
+          0.20299747586250305,
+          0.0003799845289904624
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/1e5b5a5f157e9ec92b30.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9966675639152527,
+          0.002048109658062458,
+          0.0012843081494793296
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/5110b260593dc67862d4.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9979017972946167,
+          0.0010976317571476102,
+          0.0010005044750869274
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/733bfb9149bd398074e2.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.3902070350013673e-05,
+          0.00023149025219026953,
+          0.9997546076774597
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/5f7737682e670da08a88.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.14891935884952545,
+          0.07786428928375244,
+          0.7732163667678833
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/fbe02fb61c8edcd2a5fb.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.303996294969693e-05,
+          0.0011164627503603697,
+          0.9988304972648621
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/78f0fdd1bf3dc21f5b13.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0005295008304528892,
+          0.00254591996781528,
+          0.9969245791435242
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/660c6ba2a125e916.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.12201306968927383,
+          0.5177229642868042,
+          0.3602639436721802
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/c4a81201be0127611b74.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9105649590492249,
+          0.0018711724551394582,
+          0.08756384253501892
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/af2a00421715c2263eca.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.9025306503172033e-05,
+          0.000266911752987653,
+          0.9997040629386902
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/26cc52ab24ab610d4d2e.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9996101260185242,
+          7.482265209546313e-05,
+          0.0003150386910419911
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/ae7b9fa077ad25863c7a.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00828009843826294,
+          0.00812292005866766,
+          0.9835969805717468
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/c17f41719dda687d02ac.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.1894979178905487,
+          0.0733439028263092,
+          0.7371581792831421
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/ae3b902825beb287.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9386969208717346,
+          0.03935478627681732,
+          0.021948253735899925
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/b5ddac5acc9df12f.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5311291217803955,
+          0.44725552201271057,
+          0.02161533385515213
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/f1e2361ebd55277171e4.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.9205109512986382e-06,
+          0.00011307012755423784,
+          0.9998840093612671
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/2153ef69c9d84e9ba3cc.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.11374308168888092,
+          0.8671329021453857,
+          0.01912403479218483
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/bf6af65b2077c5b26b4e.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.5694435238838196,
+          0.16314829885959625,
+          0.26740819215774536
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/d02b52889137930fb1ca.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.009931343607604504,
+          0.01682792417705059,
+          0.9732407331466675
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/7317575e81e0ced4877c.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.1301080882549286,
+          0.07678595185279846,
+          0.793105959892273
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/215c7b59739517b6.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.031135650351643562,
+          0.9686031341552734,
+          0.0002611903182696551
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/724b92fff23bec338006.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.6896858215332031,
+          0.30844658613204956,
+          0.0018675660248845816
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/8fdc1d49ec5cc13a96e9.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          4.7052417357917875e-05,
+          0.00034496732405386865,
+          0.9996079802513123
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/c55db23e76e9444d9729.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.0664057299436536e-05,
+          0.00018036883557215333,
+          0.9998089671134949
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/75d1a3799d00dc6ba735.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.822577178478241,
+          0.12322410941123962,
+          0.054198723286390305
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/3477abde8986ec20f395.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.4529753570968751e-05,
+          0.00023086256987880915,
+          0.9997546076774597
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/4abeb25800daf1096739.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00021059093705844134,
+          0.0007293146918527782,
+          0.9990600943565369
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/79ebae625fad6b8b.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3430332541465759,
+          0.5903975367546082,
+          0.06656918674707413
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/06314d6f25340df6eb80.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5771743059158325,
+          0.41653579473495483,
+          0.00628990214318037
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/1dea69608af56be6b4e7.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.03872150555253029,
+          0.00941526796668768,
+          0.9518632292747498
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/68c758b25eb3ee0cd761.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9989098906517029,
+          0.0006459162104874849,
+          0.0004442183708306402
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/83fabea1fa02cce1.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.21325457096099854,
+          0.7800526022911072,
+          0.006692850962281227
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/78540fe44c285d443b17.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.976847231388092,
+          0.02297324500977993,
+          0.00017952796770259738
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/e2a207307ae6a652a2f4.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9514555335044861,
+          0.0025105278473347425,
+          0.04603390023112297
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/9751b7bbf95b9e8b2dfa.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.07297176867723465,
+          0.14972834289073944,
+          0.7772998809814453
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/30ca6399d98273aca28f.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9991896152496338,
+          0.0002033034834312275,
+          0.0006070755189284682
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/109a21037502a80fc5df.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.8729529976844788,
+          0.03034120798110962,
+          0.09670579433441162
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/fd337f7712c92ecc.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9162299036979675,
+          0.08260062336921692,
+          0.0011695103021338582
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/55b7e3b5cbea8c70306a.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0037945047952234745,
+          0.00942824874073267,
+          0.9867772459983826
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/c402c15b34b62f51fc86.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          9.196675819111988e-05,
+          0.0007121594971977174,
+          0.9991958737373352
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/1078a73e762c7c6e3673.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.9038171172142029,
+          0.08949001878499985,
+          0.006692850962281227
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/57a55ef82af6675dd48d.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9982690811157227,
+          0.0010642526904121041,
+          0.0006667023408226669
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/27bdc863b7fee0267b47.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.8830745324958116e-05,
+          0.000480504531878978,
+          0.999480664730072
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/172976640b266191fd66.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.6990492086915765e-06,
+          0.00017277053848374635,
+          0.9998205304145813
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/69d6afb2319914f3c70b.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.790758324204944e-05,
+          0.0001986360875889659,
+          0.999783456325531
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/932dc278a417bdad2f57.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.7608886992093176e-05,
+          0.00042662452324293554,
+          0.999555766582489
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/41158b4b5789e35f8550.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.2130316109687556e-06,
+          0.00017325655790045857,
+          0.9998205304145813
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/61b6423fee6b88d0.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6833891272544861,
+          0.20842191576957703,
+          0.10818895697593689
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/73efc505ef2790a435a8.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.04545624181628227,
+          0.025103319436311722,
+          0.929440438747406
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/ac71d11177119ebb8227.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.998167872428894,
+          0.0006255783955566585,
+          0.0012065897462889552
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/86c3b3adfc537077bb05.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9966716766357422,
+          0.0007773779798299074,
+          0.0025509123224765062
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/78dd3c837b78e5414e6c.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          9.707508979772683e-06,
+          0.0009301981190219522,
+          0.9990600943565369
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/d2c3594c6096a647545b.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9459587931632996,
+          0.0014221916208043694,
+          0.052618950605392456
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/0bc9ec1327acbf6bd412.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0023733198177069426,
+          0.00620420603081584,
+          0.9914224743843079
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/03b8a991c862fe03ff36.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9859433770179749,
+          0.00624074088409543,
+          0.007815888151526451
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/00ae276fe7f5b434e7e4.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0001285679027205333,
+          0.0004417889576870948,
+          0.9994296431541443
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/acafd995f58829cbdb7f.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.055046383291482925,
+          0.020811794325709343,
+          0.9241418242454529
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/51bc93ac3baef060da88.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.552252471446991,
+          0.4420172870159149,
+          0.005730246659368277
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/8740b321cba022765a0f.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9980576634407043,
+          7.470644050044939e-05,
+          0.0018675660248845816
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/112bd7cdb58bb6e31cfc.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00031105056405067444,
+          0.000973191112279892,
+          0.9987157583236694
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/ad613de6b9eafe498582.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00014962346176616848,
+          0.0006058058352209628,
+          0.9992445707321167
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/630b2e8cc743a3c1.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3903602659702301,
+          0.6093438267707825,
+          0.0002959570847451687
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/4588c73e4deef664.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5165620446205139,
+          0.3522647023200989,
+          0.13117322325706482
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/15b6f46e2eedec41.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.13268306851387024,
+          0.858469545841217,
+          0.008847354911267757
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/230126809698c53fab7b.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.996646523475647,
+          0.0024704395327717066,
+          0.0008830457809381187
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/bfc30cbb16f9b513ec16.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9946616291999817,
+          0.004606197122484446,
+          0.0007321811863221228
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/4a993b20420c7c5afdf1.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.922569215297699,
+          0.005839600693434477,
+          0.07159119844436646
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/80085da2e370cd56.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8157591819763184,
+          0.13955993950366974,
+          0.044680867344141006
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/3290a61d30c74bc2a889.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9519066214561462,
+          0.009045043960213661,
+          0.039048291742801666
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/568b043cfb916d12.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.1827206015586853,
+          0.8125241994857788,
+          0.004755199886858463
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/3cb46930fce25d85a69a.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.1507020890712738,
+          0.5599262118339539,
+          0.28937169909477234
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/d7bc27de8c775d2e99fb.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.005120746325701475,
+          0.010303863324224949,
+          0.9845753908157349
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/4386e027417a6f082c52.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.15671077370643616,
+          0.014350386336445808,
+          0.8289388418197632
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/ff36893a9ae06d7a9a63.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9841170310974121,
+          0.014943026937544346,
+          0.0009399438858963549
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/d8392ca21ac6d36da748.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00045207852963358164,
+          0.006240748334676027,
+          0.9933071732521057
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/4faf463eff8b0682.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.16478078067302704,
+          0.8303138017654419,
+          0.004905405919998884
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/67c1c442bed8d84d7694.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9990164041519165,
+          0.0006876476109027863,
+          0.0002959570847451687
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/e1fd773a0836877f401c.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.8095349787472514e-06,
+          9.427314944332466e-05,
+          0.9999039173126221
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/e85c9bb0322c3bbbb9c2.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          4.714265014627017e-05,
+          0.000640694925095886,
+          0.999312162399292
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/c31079204d9eb4870dd2.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          9.089450941246469e-06,
+          0.00019434120622463524,
+          0.9997965693473816
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/98ef641065e82c1a3519.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8953461647033691,
+          0.003775227116420865,
+          0.10087862610816956
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/4211156c2dc67c48148d.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.22848112881183624,
+          0.27994096279144287,
+          0.4915779232978821
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/38411efe04b4b71f71bf.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9990342855453491,
+          0.000687659892719239,
+          0.0002780309587251395
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/a090bd382efbdf34c4f7.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8906651139259338,
+          0.09242001175880432,
+          0.016914913430809975
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/35bcd671f8bd5e408fe3.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.11830272525548935,
+          0.02681259624660015,
+          0.854884684085846
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/7ee9939c711a98040258.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.022821012884378433,
+          0.014505920000374317,
+          0.9626730680465698
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/f30c4c1f89b8d7ac1aa5.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.008294816128909588,
+          0.04278791323304176,
+          0.9489172697067261
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/76dd2febbb9695e9.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5003063082695007,
+          0.49300089478492737,
+          0.006692850962281227
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/f0b099f3f1cab5b2c25e.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0004985473933629692,
+          0.0026741481851786375,
+          0.9968273043632507
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/94c6d155f76e5bb7bf80.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9975699186325073,
+          0.000314372155116871,
+          0.002115703420713544
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/b0e4e2324e785b6a2bed.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.437037882278673e-06,
+          0.00013339545694179833,
+          0.9998601675033569
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/a271f282fca74c24.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.04287436604499817,
+          0.945793867111206,
+          0.011331753805279732
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/9f9c8516bc6a853deb2a.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.026765506714582443,
+          0.11357077211141586,
+          0.859663724899292
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/23a1ff5afebbdf0ff3e0.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.10543349385261536,
+          0.03396287187933922,
+          0.8606036305427551
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/24e34d636a7fbaa32e96.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0021994374692440033,
+          0.005616459995508194,
+          0.9921841025352478
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/train/authentic/celebahq/95c23e62c6bc0b8df2da.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9683786034584045,
+          0.00864406581968069,
+          0.022977370768785477
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/2c20f127b45e4aa2b3ad.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.0869881609542063e-06,
+          0.00012129462993470952,
+          0.9998766183853149
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/bb79f1fdc3b0fa425e6f.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9978702664375305,
+          0.001926342723891139,
+          0.00020342698553577065
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/edd35a9d26daae159e51.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9432321786880493,
+          0.000944653176702559,
+          0.05582314357161522
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/f10f3b2e47b39a03cb46.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.001042907708324492,
+          0.003288561711087823,
+          0.9956685304641724
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/123161aee53f2eff.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.7274588942527771,
+          0.2718315124511719,
+          0.0007096704212017357
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/ee8727d0444f50d3.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.893642008304596,
+          0.0488646999001503,
+          0.05749328061938286
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/af20991ed65030894eef.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9661245346069336,
+          0.033579569309949875,
+          0.0002959570847451687
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/d5dd00f9be8554071012.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.002580105559900403,
+          0.008072436787188053,
+          0.9893474578857422
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/8c35999f1fdf7a869c7c.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.307711267552804e-06,
+          0.00012806092854589224,
+          0.999868631362915
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/db23c70db50d59f13100.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0006396222161129117,
+          0.002250010846182704,
+          0.9971103668212891
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/6ab813f2a97be00b2bbb.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.12238121777772903,
+          0.013308338820934296,
+          0.8643104434013367
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/e756583428469e9a.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.0705411285161972,
+          0.9291976690292358,
+          0.0002611903182696551
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/9f0c520e2fea49099d44.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.2320720745483413e-05,
+          0.0004082036321051419,
+          0.9995694756507874
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/ccf1f01b6b32a10c28ec.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.01946309022605419,
+          0.08722749352455139,
+          0.8933094143867493
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/e5e103c9a8f10c959938.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.25193047523498535,
+          0.08178985118865967,
+          0.666279673576355
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/6f044ca1bb77dc1212e1.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9926340579986572,
+          0.0048932768404483795,
+          0.0024726230185478926
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/a30d9714bd5dfbfaeda0.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.07487986236810684,
+          0.02886875905096531,
+          0.896251380443573
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/249c4403cf1bd9eeed08.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8797006607055664,
+          0.11905453354120255,
+          0.0012448433553799987
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/c404131d2dedee230b0e.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00011523346620379016,
+          0.000594419427216053,
+          0.9992903470993042
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/02b9a4c0b14601d9.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6570605039596558,
+          0.33559367060661316,
+          0.007345826830714941
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/f255ca8f9b23852a04fb.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.7929013967514038,
+          0.20523104071617126,
+          0.0018675660248845816
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/be52b6d3b79c107978f0.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00023232860257849097,
+          0.004522870294749737,
+          0.9952448010444641
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/9fb6829464d589fb2128.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.4878437418228714e-06,
+          9.879372373688966e-05,
+          0.9998977184295654
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/e3b60af081150349.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.22260719537734985,
+          0.7769755125045776,
+          0.00041731575038284063
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/6e8647c48d8f4922.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.7361728549003601,
+          0.25441455841064453,
+          0.009412589482963085
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/2c549c2bcf41e1b7.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.27414095401763916,
+          0.7222654223442078,
+          0.0035936026833951473
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/a5fcb596ac0548b832ca.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0002700613113120198,
+          0.0008994414238259196,
+          0.9988304972648621
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/76f2c17eb200308a1e1f.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9916356205940247,
+          0.0005484581924974918,
+          0.007815888151526451
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/2d4d07d70524e0c74664.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00045980169670656323,
+          0.0011380200739949942,
+          0.9984021782875061
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/85c1bf8d367e4b43cf3e.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0009188830736093223,
+          0.005371076054871082,
+          0.9937100410461426
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/d5b04cdaeb10da2d872a.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.7567930626682937e-05,
+          0.00022782439191360027,
+          0.9997546076774597
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/b2191e18784a669e7d3b.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.1312355101108551,
+          0.8624746203422546,
+          0.00628990214318037
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/f3f794fff2672dc26507.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9780526757240295,
+          0.020298834890127182,
+          0.0016484829830005765
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/f47210ac16bff3101795.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9965875744819641,
+          0.00013936441973783076,
+          0.003273064736276865
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/11c79a00fd31f2c48ffc.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9861496090888977,
+          0.013633882626891136,
+          0.00021654405281879008
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/34e8564c7b304e5c.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.26695340871810913,
+          0.7313458919525146,
+          0.0017007222631946206
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/48a3c497e2cf87c7f49f.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.24063725769519806,
+          0.7587924599647522,
+          0.000570315751247108
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/c708cb71f80879b1df28.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9971348643302917,
+          0.0025501088239252567,
+          0.0003150386910419911
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/aeab590507f604d03dce.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.3168153600418009e-05,
+          0.0007189557072706521,
+          0.9992678761482239
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/be8c70369ddb9770102b.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9908550977706909,
+          0.005199529696255922,
+          0.0039454069919884205
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/87de4b71b8509efa9783.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.003946512006223202,
+          0.0362914502620697,
+          0.9597620368003845
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/fd771390ad8ff2cb.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6420793533325195,
+          0.34100574254989624,
+          0.016914913430809975
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/5dee4ec1c3361e163458.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00011218240251764655,
+          0.00040715286741033196,
+          0.999480664730072
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/33d26cb1181e8c58f556.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.520328938961029,
+          0.09475895017385483,
+          0.3849121630191803
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/4faa8afd167ca7f0c3c9.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9848117828369141,
+          0.0031344396993517876,
+          0.0120537793263793
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/9a1189e1cd3f040f3b42.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.999607503414154,
+          0.0002611560048535466,
+          0.00013135180051904172
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/5614f298e7d1084db403.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9659057855606079,
+          0.01610800437629223,
+          0.01798621006309986
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/f010325bb05dc3c0.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9280213713645935,
+          0.07156132161617279,
+          0.00041731575038284063
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/edfc7637e33e8bf6.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.19595427811145782,
+          0.7933932542800903,
+          0.01065251138061285
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/c246548d901e01519eb5.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8403497934341431,
+          0.07695287466049194,
+          0.08269733935594559
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/3772852b2be7694c.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5284509062767029,
+          0.46772459149360657,
+          0.0038244836032390594
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/9f8205bdd9f417d195b1.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9912036657333374,
+          0.00647319620475173,
+          0.002323162741959095
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/c6bb2c0d6ee641ae.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9770101308822632,
+          0.021924879401922226,
+          0.0010649627074599266
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/0c92c3056154a070bc34.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.06350655108690262,
+          0.04468243569135666,
+          0.8918110132217407
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/07656e891cb032a3515f.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.9900214738299837e-06,
+          0.00010696727258618921,
+          0.9998910427093506
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/5ccdfd86a656402c980c.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9896655678749084,
+          0.004044536966830492,
+          0.00628990214318037
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/a507d87a58df4aa3ee51.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.892359733581543,
+          0.021316776052117348,
+          0.08632347732782364
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/51af4f65353e3483b12b.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8489130735397339,
+          0.0010580809321254492,
+          0.15002880990505219
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/608ad2b1856d6e9603da.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9838184714317322,
+          0.004849819000810385,
+          0.011331753805279732
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/edef69a63a9085fa.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.08592552691698074,
+          0.9094648957252502,
+          0.004609572235494852
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/7ee3e253e13d95743b46.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.79951733420603e-06,
+          0.00028813755488954484,
+          0.9997040629386902
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/6f76f0891f4ed4b7.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.09452157467603683,
+          0.5568333268165588,
+          0.3486451208591461
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/a0cbefb7841f2d252bbe.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.05668383464217186,
+          0.07900571823120117,
+          0.8643104434013367
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/619989fb0ce000f1b000.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0006065891939215362,
+          0.0034635139163583517,
+          0.9959298968315125
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/1240fd18e987740cb73a.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.012742241844534874,
+          0.00089464575285092,
+          0.9863631129264832
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/a31626096c4290759692.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9403358697891235,
+          0.03703495115041733,
+          0.02262919954955578
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/ec957a23de56af1b70a3.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.007813259959220886,
+          0.0096292644739151,
+          0.982557475566864
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/01baf90782cd11adee59.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.10268446058034897,
+          0.29712721705436707,
+          0.6001883149147034
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/f033e08a1ab3bdf73659.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.4803138482384384e-05,
+          0.0003894302644766867,
+          0.999555766582489
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/11cb03f691ed6a5d16e6.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.07387317717075348,
+          0.4120314419269562,
+          0.5140953660011292
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/cdd321c5c316dfa3de44.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.2572424970567226e-05,
+          0.0006341055268421769,
+          0.9993333220481873
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/196a37b277fd15e6.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5545328855514526,
+          0.37889790534973145,
+          0.06656918674707413
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/435e5bd409107876.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.7120270133018494,
+          0.023614615201950073,
+          0.26435837149620056
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/144e22b0947f16f27af3.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.17169398069381714,
+          0.20309674739837646,
+          0.6252092719078064
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/8d95e172eab1c4e86181.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9860546588897705,
+          0.01321314089000225,
+          0.0007321811863221228
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/007ca4b87fd9e752.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8358818888664246,
+          0.16331401467323303,
+          0.0008040859247557819
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/b3d52b9d7ab529eb5cd0.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.026757607236504555,
+          0.005832124501466751,
+          0.9674102663993835
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/3e2a0394cbf2611cc307.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9952391386032104,
+          0.0038208886981010437,
+          0.0009399438858963549
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/f44e9b97c58d3e55eab4.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9965131282806396,
+          0.0006859245477244258,
+          0.0028009270317852497
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/5ca77d44da3fc9f084b5.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00034780692658387125,
+          0.0020489555317908525,
+          0.9976032376289368
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/cf95b610036b83ea07cc.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9935415387153625,
+          0.005213627126067877,
+          0.0012448433553799987
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/edd1aa45ff9dfdb76db7.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.028151212260127068,
+          0.02293151617050171,
+          0.9489172697067261
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/8e5e148a87af1a01b66b.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8678587675094604,
+          0.0900535061955452,
+          0.042087726294994354
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/faf61ebd101d2095fe68.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.3580329070682637e-05,
+          0.0002069108304567635,
+          0.9997695088386536
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/7ae70cd4307621da.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3869996666908264,
+          0.6005687117576599,
+          0.012431650422513485
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/3c4644b575d0438b6795.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.001360300462692976,
+          0.0029711690731346607,
+          0.9956685304641724
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/a40e4c84a636e8fe347d.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9989530444145203,
+          0.0007319505675695837,
+          0.0003150386910419911
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/83cb5ea9dc4bc3d75693.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.030470602214336395,
+          0.0006731832982040942,
+          0.9688562154769897
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/384b2e5f8f0a9ebbdec4.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          9.395744564244524e-05,
+          0.0004588756419252604,
+          0.9994471669197083
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/31c252ad9359e98510af.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.10367531329393387,
+          0.09069251269102097,
+          0.8056321740150452
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/3825ce7a969883e04078.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.0263098576833727e-06,
+          0.00012934232654515654,
+          0.999868631362915
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/714d158d9ffecbdb6660.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0003170478157699108,
+          0.0036284220404922962,
+          0.9960545301437378
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/7321af52a7dffc0e2808.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0014106498565524817,
+          0.003344549098983407,
+          0.9952448010444641
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/b95a9906037f641cf890.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.810863851569593e-06,
+          0.00012455777323339134,
+          0.999868631362915
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/7b798e3e7a4bad6707ae.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.7103126049041748,
+          0.00031567414407618344,
+          0.28937169909477234
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/759c98ea9644a252e183.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9986670613288879,
+          0.0006662578671239316,
+          0.0006667023408226669
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/0f014463bfa026d872f7.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.8468452809611335e-06,
+          0.0002096968237310648,
+          0.999783456325531
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/596ae2204c72426cb329.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.467021431584726e-06,
+          0.000428057333920151,
+          0.9995694756507874
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/48565d594b7da149ec76.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00030708572012372315,
+          0.0005759570631198585,
+          0.9991169571876526
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/740bddeaf7ef98da039e.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9153449535369873,
+          0.021865850314497948,
+          0.06278920918703079
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/5482e997383cd53d5a83.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9830170273780823,
+          0.0072745103389024734,
+          0.009708477184176445
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/000a6c181bfede003e40.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9968098998069763,
+          0.001322547672316432,
+          0.0018675660248845816
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/d8e905723d0be35cc4c7.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.740089282975532e-05,
+          0.00019914278527721763,
+          0.999783456325531
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/c68f34880baa1c453031.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.222946856520139e-05,
+          0.00039200394530780613,
+          0.999555766582489
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/579010a25329d5991758.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9995616674423218,
+          0.0001233557122759521,
+          0.0003150386910419911
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/f34aa9350db1a5bc4ce7.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.01805313304066658,
+          0.021585684269666672,
+          0.9603611826896667
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/9b0b230e542c74a7eab1.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9881656169891357,
+          0.011685517616569996,
+          0.00014883848780300468
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/746d74d429b04be53e1a.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9968412518501282,
+          0.0006861503352411091,
+          0.0024726230185478926
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/172136c8bd4d6a1dccc1.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9968671798706055,
+          0.0013226238079369068,
+          0.0018102108733728528
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/736cca524b8df2019fa5.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00020519808458629996,
+          0.00197752402164042,
+          0.9978172779083252
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/38848ea26913ea8c.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.050460800528526306,
+          0.37872934341430664,
+          0.5708098411560059
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/a2b083dc89f1fe3ea537.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9925298094749451,
+          0.0005663784104399383,
+          0.006903838831931353
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/ae7a774efd8a6b63e39f.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.020639268681406975,
+          0.017826946452260017,
+          0.961533784866333
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/227c4b56731b79adfcbb.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.1524840374477208e-05,
+          0.000191905812243931,
+          0.9997965693473816
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/deffa08a312b4e5d328d.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9745099544525146,
+          0.013058440759778023,
+          0.012431650422513485
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/6e5a395c5714c27a716f.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.07385101914405823,
+          0.05036202073097229,
+          0.8757869601249695
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/48bcd7778b118670d603.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.901922562159598e-05,
+          0.0003882728924509138,
+          0.9995827078819275
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/72dee8193d59bac5a662.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0017065030988305807,
+          0.005639292765408754,
+          0.9926542043685913
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/068834c5f049c359.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8573625087738037,
+          0.14216464757919312,
+          0.0004728544445242733
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/eab88b6d6eb3dc9c10b4.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          9.040662916959263e-06,
+          0.00013079182826913893,
+          0.9998601675033569
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/7f7f7d62d7ddcb37fe4d.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00033098694984801114,
+          0.0036144829355180264,
+          0.9960545301437378
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/f19cdf484d040d901e52.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.282543598790653e-05,
+          0.0004314079706091434,
+          0.999555766582489
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/9cca5b907fe957369e35.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.08952520787715912,
+          0.05081105977296829,
+          0.859663724899292
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/f67bee7086ca88f757de.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.2852025032043457,
+          0.030533500015735626,
+          0.6842640042304993
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/a5c09e57f809bcd33b36.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8772118091583252,
+          0.11687716096639633,
+          0.0059110685251653194
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/3dff5a813c66bcd05e87.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.009019826538860798,
+          0.015403295867145061,
+          0.9755768775939941
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/964a9aa4c6f3160c1879.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9847021102905273,
+          0.014951910823583603,
+          0.00034599160426296294
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/e290367ec44677e7afdc.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.1068153728265315e-05,
+          0.0004231652710586786,
+          0.999555766582489
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/f46686c336e30e5c.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6764882802963257,
+          0.32205668091773987,
+          0.0014550630003213882
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/36943217c44ed3b4dcaf.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.004665089305490255,
+          0.005348550621420145,
+          0.9899863600730896
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/79e4ecca6d8b53e46d4c.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9963842034339905,
+          0.0022487689275294542,
+          0.0013670255430042744
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/513dc1a5cb1099170abc.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9820512533187866,
+          0.006617009174078703,
+          0.011331753805279732
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/e8abdb99dec2911e11e4.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.3837184168514796e-06,
+          0.000850538956001401,
+          0.9991440773010254
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/00032d5bb63c29eb.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.4467545449733734,
+          0.5511297583580017,
+          0.002115703420713544
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/1b51fdefd5ae02df1440.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.005968736484646797,
+          0.0007240899722091854,
+          0.9933071732521057
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/d5104a475f8f498580d8.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0012793573550879955,
+          0.003940698225051165,
+          0.9947799444198608
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/9d5a4adae045574adedb.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.96001981041627e-05,
+          0.00033875650842674077,
+          0.9996316432952881
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/d86b7f43f70e11b628ca.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.07921197265386581,
+          0.10555551201105118,
+          0.815232515335083
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/d99546f5d464e19dcaba.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5072261691093445,
+          0.03345519304275513,
+          0.4593186378479004
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/b7e1a56c4a33b8c261cf.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.09541540592908859,
+          0.0487334206700325,
+          0.8558511734008789
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/6887adb30e27108ee3c7.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9941685795783997,
+          0.00027648653485812247,
+          0.005554925184696913
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/c6ea3de029e9b6ddb52b.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.826096773147583,
+          0.00394702423363924,
+          0.169956237077713
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/dd017f544ac3452f1871.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00020676244457717985,
+          0.0013910592533648014,
+          0.9984021782875061
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/2e38ab6ef1b823b88cf9.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9949017763137817,
+          0.004065936431288719,
+          0.0010322310263291001
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/31ffc1cc320c21b16891.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0020920869428664446,
+          0.0034627679269760847,
+          0.9944451451301575
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/02e9a1b29a30f5ad4d8e.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.4659888446331024,
+          0.5080537796020508,
+          0.02595735713839531
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/60a684a3752c2508513d.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0026624312158674,
+          0.007351208478212357,
+          0.9899863600730896
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/68dcbdcbfbe3bd51797c.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9974003434181213,
+          0.00020293943816795945,
+          0.0023967307060956955
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/879ad76c2b7dd95cc1ff.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9901943802833557,
+          0.004585509654134512,
+          0.005220125429332256
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/63312c8e7416f44c989c.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0001632450585020706,
+          0.0006926776259206235,
+          0.9991440773010254
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/cf1d163c1dc18604a24f.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9903145432472229,
+          0.0027815899811685085,
+          0.006903838831931353
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/206c0c40514e38d4494f.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6369284391403198,
+          0.3490079641342163,
+          0.014063628390431404
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/05f9e00cec322b9955d9.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9632283449172974,
+          0.001093124970793724,
+          0.035678550601005554
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/dc49d80adc91b600.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9871257543563843,
+          0.00998463574796915,
+          0.002889581024646759
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/2becbf2f77d82a0a9432.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00216821301728487,
+          0.010263468138873577,
+          0.9875683188438416
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/f72e39679cf5b8928b45.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00010860680049518123,
+          0.0006010460783727467,
+          0.9992903470993042
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/938c48a7dc6425dacefc.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.3705357015132904,
+          0.12905803322792053,
+          0.5004062652587891
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/5b90907bc61b0999.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.1491299569606781,
+          0.8061891198158264,
+          0.044680867344141006
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/f0f72fac136fdc8ebd43.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.10036817938089371,
+          0.0005104794981889427,
+          0.8991213440895081
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/7f4bd74f7f0dacbb3b35.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9973716139793396,
+          0.001596196205355227,
+          0.0010322310263291001
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/3b794e16f878f7f587d0.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9939921498298645,
+          0.005381565075367689,
+          0.000626334105618298
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/9c081c887ded1f12.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.14386719465255737,
+          0.017453070729970932,
+          0.8386797308921814
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/e4dbf3ab2d77171680b8.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.2656514346599579,
+          0.005600242875516415,
+          0.7287483215332031
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/96262132aaf07a7786f7.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9976351857185364,
+          0.000909725553356111,
+          0.0014550630003213882
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/0a42b12275be403c006c.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.996576189994812,
+          0.0005342324147932231,
+          0.002889581024646759
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/15fe178f716360144fe6.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.22747455537319183,
+          0.07739432156085968,
+          0.6951311230659485
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/1648d80d776137386cd8.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0002745548845268786,
+          0.0008590062498115003,
+          0.9988664388656616
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/76afb853d272f7b71fa8.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.938137084944174e-05,
+          0.0004184230347163975,
+          0.9995121955871582
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/251c8a0db8df2d1f904c.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.03526417538523674,
+          0.02308168262243271,
+          0.9416541457176208
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/cc00643b1e2ac8729b6a.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.870403012726456e-06,
+          0.00015155875007621944,
+          0.999841570854187
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/06177a298eabf2bc8f09.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.4410575330257416,
+          0.2474108338356018,
+          0.31153160333633423
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/12e02f5f225fcb1a.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8850029706954956,
+          0.1142873764038086,
+          0.0007096704212017357
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/a22ee87ea9d23722e3e5.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.026811977848410606,
+          0.09655366092920303,
+          0.8766343593597412
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/3e9f13faef23c70405fa.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          4.128659838897875e-06,
+          0.00010482862853677943,
+          0.9998910427093506
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/30342ba43a36487b8866.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9502051472663879,
+          0.0002058058453258127,
+          0.04958902671933174
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/143d1775bb7dfc1fd6b5.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          4.903587978333235e-06,
+          0.0001264650491066277,
+          0.999868631362915
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/e78f2c57343ca86c.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.025902487337589264,
+          0.9719817638397217,
+          0.002115703420713544
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/eeb318d3d9545592492a.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8146243691444397,
+          0.1831928938627243,
+          0.002182716503739357
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/e6c5f1c481ad84bcd910.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          8.57292707223678e-06,
+          0.00032676279079169035,
+          0.9996646642684937
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/a67e26429c1b32732868.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.21600164473056793,
+          0.026203973218798637,
+          0.7577943801879883
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/87be5df71dc6bdbfcb27.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          9.195706297759898e-06,
+          0.00018183718202635646,
+          0.9998089671134949
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/893edc0ced3b823318dd.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.042536253720755e-06,
+          0.000196388122276403,
+          0.9997965693473816
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/b726fe0b865d313853ae.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9971315860748291,
+          0.00047172114136628807,
+          0.0023967307060956955
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/bd164ebf9a7243821a51.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9976612329483032,
+          0.0012052219826728106,
+          0.0011335690505802631
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/c37bae1ff2c965172be6.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.044693149626255035,
+          0.02586640976369381,
+          0.929440438747406
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/66a2a49a66c570326051.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9751124382019043,
+          0.01731031946837902,
+          0.007577241398394108
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/a01d1726f79d1f63e647.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8765962719917297,
+          0.10307136923074722,
+          0.020332353189587593
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/c469482956505cbf34ef.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.007560538128018379,
+          0.0041266814805567265,
+          0.9883127808570862
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/cf08a689326826a260e7.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5426800847053528,
+          0.002847723662853241,
+          0.454472154378891
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/9eb0a24c20118da6f2f3.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.856601357460022,
+          0.13766835629940033,
+          0.005730246659368277
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/0196035fa091d767.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.16797547042369843,
+          0.8268043994903564,
+          0.005220125429332256
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/8f6b39b27accc8813095.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.338034366606735e-05,
+          0.0002625567140057683,
+          0.9997040629386902
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/ea4d06325dad6bfa2fae.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.0559903122484684,
+          0.9323223829269409,
+          0.011687257327139378
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/1dc9f55d5fa8eaf6da13.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.013219494372606277,
+          0.04686717316508293,
+          0.9399133324623108
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/fb3d9d2f8e213a87cc3c.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9787997603416443,
+          0.0037577752955257893,
+          0.017442485317587852
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/e5f19e277eba8585fb5a.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8764252662658691,
+          0.06348803639411926,
+          0.060086652636528015
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/340f56d7652908718b4b.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.552804618171649e-06,
+          0.00012381582928355783,
+          0.999868631362915
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/10241a1bbb2017e6.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.022377923130989075,
+          0.8663808703422546,
+          0.11124119907617569
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/cf72c7672b0bbd07.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5961993336677551,
+          0.40340861678123474,
+          0.0003920417802873999
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/fb349e45b933ecc857c9.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0017556585371494293,
+          0.005365725606679916,
+          0.9928786158561707
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/321062dc65b255fb40d5.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8545753359794617,
+          0.12902158498764038,
+          0.01640303246676922
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/ca28c642ed16d455.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3140679895877838,
+          0.6419133543968201,
+          0.04401864856481552
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/386be0d05f51bc15.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5719626545906067,
+          0.4209159314632416,
+          0.00712142838165164
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/9dc4c6f74d09884eb7ab.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.987107515335083,
+          0.0019055658485740423,
+          0.010986941866576672
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/eb37f3e0b551123efb1b.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.00014681021275464445,
+          0.0015538891311734915,
+          0.9982993006706238
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/fb8bda03b4a3dba9ecd0.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.5699335336685181,
+          0.1185348778963089,
+          0.31153160333633423
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/if/6f0f8efe98c020369910.png",
+      "dataset": "DiffusionForensics",
+      "generator": "if",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0010335545521229506,
+          0.004351426847279072,
+          0.9946150183677673
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/5916bdb63b019350874b.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          2.4643366486998275e-05,
+          0.0007547469576820731,
+          0.999220609664917
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/7ea76f29c3e039b3c354.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.6564986109733582,
+          0.08217042684555054,
+          0.2613309323787689
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/c8cddf6c545be2221c8b.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9920213222503662,
+          0.0004014166188426316,
+          0.007577241398394108
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/f4b866f376cae7cecf75.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.005453311372548342,
+          0.002862490015104413,
+          0.9916841983795166
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/1ff62ecd26884b0ef290.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.004473736975342035,
+          0.01048333290964365,
+          0.985042929649353
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/242dc6788bfdd177f0a7.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.43539773489465e-05,
+          0.0001890766725409776,
+          0.9997965693473816
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/dalle2/e0aa67523d28149ad7d5.png",
+      "dataset": "DiffusionForensics",
+      "generator": "dalle2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.004813346546143293,
+          0.004895117599517107,
+          0.9902915358543396
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/01c1dd2232fb6e90120e.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9965546727180481,
+          0.002799117239192128,
+          0.0006462032906711102
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/b6507ffcd038cea32220.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.07592852413654327,
+          0.1620013564825058,
+          0.7620701193809509
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/2a9a6765e16db940324a.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9739177823066711,
+          0.024381553754210472,
+          0.0017007222631946206
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv2/3f344d7ef3b666f82cbc.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          9.883626626105979e-05,
+          0.0011854054173454642,
+          0.9987157583236694
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/61e69dc40fad0e50.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3006650507450104,
+          0.6802109479904175,
+          0.01912403479218483
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/midjourney/3135d9a4a5ed6c93ef21.png",
+      "dataset": "DiffusionForensics",
+      "generator": "midjourney",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.002270017983391881,
+          0.009783769957721233,
+          0.9879462122917175
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/b23d4700444c4be8e7e7.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9161301851272583,
+          0.07880949229001999,
+          0.005060331895947456
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/train/authentic/celebahq/c9d9f2d9cd3dc58bebb8.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9996436834335327,
+          0.00013979178038425744,
+          0.00021654405281879008
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/217b2e4a475abf69d8a5.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.046265818644315e-05,
+          0.0003468294453341514,
+          0.9995827078819275
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/3b463c217000f233.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.3139539659023285,
+          0.6830650568008423,
+          0.0029810327105224133
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/ea11a94681a57800c73b.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9951609969139099,
+          0.00022944416559766978,
+          0.004609572235494852
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/267b45741d575b13e3dc.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9990992546081543,
+          0.00016852925182320178,
+          0.0007321811863221228
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/07fabfae1dba04ba.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.8606573343276978,
+          0.1077238917350769,
+          0.031618766486644745
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/529678bcec098b013f79.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9814218282699585,
+          0.002671799622476101,
+          0.01590639166533947
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/78631178806cfdd7e4bc.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9995800852775574,
+          0.0002165000041713938,
+          0.00020342698553577065
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/pndm/f220f54fb4e40bb34135.png",
+      "dataset": "DiffusionForensics",
+      "generator": "pndm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          1.0815056157298386e-05,
+          0.0001380773464916274,
+          0.9998511075973511
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/e19c6f87e79d25aee369.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.807725079241209e-05,
+          0.0002769929124042392,
+          0.9996849298477173
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new1/6af07e4c2f6563ae98a8.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.019530367106199265,
+          0.0441846139729023,
+          0.9362850189208984
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/eb1f6fe0ee5fde1a3efe.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9930539131164551,
+          0.004895346239209175,
+          0.0020507434383034706
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/28bd0f972a0145ebef94.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          3.551115878508426e-05,
+          0.0003817809629254043,
+          0.9995827078819275
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/18cd1021bb3203ce01b0.jpg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9978818297386169,
+          0.0015478779096156359,
+          0.000570315751247108
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/ldm/0cb57bbde5a9be9a79ee.png",
+      "dataset": "DiffusionForensics",
+      "generator": "ldm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.746264989487827e-05,
+          0.00062037497991696,
+          0.999312162399292
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/afhq/28b584fbbc5859aa7704.jpg",
+      "dataset": "WildFake",
+      "generator": "afhq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9997128248214722,
+          0.0001910859573399648,
+          9.610241977497935e-05
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/f7521bf0513b9539b527.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.6625282764434814,
+          0.002882226835936308,
+          0.3345894515514374
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/a49972be880dbf4db54a.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          6.495308753073914e-06,
+          0.000289441755739972,
+          0.9997040629386902
+        ]
+      }
+    },
+    {
+      "image_path": "sid_sanity/validation/authentic/5e6f4e91bb7efe12.jpg",
+      "dataset": "SID-Set",
+      "generator": "sid_set_unknown",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.47741132974624634,
+          0.4835403561592102,
+          0.039048291742801666
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/6f9bf814110e34122663.png",
+      "dataset": "DiffusionForensics",
+      "generator": "iddpm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.642445780220442e-06,
+          0.00023774987494107336,
+          0.9997546076774597
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/validation/authentic/celebahq/33cd053e0909b8435c7e.jpg",
+      "dataset": "WildFake",
+      "generator": "celebahq",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9807896614074707,
+          0.005146711599081755,
+          0.014063628390431404
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/250d4edb1cf313781928.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.15735891461372375,
+          0.06534121185541153,
+          0.7772998809814453
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1_new2/a2228c81cd55730e50ff.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1_new2",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.41621115594171e-05,
+          0.0005925158620811999,
+          0.9993333220481873
+        ]
+      }
+    },
+    {
+      "image_path": "wildfake_subset/test_unseen/fully_aigc/vqdm/a95e1cdb031faec1ff18.png",
+      "dataset": "WildFake",
+      "generator": "vqdm",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          7.384228865703335e-06,
+          0.00020915945060551167,
+          0.999783456325531
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/vqdiffusion/6b9d44d3e8be780a4268.png",
+      "dataset": "DiffusionForensics",
+      "generator": "vqdiffusion",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          5.174433681531809e-06,
+          0.00016350671648979187,
+          0.9998313188552856
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/5007d3bcdb67bbc1c7b6.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9867030382156372,
+          0.011309228837490082,
+          0.001987774157896638
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/7351cc1d48f7e748318c.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.05327925458550453,
+          0.9443975687026978,
+          0.002323162741959095
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/validation/authentic/real/f5381be5772156a743b1.jpeg",
+      "dataset": "DiffusionForensics",
+      "generator": "real",
+      "target": "authentic",
+      "probabilities": {
+        "clean": [
+          0.9708961248397827,
+          0.005773158743977547,
+          0.023330770432949066
+        ]
+      }
+    },
+    {
+      "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/sdv1/fdaf568a850edcbd15c9.png",
+      "dataset": "DiffusionForensics",
+      "generator": "sdv1",
+      "target": "fully_aigc",
+      "probabilities": {
+        "clean": [
+          0.0006876945844851434,
+          0.007628106977790594,
+          0.9916841983795166
+        ]
+      }
+    }
+  ]
+}
