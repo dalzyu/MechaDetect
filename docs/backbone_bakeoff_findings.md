@@ -178,13 +178,12 @@ training:
   heads_lr: 1.0e-4
   weight_decay: 0.01
   gradient_clip_norm: 1.0
-  warmup_fraction: 0.05
-  generator_balanced_sampler: true
-  ema:
-    enabled: true
-    decay: 0.999
-    confidence_threshold: 0.80
-loss:
+| Candidate | Checkpoint Type | Local Path | Parameters | File Size | SHA-256 Checksum | Primary Evaluated Metric |
+| :--- | :--- | :--- | :---: | :---: | :--- | :--- |
+| **DINOv3 ViT-H+/16** | **Best Adapted Checkpoint** | `E:/techjam26-runtime/outputs/bakeoff/bakeoff_adapt_dinov3/checkpoint-step-188.pt` | 844.5M | 1.3 GB | `83dc518d70b0e8832e94b229a7f9ee3e88364bd5e531cd07a8f49e5c25326ebe` | **0.9794 Strict-Unseen AUROC**, **0.9973 Proxy AUROC** |
+| **DINOv3 ViT-H+/16** | Best Frozen Checkpoint | `E:/techjam26-runtime/outputs/bakeoff/bakeoff_frozen_dinov3/checkpoint-step-188.pt` | 844.5M | 46 MB | `ba53f1a5c633cf89233571a8163cf8c43ab85d33f7b9a6066e58759bc840b456` | 0.9782 Strict-Unseen AUROC, 0.9978 Proxy AUROC |
+| **PE-Spatial-G/14** | Best Frozen Checkpoint | `E:/techjam26-runtime/outputs/bakeoff/bakeoff_frozen_pe_spatial/checkpoint-step-188.pt` | 1,856.0M | 47 MB | `b78aa1a52410c063445680d3f4a26a9a458c4a1cb28522de296a02e061671986` | 0.9946 Strict-Unseen AUROC, 0.9538 Proxy AUROC |
+| **Gemma 4 Tower** | Best Frozen Checkpoint | `E:/techjam26-runtime/outputs/bakeoff/bakeoff_frozen_gemma4/checkpoint-step-188.pt` | 573.4M | 45 MB | `ea7645f0bb9826a68970d5035fe5b1acf8b76a2ea3de5ea7ba1597a80c888089` | 0.9548 Strict-Unseen AUROC, 0.9235 Proxy AUROC |
   provenance_original: 1.0
   provenance_transformed: 1.0
   prediction_consistency: 0.5

@@ -67,7 +67,10 @@ def main() -> None:
         raise ValueError("shard-index must be in [0, num-shards)")
     args.output.mkdir(parents=True, exist_ok=True)
     shard = IndexedShard(dataset, args.shard_index, args.num_shards, cache_dir=args.output)
-    print(f"shard {args.shard_index}/{args.num_shards} missing items to compute: {len(shard)}", flush=True)
+    print(
+        f"shard {args.shard_index}/{args.num_shards} missing items to compute: {len(shard)}",
+        flush=True,
+    )
     loader = DataLoader(
         shard,
         batch_size=int(config["training"].get("cache_batch_size", 1)),

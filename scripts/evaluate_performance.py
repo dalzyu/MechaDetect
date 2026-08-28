@@ -176,6 +176,11 @@ def main() -> None:
     parser.add_argument("--per-class", type=int)
     parser.add_argument("--batch-size", type=int, default=2)
     parser.add_argument(
+        "--deduplicate-content",
+        action="store_true",
+        help="Infer each sha256 content once while preserving duplicate row weighting in metrics",
+    )
+    parser.add_argument(
         "--state",
         type=Path,
         help="Append completed rows here so a long evaluation can resume after interruption",
@@ -199,6 +204,10 @@ def main() -> None:
         ).sample(frac=1.0, random_state=42)
     if args.limit:
         frame = frame.iloc[: args.limit]
+    if args.deduplicate_content:
+        content_key = "sha256" if "sha256" in frame.columns else "image_path"
+        frame["_eval_weight"] = frame.groupby(content_key)[content_key].transform("size")
+        frame = frame.drop_duplicates(content_key, keep="first").reset_index(drop=True)
     model = build_model(config).to("cuda").eval()
     _load_checkpoint(model, args.checkpoint)
     torch.cuda.reset_peak_memory_stats()
@@ -208,6 +217,7 @@ def main() -> None:
     conditions = ROBUSTNESS_CONDITIONS if args.robustness else {"clean": ()}
     condition_probabilities: dict[str, list[torch.Tensor]] = {name: [] for name in conditions}
     targets = []
+    weights = []
     output_rows = []
     records = frame.to_dict(orient="records")
     state_path = args.state
@@ -236,6 +246,7 @@ def main() -> None:
                 condition_probabilities[condition].append(
                     torch.tensor(row["probabilities"][condition], dtype=torch.float32)
                 )
+            weights.append(int(row.get("weight", 1)))
     if state_path is not None:
         state_path.parent.mkdir(parents=True, exist_ok=True)
         state_handle = state_path.open("a", encoding="utf-8")
@@ -295,8 +306,10 @@ def main() -> None:
                 "generator": str(row.get("generator_family", row.get("generator", ""))),
                 "target": PROVENANCE_NAMES[target],
                 "probabilities": row_probabilities,
+                "weight": int(row.get("_eval_weight", 1)),
             }
             output_rows.append(output_row)
+            weights.append(int(row.get("_eval_weight", 1)))
             new_state_rows.append({"_index": batch_start + offset, "row": output_row})
         if state_handle is not None:
             for item in new_state_rows:
@@ -307,14 +320,18 @@ def main() -> None:
             print(f"evaluated {progress}/{len(frame)}", flush=True)
 
     target_tensor = torch.tensor(targets)
+    weight_tensor = torch.tensor(weights, dtype=torch.long)
+    expanded_indices = torch.repeat_interleave(torch.arange(len(target_tensor)), weight_tensor)
+    metric_target = target_tensor[expanded_indices]
     torch.cuda.synchronize()
     inference_seconds = time.perf_counter() - inference_started
     metrics: dict[str, object] = {"conditions": {}}
     for condition, values in condition_probabilities.items():
         probabilities = torch.stack(values)
-        condition_metrics = summarize(target_tensor, probabilities)
+        metric_probabilities = probabilities[expanded_indices]
+        condition_metrics = summarize(metric_target, metric_probabilities)
         condition_metrics["fully_aigc_auroc_95ci"] = bootstrap_auroc_ci(
-            (target_tensor == int(Provenance.FULLY_AIGC)).float(), probabilities[:, 2]
+            (metric_target == int(Provenance.FULLY_AIGC)).float(), metric_probabilities[:, 2]
         )
         metrics["conditions"][condition] = condition_metrics
     clean_auroc = metrics["conditions"]["clean"]["fully_aigc_auroc"]
@@ -326,23 +343,26 @@ def main() -> None:
             else None
         )
     clean = torch.stack(condition_probabilities["clean"])
+    metric_clean = clean[expanded_indices]
     metrics["per_dataset"] = {}
     dataset_values = [str(row.get("dataset", "")) for row in output_rows]
-    for group in sorted(set(dataset_values)):
-        indices = torch.tensor([value == group for value in dataset_values])
+    metric_dataset_values = [dataset_values[index] for index in expanded_indices.tolist()]
+    for group in sorted(set(metric_dataset_values)):
+        indices = torch.tensor([value == group for value in metric_dataset_values])
         if int(indices.sum()) >= 2:
-            metrics["per_dataset"][group] = summarize(target_tensor[indices], clean[indices])
+            metrics["per_dataset"][group] = summarize(metric_target[indices], metric_clean[indices])
 
     generator_values = [str(row.get("generator", "")) for row in output_rows]
+    metric_generator_values = [generator_values[index] for index in expanded_indices.tolist()]
     metrics["per_aigc_generator"] = {}
-    non_aigc = target_tensor != int(Provenance.FULLY_AIGC)
-    for group in sorted(set(generator_values)):
-        generator_mask = torch.tensor([value == group for value in generator_values])
-        positives = generator_mask & ~non_aigc
+    non_aigc = metric_target != int(Provenance.FULLY_AIGC)
+    for group in sorted(set(metric_generator_values)):
+        generator_mask = torch.tensor([value == group for value in metric_generator_values])
+        positives = generator_mask & ~(metric_target != int(Provenance.FULLY_AIGC))
         comparison = positives | non_aigc
         if positives.any() and non_aigc.any():
             metrics["per_aigc_generator"][group] = summarize(
-                target_tensor[comparison], clean[comparison]
+                metric_target[comparison], metric_clean[comparison]
             )
     family_aurocs = [
         values["fully_aigc_auroc"]
@@ -367,7 +387,8 @@ def main() -> None:
         "secondary_chain_auroc": chain_auroc,
     }
     metrics["efficiency"] = {
-        "images": len(frame),
+        "images": int(weight_tensor.sum()),
+        "inferred_unique_images": len(frame),
         "views_on_clean": 3 if args.three_view else 1,
         "conditions": len(conditions),
         "inference_seconds": inference_seconds,
