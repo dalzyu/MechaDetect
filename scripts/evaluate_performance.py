@@ -145,7 +145,9 @@ def main() -> None:
     project_root = args.config.resolve().parent.parent
     load_local_environment(project_root)
     config = load_config(args.config)
-    data_root = Path(os.environ["TECHJAM_DATA_ROOT"])
+    data_root = Path(
+        config["paths"].get("data_root") or os.environ.get("TECHJAM_DATA_ROOT", "data")
+    )
     frame = pd.read_csv(args.manifest).fillna("")
     if args.per_class:
         frame = pd.concat(
