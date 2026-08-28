@@ -38,6 +38,15 @@ def main() -> None:
     loss.backward()
     if model.token_adapter[1].weight.grad is None:
         raise RuntimeError("Adapter backward pass produced no gradient")
+    trainable_backbone = [
+        parameter for parameter in model.backbone.parameters() if parameter.requires_grad
+    ]
+    backbone_gradients = sum(
+        parameter.grad is not None and bool(torch.isfinite(parameter.grad).all())
+        for parameter in trainable_backbone
+    )
+    if trainable_backbone and backbone_gradients == 0:
+        raise RuntimeError("Trainable backbone layers produced no finite gradients")
 
     with tempfile.NamedTemporaryFile(suffix=".pt") as handle:
         state = {
@@ -57,6 +66,7 @@ def main() -> None:
         "token_count": int(output.token_tamper_logits[0].numel()),
         "peak_vram_gib": round(torch.cuda.max_memory_allocated(device) / 2**30, 3),
         "forward_backward": "ok",
+        "backbone_gradient_tensors": backbone_gradients,
         "checkpoint_roundtrip": "ok",
     }
     print(json.dumps(result, sort_keys=True), flush=True)
