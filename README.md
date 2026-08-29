@@ -193,7 +193,7 @@ uv run torchrun --standalone --nproc-per-node=6 \
 ```
 
 Rank 0 alone writes logs, clean validation metrics, resolved config, and atomic
-checkpoints. For a one-GPU smoke run, replace `torchrun ...` with `python` and
+checkpoints. For a one-GPU smoke run, replace `uv run torchrun ...` with `uv run python`
 add `--max-steps 2 --stage teacher-smoke`.
 
 The complete operational plan—including hardware checks, failure rules,
