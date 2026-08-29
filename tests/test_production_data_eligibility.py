@@ -35,12 +35,15 @@ from acquire_all_images import (
     KNOWN_PLACEHOLDER_SHA256,
     LOCKED_HF_REVISIONS,
     SOURCE_REGISTRY,
+    DeclaredRecord,
     atomic_save_image,
     atomic_write_bytes,
     is_forbidden_row_or_path,
     is_placeholder_sha,
     is_safe_relative_path,
     load_declared_manifests,
+    parallel_acquire_records,
+    validate_worker_count,
 )
 from freeze_production_eligible import (
     RUNTIME_IDENTITY_COLUMNS,
@@ -49,6 +52,57 @@ from freeze_production_eligible import (
     freeze_production_eligible,
     select_calibration_from_eligible_rows,
 )
+
+
+def test_parallel_acquisition_validates_worker_bounds() -> None:
+    import pytest
+
+    assert validate_worker_count(1) == 1
+    assert validate_worker_count(32) == 32
+    with pytest.raises(ValueError):
+        validate_worker_count(0)
+    with pytest.raises(ValueError):
+        validate_worker_count(33)
+
+
+def test_parallel_acquisition_accounts_out_of_order_results_and_exceptions() -> None:
+    import threading
+    import time
+
+    records = [
+        DeclaredRecord(f"parallel/{index}.jpg", "source", "train", external_id=str(index))
+        for index in range(6)
+    ]
+    thread_ids: set[int] = set()
+    lock = threading.Lock()
+
+    def worker(record: DeclaredRecord) -> str:
+        with lock:
+            thread_ids.add(threading.get_ident())
+        time.sleep((5 - int(record.external_id)) * 0.005)
+        if record.external_id == "0":
+            raise RuntimeError("expected test failure")
+        return ("saved", "skipped", "error")[int(record.external_id) % 3]
+
+    assert parallel_acquire_records(records, worker, workers=4) == (1, 2, 3)
+    assert len(thread_ids) > 1
+
+
+def test_parallel_acquisition_suppresses_duplicate_destination_work() -> None:
+    records = [
+        DeclaredRecord("same/image.jpg", "source", "train", external_id="same"),
+        DeclaredRecord("same\\image.jpg", "source", "train", external_id="same"),
+    ]
+    calls = 0
+
+    def worker(_: DeclaredRecord) -> str:
+        nonlocal calls
+        calls += 1
+        return "saved"
+
+    assert parallel_acquire_records(records, worker, workers=2) == (1, 0, 0)
+    assert calls == 1
+
 
 # ==============================================================================
 # 1. Path Safety, Forbidden Rules, and Nano Banana Retention

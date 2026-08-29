@@ -42,12 +42,14 @@ import re
 import sys
 import uuid
 import zipfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from collections.abc import Callable
 
 # Ensure project root is on sys.path for aigc_detector imports
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -76,6 +78,62 @@ try:
         os.environ["HUGGING_FACE_HUB_TOKEN"] = _token
 except Exception:
     pass
+
+MAX_ACQUISITION_WORKERS = 32
+DEFAULT_ACQUISITION_WORKERS = min(24, MAX_ACQUISITION_WORKERS)
+
+
+def validate_worker_count(workers: int) -> int:
+    """Validate bounded acquisition concurrency."""
+    if workers < 1 or workers > MAX_ACQUISITION_WORKERS:
+        raise ValueError(f"workers must be between 1 and {MAX_ACQUISITION_WORKERS}, got {workers}")
+    return workers
+
+
+def parallel_acquire_records(
+    records: list["DeclaredRecord"],
+    worker: Callable[["DeclaredRecord"], str],
+    *,
+    workers: int,
+) -> tuple[int, int, int]:
+    """Run independent record work concurrently with destination de-duplication.
+
+    The worker returns ``saved``, ``skipped``, or ``error``. Unexpected worker
+    exceptions are converted into errors so one bad remote item cannot cancel
+    unrelated downloads.
+    """
+    validate_worker_count(workers)
+    unique_records: dict[str, DeclaredRecord] = {}
+    duplicate_errors = 0
+    for record in records:
+        normalized = record.image_path.replace("\\", "/")
+        existing = unique_records.get(normalized)
+        if existing is None:
+            unique_records[normalized] = record
+        elif (
+            existing.dataset,
+            existing.source_index,
+            existing.external_id,
+        ) != (
+            record.dataset,
+            record.source_index,
+            record.external_id,
+        ):
+            duplicate_errors += 1
+
+    counts = {"saved": 0, "skipped": 0, "error": duplicate_errors}
+    with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="acquire-record") as pool:
+        futures = [pool.submit(worker, record) for record in unique_records.values()]
+        for future in as_completed(futures):
+            try:
+                outcome = future.result()
+            except Exception:
+                outcome = "error"
+            if outcome not in counts:
+                outcome = "error"
+            counts[outcome] += 1
+    return counts["saved"], counts["skipped"], counts["error"]
+
 
 # ==============================================================================
 # Known placeholder hashes and forbidden patterns
@@ -1112,6 +1170,118 @@ def acquire_gpt_image_2_user_screenshots(
     return saved, skipped, errors
 
 
+def acquire_dataset(
+    dataset_name: str,
+    records: list[DeclaredRecord],
+    *,
+    data_root: Path,
+    dry_run: bool,
+    resume: bool,
+    verify_bytes: bool,
+    record_workers: int,
+) -> tuple[int, int, int]:
+    """Acquire one logical dataset; safe to run concurrently with other datasets."""
+    config = SOURCE_REGISTRY.get(dataset_name)
+    if config is None:
+        return 0, 0, len(records)
+    if config.source_type == "huggingface":
+        return acquire_hf_source(
+            dataset_name,
+            records,
+            config,
+            data_root,
+            dry_run=dry_run,
+            resume=resume,
+            verify_bytes=verify_bytes,
+        )
+    if config.source_type == "local_zip" and dataset_name == "ewan_gpt_images":
+        return acquire_ewan_gpt_images(
+            records,
+            data_root,
+            dry_run=dry_run,
+            resume=resume,
+            verify_bytes=verify_bytes,
+        )
+    if dataset_name == "gpt_image_2_user_screenshots":
+        return acquire_gpt_image_2_user_screenshots(
+            records,
+            data_root,
+            dry_run=dry_run,
+            resume=resume,
+            verify_bytes=verify_bytes,
+        )
+
+    def audit_local_record(record: DeclaredRecord) -> str:
+        destination = data_root / record.image_path
+        if not destination.is_file() or destination.stat().st_size == 0:
+            return "error"
+        if verify_bytes:
+            from PIL import Image
+
+            try:
+                with Image.open(destination) as image:
+                    image.verify()
+            except Exception:
+                return "error"
+        return "skipped"
+
+    return parallel_acquire_records(
+        records,
+        audit_local_record,
+        workers=record_workers,
+    )
+
+
+def acquire_datasets_parallel(
+    records_by_dataset: dict[str, list[DeclaredRecord]],
+    *,
+    data_root: Path,
+    dry_run: bool,
+    resume: bool,
+    verify_bytes: bool,
+    workers: int,
+) -> dict[str, dict[str, int]]:
+    """Acquire independent dataset sources concurrently with bounded workers."""
+    validate_worker_count(workers)
+    stats_by_dataset: dict[str, dict[str, int]] = {}
+    ordered_items = sorted(records_by_dataset.items())
+    with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="acquire-source") as pool:
+        futures = {
+            pool.submit(
+                acquire_dataset,
+                dataset_name,
+                records,
+                data_root=data_root,
+                dry_run=dry_run,
+                resume=resume,
+                verify_bytes=verify_bytes,
+                record_workers=min(4, workers),
+            ): (dataset_name, len(records))
+            for dataset_name, records in ordered_items
+        }
+        completed = 0
+        for future in as_completed(futures):
+            dataset_name, declared_count = futures[future]
+            try:
+                saved, skipped, errors = future.result()
+            except Exception as exc:
+                logger.exception("Dataset acquisition failed for %s: %s", dataset_name, exc)
+                saved, skipped, errors = 0, 0, declared_count
+            stats_by_dataset[dataset_name] = {
+                "saved": saved,
+                "skipped": skipped,
+                "errors": errors,
+            }
+            completed += 1
+            print(
+                f"  [{completed:02d}/{len(ordered_items):02d}] "
+                f"{dataset_name:32s} saved={saved:<6d} "
+                f"skipped={skipped:<6d} errors={errors:<6d}",
+                flush=True,
+            )
+    return {name: stats_by_dataset[name] for name, _ in ordered_items}
+
+
 def resolve_hf_source_revision(repo_id: str, default_rev: str = "") -> str:
     """Resolve immutable 40-hex commit SHA from HF API or locked registry."""
     if repo_id in LOCKED_HF_REVISIONS:
@@ -1241,6 +1411,15 @@ def main() -> None:
         help="Verify decodability of existing files on disk and re-acquire corrupt ones",
     )
     parser.add_argument(
+        "--workers",
+        type=int,
+        default=DEFAULT_ACQUISITION_WORKERS,
+        help=(
+            f"Concurrent dataset source workers "
+            f"(default: {DEFAULT_ACQUISITION_WORKERS}, max: {MAX_ACQUISITION_WORKERS})"
+        ),
+    )
+    parser.add_argument(
         "--caps",
         type=str,
         default=None,
@@ -1278,6 +1457,7 @@ def main() -> None:
     print(f"Dry run:       {args.dry_run}")
     print(f"Resume:        {args.resume}")
     print(f"Verify bytes:  {args.verify_bytes}")
+    print(f"Workers:       {validate_worker_count(args.workers)}")
     print("=" * 70)
 
     # Ingest manifests
@@ -1308,59 +1488,17 @@ def main() -> None:
 
     print(f"Active datasets to process: {len(records_by_dataset)}")
 
-    stats_by_dataset: dict[str, dict[str, int]] = {}
-    total_saved = 0
-    total_skipped = 0
-    total_errors = 0
-
-    for ds_name, recs in sorted(records_by_dataset.items()):
-        cfg = SOURCE_REGISTRY.get(ds_name)
-        if not cfg:
-            print(f"  [{ds_name}] No registry entry; skipping remote acquisition")
-            stats_by_dataset[ds_name] = {"saved": 0, "skipped": 0, "errors": len(recs)}
-            continue
-
-        if cfg.source_type == "huggingface":
-            saved, skipped, errors = acquire_hf_source(
-                ds_name,
-                recs,
-                cfg,
-                args.data_root,
-                dry_run=args.dry_run,
-                resume=args.resume,
-                verify_bytes=args.verify_bytes,
-            )
-        elif cfg.source_type == "local_zip" and ds_name == "ewan_gpt_images":
-            saved, skipped, errors = acquire_ewan_gpt_images(
-                recs,
-                args.data_root,
-                dry_run=args.dry_run,
-                resume=args.resume,
-                verify_bytes=args.verify_bytes,
-            )
-        elif ds_name == "gpt_image_2_user_screenshots":
-            saved, skipped, errors = acquire_gpt_image_2_user_screenshots(
-                recs,
-                args.data_root,
-                dry_run=args.dry_run,
-                resume=args.resume,
-                verify_bytes=args.verify_bytes,
-            )
-        else:
-            # Local directory / reference only: audit actual presence on disk
-            saved = 0
-            skipped = 0
-            errors = 0
-            for rec in recs:
-                if (args.data_root / rec.image_path).is_file():
-                    skipped += 1
-                else:
-                    errors += 1
-        stats_by_dataset[ds_name] = {"saved": saved, "skipped": skipped, "errors": errors}
-        total_saved += saved
-        total_skipped += skipped
-        total_errors += errors
-        print(f"  [{ds_name:32s}] saved={saved:<5d} skipped={skipped:<6d} errors={errors:<4d}")
+    stats_by_dataset = acquire_datasets_parallel(
+        records_by_dataset,
+        data_root=args.data_root,
+        dry_run=args.dry_run,
+        resume=args.resume,
+        verify_bytes=args.verify_bytes,
+        workers=args.workers,
+    )
+    total_saved = sum(stats["saved"] for stats in stats_by_dataset.values())
+    total_skipped = sum(stats["skipped"] for stats in stats_by_dataset.values())
+    total_errors = sum(stats["errors"] for stats in stats_by_dataset.values())
 
     print("=" * 70)
     print(f"Summary: Saved={total_saved}, Skipped={total_skipped}, Errors={total_errors}")
