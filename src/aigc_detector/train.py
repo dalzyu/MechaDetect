@@ -36,13 +36,14 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import AdamW, Optimizer
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import DataLoader, Subset
-from .config import load_config
-from .constants import Provenance, Transformation
+
 from .adaptation import (
     apply_attention_lora,
     load_trainable_encoder_state,
     trainable_encoder_state,
 )
+from .config import load_config
+from .constants import Provenance, Transformation
 from .dataset import PairedImageDataset, collate_pairs, load_manifest_frame, verify_materialization
 from .ema import ParameterEMA
 from .feature_cache import CachedFeatureDataset, collate_cached_features
@@ -94,9 +95,7 @@ def build_model(config: dict[str, Any]) -> ProvenanceModel:
         "bf16": torch.bfloat16,
     }
     if dtype_name not in encoder_dtypes:
-        raise ValueError(
-            f"Unsupported model.encoder_dtype {dtype_name!r}; use float32 or bfloat16"
-        )
+        raise ValueError(f"Unsupported model.encoder_dtype {dtype_name!r}; use float32 or bfloat16")
     model = ProvenanceModel(
         values["encoder_id"],
         encoder_revision=values.get("encoder_revision"),
@@ -189,15 +188,11 @@ def build_optimizer(model: ProvenanceModel, config: dict[str, Any]) -> Optimizer
 
     optimizer_name = str(training.get("optimizer", "adamw")).lower()
     if optimizer_name != "adamw":
-        raise ValueError(
-            f"Unsupported training.optimizer {optimizer_name!r}; use adamw"
-        )
+        raise ValueError(f"Unsupported training.optimizer {optimizer_name!r}; use adamw")
     return AdamW(groups, weight_decay=training["weight_decay"])
 
 
-def build_scheduler(
-    optimizer: Optimizer, total_updates: int, warmup_fraction: float
-) -> LambdaLR:
+def build_scheduler(optimizer: Optimizer, total_updates: int, warmup_fraction: float) -> LambdaLR:
     """Cosine learning rate decay schedule with linear warmup."""
     warmup_steps = max(1, round(total_updates * warmup_fraction))
 
@@ -208,6 +203,26 @@ def build_scheduler(
         return 0.5 * (1.0 + math.cos(math.pi * min(1.0, progress)))
 
     return LambdaLR(optimizer, schedule)
+
+
+def get_git_metadata() -> dict[str, Any]:
+    """Extract Git commit, branch, and dirty state.
+
+    Fails closed if Git metadata cannot be extracted, ensuring production
+    checkpoints never falsely claim clean or unknown provenance.
+    """
+    import subprocess
+
+    commit = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], text=True, timeout=5, stderr=subprocess.PIPE
+    ).strip()
+    branch = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True, timeout=5, stderr=subprocess.PIPE
+    ).strip()
+    status = subprocess.check_output(
+        ["git", "status", "--porcelain"], text=True, timeout=5, stderr=subprocess.PIPE
+    ).strip()
+    return {"commit": commit, "branch": branch, "dirty": bool(status)}
 
 
 def save_checkpoint(
@@ -224,6 +239,8 @@ def save_checkpoint(
     *,
     filename: str | None = None,
     selection: dict[str, Any] | None = None,
+    coverage_metadata: dict[str, Any] | None = None,
+    batch_metadata: dict[str, Any] | None = None,
 ) -> Path:
     """Serialize model weights and resumable state atomically."""
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -234,10 +251,12 @@ def save_checkpoint(
         "heads": model.heads.state_dict(),
         "token_adapter": model.token_adapter.state_dict(),
         "encoder_trainable": encoder_trainable,
+        "parameter_count": int(sum(p.numel() for p in model.parameters())),
         "rng_cpu": torch.get_rng_state(),
         "rng_cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [],
         "epoch": epoch,
         "micro_step": micro_step,
+        "git": get_git_metadata(),
     }
     if model.spectral is not None:
         payload["spectral"] = model.spectral.state_dict()
@@ -251,7 +270,16 @@ def save_checkpoint(
         payload["scheduler"] = scheduler.state_dict()
     if manifest_path is not None:
         import hashlib
-        payload["manifest_sha256"] = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+
+        m_bytes = manifest_path.read_bytes()
+        m_sha = hashlib.sha256(m_bytes).hexdigest()
+        payload["manifest_path"] = str(manifest_path)
+        payload["manifest_sha256"] = m_sha
+        payload["manifest_digest"] = m_sha
+    if coverage_metadata is not None:
+        payload["coverage"] = coverage_metadata
+    if batch_metadata is not None:
+        payload["batch_metadata"] = batch_metadata
     if ema is not None:
         payload["ema"] = ema.state_dict()
     if selection is not None:
@@ -287,10 +315,12 @@ def restore_checkpoint(
 
     payload = torch.load(path, map_location="cpu", weights_only=False)
     expected_manifest = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
-    if payload.get("manifest_sha256") != expected_manifest:
-        raise RuntimeError("Resume checkpoint was created from a different training manifest")
-
-    model.heads.load_state_dict(payload["heads"])
+    saved_sha = payload.get("manifest_sha256") or payload.get("manifest_digest")
+    if saved_sha and saved_sha != expected_manifest:
+        raise RuntimeError(
+            f"Resume checkpoint was created from a different training manifest: "
+            f"checkpoint manifest sha {saved_sha} != current manifest sha {expected_manifest}"
+        )
     adapter_state = payload.get("token_adapter", {})
     if model.token_adapter.state_dict() or adapter_state:
         model.token_adapter.load_state_dict(adapter_state)
@@ -350,18 +380,13 @@ def _compute_micro_step_loss(
                 ).probabilities.detach()
 
         original = raw_model.forward_tokens(original_tokens)
-        transformed = (
-            original if clean_only else raw_model.forward_tokens(transformed_tokens)
-        )
+        transformed = original if clean_only else raw_model.forward_tokens(transformed_tokens)
         token_mask_targets = [
-            None if target is None else target.to(device)
-            for target in batch["token_mask_targets"]
+            None if target is None else target.to(device) for target in batch["token_mask_targets"]
         ]
     else:
         if ema is not None and update_step >= ema_start_step:
-            teacher_probabilities = ema.forward(
-                raw_model, batch["original"]
-            ).probabilities.detach()
+            teacher_probabilities = ema.forward(raw_model, batch["original"]).probabilities.detach()
 
         if clean_only:
             original = model(batch["original"])
@@ -397,9 +422,7 @@ def _compute_micro_step_loss(
                 ),
             )
         token_mask_targets = [
-            None
-            if mask is None
-            else mask_to_token_occupancy(mask, logits.numel(), image.size)
+            None if mask is None else mask_to_token_occupancy(mask, logits.numel(), image.size)
             for mask, logits, image in zip(
                 batch["mask"],
                 original.token_tamper_logits,
@@ -442,9 +465,7 @@ def _validate(
         data_root=data_root,
         seed=int(config["seed"]),
         transform_families=(),
-        render_policy=config.get("preprocessing", {}).get(
-            "policy", "square_jpeg95"
-        ),
+        render_policy=config.get("preprocessing", {}).get("policy", "square_jpeg95"),
     )
     if max_rows is not None:
         dataset = Subset(dataset, range(min(int(max_rows), len(dataset))))
@@ -518,7 +539,8 @@ def _validate(
         "authentic_recall": condition_metrics["clean"]["authentic_recall"],
         "robust_probe_mean_auroc": sum(
             metric["ai_positive_auroc"] for metric in condition_metrics.values()
-        ) / len(condition_metrics),
+        )
+        / len(condition_metrics),
     }
 
 
@@ -595,30 +617,48 @@ def run_training(
         )
 
     if is_cached:
-        dataset = CachedFeatureDataset(
-            manifest, resolve_project_path(cache_root, project_root)
-        )
+        dataset = CachedFeatureDataset(manifest, resolve_project_path(cache_root, project_root))
         collate_fn = collate_cached_features
     else:
+        stage_name = str(training.get("stage", "")).lower()
+        expected_split = (
+            "train"
+            if ("stage1" in stage_name or "stage2" in stage_name or "train" in stage_name)
+            else None
+        )
         dataset = PairedImageDataset(
             manifest,
             data_root=config["paths"]["data_root"],
             seed=int(config["seed"]),
             transform_families=tuple(
-                Transformation[name.upper()]
-                for name in config["transforms"].get("families", [])
+                Transformation[name.upper()] for name in config["transforms"].get("families", [])
             ),
-            render_policy=config.get("preprocessing", {}).get(
-                "policy", "square_jpeg95"
-            ),
-            runtime_fetch=bool(config["paths"].get("runtime_fetch", True)),
+            render_policy=config.get("preprocessing", {}).get("policy", "square_jpeg95"),
+            expected_split=expected_split,
+            runtime_fetch=False,
             allow_missing=not require_mat,
         )
         collate_fn = collate_pairs
 
-    use_balanced_sampler = bool(training.get("generator_balanced_sampler", True))
-    sampler = (
-        build_balanced_sampler(
+    sampler_type = str(training.get("sampler", "")).lower()
+    use_coverage = (
+        sampler_type in {"coverage", "distributed_coverage", "no_replacement"}
+        or bool(training.get("coverage_sampler", False))
+        or not bool(training.get("generator_balanced_sampler", False))
+    )
+    if use_coverage:
+        from .sampling import DeterministicDistributedCoverageSampler
+
+        sampler = DeterministicDistributedCoverageSampler(
+            len(dataset),
+            seed=int(config["seed"]),
+            rank=rank,
+            world_size=world_size,
+            epoch=0,
+            start_offset=0,
+        )
+    elif bool(training.get("generator_balanced_sampler", True)):
+        sampler = build_balanced_sampler(
             [int(record.provenance) for record in dataset.records],
             [record.generator for record in dataset.records],
             samples=len(dataset),
@@ -628,9 +668,8 @@ def run_training(
             ai_positive=[int(record.ai_positive) for record in dataset.records],
             max_ratio=float(training.get("sampler_max_ratio", 5.0)),
         )
-        if use_balanced_sampler
-        else None
-    )
+    else:
+        sampler = None
     if world_size > 1 and sampler is None:
         from torch.utils.data.distributed import DistributedSampler
 
@@ -664,13 +703,17 @@ def run_training(
     else:
         raw_model.to(device)
 
-    initial_checkpoint = initial_checkpoint_override or config["paths"].get(
-        "initial_checkpoint"
-    )
+    initial_checkpoint = initial_checkpoint_override or config["paths"].get("initial_checkpoint")
     initial_ema_state = None
     if initial_checkpoint and resume_path is None:
+        init_ckpt_path = resolve_project_path(initial_checkpoint, project_root)
+        if not init_ckpt_path.is_file():
+            cleanup_distributed()
+            raise FileNotFoundError(
+                f"Initial checkpoint for stage warm-start not found: {init_ckpt_path}"
+            )
         payload = torch.load(
-            resolve_project_path(initial_checkpoint, project_root),
+            init_ckpt_path,
             map_location=device,
             weights_only=False,
         )
@@ -701,9 +744,8 @@ def run_training(
         cleanup_distributed()
         raise ValueError("training.gradient_accumulation must be positive")
     micro_steps_per_epoch = len(loader)
-    total_updates = (
-        math.ceil(micro_steps_per_epoch / accumulation) * int(training["epochs"])
-    )
+    updates_per_epoch = math.ceil(micro_steps_per_epoch / accumulation)
+    total_updates = updates_per_epoch * int(training.get("epochs", 1))
     configured_budget = max_steps
     if configured_budget is None:
         configured_budget = training.get("max_updates")
@@ -712,9 +754,16 @@ def run_training(
         if configured_budget is not None
         else total_updates
     )
-    scheduler = build_scheduler(
-        optimizer, stop_step, float(training["warmup_fraction"])
-    )
+    coverage_fractions = training.get("coverage_checkpoints", [0.25, 0.50, 0.75, 1.00])
+    coverage_checkpoint_steps: dict[int, list[str]] = {}
+    if coverage_fractions:
+        for frac in coverage_fractions:
+            step_target = max(1, math.ceil(stop_step * float(frac)))
+            pct_label = int(round(float(frac) * 100))
+            coverage_checkpoint_steps.setdefault(step_target, []).append(
+                f"checkpoint-{pct_label}pct.pt"
+            )
+    scheduler = build_scheduler(optimizer, stop_step, float(training["warmup_fraction"]))
 
     ema_config = training.get("ema", {})
     ema = (
@@ -737,6 +786,10 @@ def run_training(
         if resume_micro_step >= micro_steps_per_epoch:
             start_epoch += 1
             resume_micro_step = 0
+        if hasattr(sampler, "set_epoch"):
+            sampler.set_epoch(start_epoch)
+        if hasattr(sampler, "set_start_offset"):
+            sampler.set_start_offset(resume_micro_step)
         if is_main_process():
             print(
                 f"resumed={resume_path} update={update_step} epoch={start_epoch + 1} "
@@ -760,9 +813,7 @@ def run_training(
     output_dir = Path(config["paths"]["output_root"]) / training["stage"]
     if is_main_process():
         output_dir.mkdir(parents=True, exist_ok=True)
-        with (output_dir / "resolved-config.json").open(
-            "w", encoding="utf-8"
-        ) as handle:
+        with (output_dir / "resolved-config.json").open("w", encoding="utf-8") as handle:
             json.dump(config, handle, indent=2)
         print(
             f"training devices={world_size} per_gpu_batch={training['physical_batch_size']} "
@@ -803,21 +854,15 @@ def run_training(
                 continue
 
             batch = _to_device(raw_batch, device)
-            is_boundary = (
-                micro_step % accumulation == 0 or micro_step == micro_steps_per_epoch
-            )
+            is_boundary = micro_step % accumulation == 0 or micro_step == micro_steps_per_epoch
             sync_context = (
-                model.no_sync()
-                if isinstance(model, DDP) and not is_boundary
-                else nullcontext()
+                model.no_sync() if isinstance(model, DDP) and not is_boundary else nullcontext()
             )
 
             # Divide by the actual accumulation-window size. This matters for
             # the short final window when epoch length is not divisible by N.
             window_start = ((micro_step - 1) // accumulation) * accumulation + 1
-            window_size = min(
-                accumulation, micro_steps_per_epoch - window_start + 1
-            )
+            window_size = min(accumulation, micro_steps_per_epoch - window_start + 1)
             autocast = (
                 torch.autocast(device_type="cuda", dtype=torch.bfloat16)
                 if training["precision"] == "bf16"
@@ -842,17 +887,13 @@ def run_training(
 
             window_loss += loss.detach().item()
             for name, value in components.items():
-                window_components[name] = (
-                    window_components.get(name, 0.0) + value.detach().item()
-                )
+                window_components[name] = window_components.get(name, 0.0) + value.detach().item()
             window_micro_steps += 1
 
             if not is_boundary:
                 continue
 
-            torch.nn.utils.clip_grad_norm_(
-                raw_model.parameters(), training["gradient_clip_norm"]
-            )
+            torch.nn.utils.clip_grad_norm_(raw_model.parameters(), training["gradient_clip_norm"])
             optimizer.step()
             scheduler.step()
             if ema is not None:
@@ -863,8 +904,7 @@ def run_training(
             if is_main_process():
                 divisor = float(window_micro_steps)
                 component_text = " ".join(
-                    f"{name}={value / divisor:.4f}"
-                    for name, value in window_components.items()
+                    f"{name}={value / divisor:.4f}" for name, value in window_components.items()
                 )
                 print(
                     f"epoch={epoch + 1} update={update_step}/{stop_step} "
@@ -875,8 +915,27 @@ def run_training(
             window_components = {}
             window_micro_steps = 0
 
+            batch_meta = {
+                "physical_batch_size": int(training["physical_batch_size"]),
+                "world_size": world_size,
+                "gradient_accumulation": accumulation,
+                "effective_batch_size": int(training["physical_batch_size"])
+                * world_size
+                * accumulation,
+            }
+            cov_meta = {
+                "coverage_fraction": update_step / max(1, stop_step),
+                "coverage_pct": int(round((update_step / max(1, stop_step)) * 100)),
+                "total_dataset_rows": len(dataset),
+                "update_step": update_step,
+                "stop_step": stop_step,
+            }
+            if hasattr(sampler, "get_coverage_report"):
+                cov_meta.update(sampler.get_coverage_report())
+
             checkpoint_interval = int(training.get("checkpoint_interval", 0))
-            should_checkpoint = (
+            is_coverage_checkpoint = update_step in coverage_checkpoint_steps
+            should_checkpoint = is_coverage_checkpoint or (
                 checkpoint_interval > 0 and update_step % checkpoint_interval == 0
             )
             if should_checkpoint and is_main_process():
@@ -891,88 +950,113 @@ def run_training(
                     ema,
                     epoch,
                     micro_step,
+                    coverage_metadata=cov_meta,
+                    batch_metadata=batch_meta,
                 )
                 print(f"checkpoint={saved}", flush=True)
+                if is_coverage_checkpoint:
+                    for cov_filename in coverage_checkpoint_steps[update_step]:
+                        cov_saved = save_checkpoint(
+                            raw_model,
+                            config,
+                            output_dir,
+                            update_step,
+                            optimizer,
+                            scheduler,
+                            manifest,
+                            ema,
+                            epoch,
+                            micro_step,
+                            filename=cov_filename,
+                            coverage_metadata=cov_meta,
+                            batch_metadata=batch_meta,
+                        )
+                        print(f"coverage_checkpoint={cov_saved}", flush=True)
             if should_checkpoint and world_size > 1:
                 torch.distributed.barrier()
-
             should_validate = (
-                val_interval > 0
-                and val_manifest_value
-                and update_step % val_interval == 0
+                val_interval > 0 and val_manifest_value and update_step % val_interval == 0
             )
-            if should_validate and is_main_process():
-                validation_manifest = resolve_project_path(val_manifest_value, project_root)
-                online_metrics = _validate(
-                    raw_model,
-                    validation_manifest,
-                    config,
-                    device,
-                    data_root=validation_data_root,
-                    max_rows=training.get("validation_rows"),
-                )
-                candidates = [(False, online_metrics)]
-                if ema is not None:
-                    with ema.average_parameters(raw_model):
-                        candidates.append(
-                            (
-                                True,
-                                _validate(
-                                    raw_model,
-                                    validation_manifest,
-                                    config,
-                                    device,
-                                    data_root=validation_data_root,
-                                    max_rows=training.get("validation_rows"),
-                                ),
-                            )
-                        )
-                def guarded_score(item: tuple[bool, dict[str, float]]) -> float:
-                    candidate = item[1]
-                    if (
-                        candidate["ai_positive_recall"] < 0.60
-                        or candidate["authentic_recall"] < 0.60
-                    ):
-                        return float("-inf")
-                    return float(candidate["robust_probe_mean_auroc"])
-
-                use_ema, metrics = max(candidates, key=guarded_score)
-                metric_text = " ".join(
-                    f"{name}={value:.4f}" for name, value in metrics.items()
-                )
-                print(
-                    f"validation update={update_step} selected={'ema' if use_ema else 'online'} "
-                    f"{metric_text}",
-                    flush=True,
-                )
-                score = guarded_score((use_ema, metrics))
-                if score > best_metric:
-                    best_metric = score
-                    best_selection = {
-                        "metric": "robust_probe_mean_auroc",
-                        "value": score,
-                        "update": update_step,
-                        "probe_rows": training.get("validation_rows"),
-                        "use_ema": use_ema,
-                        "online": online_metrics,
-                    }
-                    best_path = save_checkpoint(
+            if should_validate:
+                # Pre-validation barrier: all ranks synchronise here so non-zero
+                # ranks park cleanly while rank 0 runs the full validation loop.
+                # Without this, ranks 1-5 reach the post-validation barrier
+                # immediately and trigger the NCCL watchdog while rank 0 is still
+                # running inference over the probe set.
+                if world_size > 1:
+                    torch.distributed.barrier()
+                if is_main_process():
+                    validation_manifest = resolve_project_path(val_manifest_value, project_root)
+                    online_metrics = _validate(
                         raw_model,
+                        validation_manifest,
                         config,
-                        output_dir,
-                        update_step,
-                        optimizer,
-                        scheduler,
-                        manifest,
-                        ema,
-                        epoch,
-                        micro_step,
-                        filename="checkpoint-best.pt",
-                        selection=best_selection,
+                        device,
+                        data_root=validation_data_root,
+                        max_rows=training.get("validation_rows"),
                     )
-                    print(f"best_checkpoint={best_path}", flush=True)
-            if should_validate and world_size > 1:
-                torch.distributed.barrier()
+                    candidates = [(False, online_metrics)]
+                    if ema is not None:
+                        with ema.average_parameters(raw_model):
+                            candidates.append(
+                                (
+                                    True,
+                                    _validate(
+                                        raw_model,
+                                        validation_manifest,
+                                        config,
+                                        device,
+                                        data_root=validation_data_root,
+                                        max_rows=training.get("validation_rows"),
+                                    ),
+                                )
+                            )
+
+                    def guarded_score(item: tuple[bool, dict[str, float]]) -> float:
+                        candidate = item[1]
+                        if (
+                            candidate["ai_positive_recall"] < 0.60
+                            or candidate["authentic_recall"] < 0.60
+                        ):
+                            return float("-inf")
+                        return float(candidate["robust_probe_mean_auroc"])
+
+                    use_ema, metrics = max(candidates, key=guarded_score)
+                    metric_text = " ".join(f"{name}={value:.4f}" for name, value in metrics.items())
+                    print(
+                        f"validation update={update_step} selected={'ema' if use_ema else 'online'} "
+                        f"{metric_text}",
+                        flush=True,
+                    )
+                    score = guarded_score((use_ema, metrics))
+                    if score > best_metric:
+                        best_metric = score
+                        best_selection = {
+                            "metric": "robust_probe_mean_auroc",
+                            "value": score,
+                            "update": update_step,
+                            "probe_rows": training.get("validation_rows"),
+                            "use_ema": use_ema,
+                            "online": online_metrics,
+                        }
+                        best_path = save_checkpoint(
+                            raw_model,
+                            config,
+                            output_dir,
+                            update_step,
+                            optimizer,
+                            scheduler,
+                            manifest,
+                            ema,
+                            epoch,
+                            micro_step,
+                            filename="checkpoint-best.pt",
+                            selection=best_selection,
+                        )
+                        print(f"best_checkpoint={best_path}", flush=True)
+                # Post-validation barrier: rank 0 rejoins the group before training resumes.
+                if world_size > 1:
+                    torch.distributed.barrier()
 
             if update_step >= stop_step:
                 should_stop = True
@@ -983,6 +1067,37 @@ def run_training(
 
     if world_size > 1:
         torch.distributed.barrier()
+    cov_meta = {
+        "coverage_fraction": 1.0,
+        "coverage_pct": 100,
+        "total_dataset_rows": len(dataset),
+        "update_step": update_step,
+        "stop_step": stop_step,
+    }
+    if hasattr(sampler, "get_coverage_report"):
+        cov_meta.update(sampler.get_coverage_report())
+    batch_meta = {
+        "physical_batch_size": int(training["physical_batch_size"]),
+        "world_size": world_size,
+        "gradient_accumulation": accumulation,
+        "effective_batch_size": int(training["physical_batch_size"]) * world_size * accumulation,
+    }
+    if is_main_process():
+        save_checkpoint(
+            raw_model,
+            config,
+            output_dir,
+            update_step,
+            optimizer,
+            scheduler,
+            manifest,
+            ema,
+            last_epoch,
+            last_micro_step,
+            filename="checkpoint-100pct.pt",
+            coverage_metadata=cov_meta,
+            batch_metadata=batch_meta,
+        )
     checkpoint = (
         save_checkpoint(
             raw_model,
@@ -995,25 +1110,12 @@ def run_training(
             ema,
             last_epoch,
             last_micro_step,
+            coverage_metadata=cov_meta,
+            batch_metadata=batch_meta,
         )
         if is_main_process()
         else Path()
     )
-    if is_main_process() and best_metric == float("-inf"):
-        save_checkpoint(
-            raw_model,
-            config,
-            output_dir,
-            update_step,
-            optimizer,
-            scheduler,
-            manifest,
-            ema,
-            last_epoch,
-            last_micro_step,
-            filename="checkpoint-best.pt",
-            selection={"metric": "final_state", "update": update_step},
-        )
     if world_size > 1:
         torch.distributed.barrier()
     cleanup_distributed()
@@ -1026,9 +1128,17 @@ def main() -> None:
         description="Train or adapt the robust provenance detection model."
     )
     parser.add_argument(
+        "config_positional",
+        type=Path,
+        nargs="?",
+        default=None,
+        help="Optional positional path to YAML training configuration file.",
+    )
+    parser.add_argument(
         "--config",
         type=Path,
-        default=Path("configs/teacher_dinov3_stage1_clean_frozen.yaml"),
+        default=None,
+        help="Path to YAML training configuration file.",
     )
     parser.add_argument(
         "--max-steps", type=int, help="Optional update step limit (for fast testing)."
@@ -1049,8 +1159,13 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    config_path = (
+        args.config
+        or args.config_positional
+        or Path("configs/teacher_dinov3_stage1_clean_frozen.yaml")
+    )
     checkpoint = run_training(
-        args.config,
+        config_path,
         max_steps=args.max_steps,
         train_manifest_override=args.train_manifest,
         resume_path=args.resume,

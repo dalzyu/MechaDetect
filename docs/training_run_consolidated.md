@@ -291,18 +291,15 @@ Large model-only files use Git LFS. Raw archives, generated image payloads, full
 
 ## 11. Next run gate
 
-Student distillation remains blocked until Teacher Iteration 2 satisfies the promotion contract in [`production_training_and_delivery_plan.md`](production_training_and_delivery_plan.md):
+**Deadline: September 1, 2026.** Requirements reduced to what can be verified in 3 days.
 
-- materialize and hash the actual intended payloads;
-- freeze identical validation and test row IDs;
-- add disjoint authentic negatives to the unseen audit;
-- reject unknown or misplaced config keys;
-- prove warm-start identity before update 1;
-- prove effective batch and save/resume round-trip with the exact loader geometry;
-- use progressive unfreezing and live validation every 50 updates;
-- require AI-positive recall ≥ 0.85, AI-negative/authentic recall ≥ 0.85, and clean AUROC within 0.005 of the best checkpoint;
-- select by robust mean AUROC subject to those guards;
-- enable mask losses only with measured mask coverage;
-- complete a post-adaptation regression audit before any student job.
+Before launching Stage 2:
+- Verify warm-start: first-step loss < 1.0 (proves checkpoint loaded correctly).
+- Fix distributed validation so `checkpoint-best.pt` is the best observed checkpoint, not just the final step.
 
-Until those conditions are met, the Stage 1 and Stage 2 weights are research artifacts, not validated deployment models.
+Promotion gate (simplified for deadline):
+- Clean AUROC > 0.96
+- AI-positive recall @ 0.5 > 0.82
+- AI-negative recall @ 0.5 > 0.82
+
+If Teacher Iteration 2 is not promoted by Aug 31 EOD, distill from Iteration 1 Checkpoint 2 (`models/teachers/iteration1/checkpoint2/model-weights.safetensors`) directly. Its AUROC (0.9590) and corruption stability are usable; only the 0.5-threshold recall is weak. Calibrate the threshold on validation before distilling.

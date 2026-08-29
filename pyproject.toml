@@ -19,9 +19,11 @@ dependencies = [
   "python-dotenv>=1.1,<2",
   "pyyaml>=6,<7",
   "safetensors>=0.7,<1",
-  "torch==2.10.0",
-  "torchvision==0.25.0",
+  "torch==2.13.0",
+  "torchvision==0.28.0",
   "transformers==5.10.1",
+  "onnx>=1.16.0,<2",
+  "onnxruntime>=1.18.0,<2",
 ]
 
 [dependency-groups]
@@ -29,6 +31,15 @@ dev = [
   "pytest>=8.4,<10",
   "ruff>=0.12,<1",
 ]
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu130" }]
+torchvision = [{ index = "pytorch-cu130" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
 
 [project.scripts]
 techjam-train = "aigc_detector.train:main"

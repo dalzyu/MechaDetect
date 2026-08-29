@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import io
-import os
-import re
 from dataclasses import dataclass
 from pathlib import Path
 from random import Random
@@ -26,12 +23,17 @@ from .transforms import apply_transform, sample_transform
 
 @dataclass(frozen=True)
 class ManifestRecord:
+    row_id: str
+    split: str
     image_path: Path
     provenance: Provenance
+    ai_positive: int
     dataset: str
     generator: str
+    generator_family: str
+    duplicate_group: str
+    source_image_group: str
     tamper_mask_path: Path | None
-    ai_positive: int = 0
 
 
 def parse_provenance(value: Any, dataset: str = "") -> Provenance:
@@ -76,89 +78,6 @@ def load_manifest_frame(manifest_path: str | Path) -> pd.DataFrame:
     raise ValueError(f"Unsupported manifest format {path.suffix!r}; use CSV, Parquet, or JSONL")
 
 
-HF_SOURCE_MAP: dict[str, dict[str, Any]] = {
-    "artic_dataset": {"repo": "links-ads/artic-dataset", "split": "train", "img_key": "image"},
-    "flux_reason_6m": {"repo": "LucasFang/FLUX-Reason-6M", "split": "train", "img_key": "image"},
-    "flux_cyberpunk_scifi": {"repo": "LucasFang/FLUX-Reason-6M", "split": "train", "img_key": "image"},
-    "ideogram_27k": {"repo": "bitmind/ideogram-27k", "split": "train", "img_key": "image"},
-    "art_museums_pd": {"repo": "Mitsua/art-museums-pd-440k", "split": "train", "img_key": "jpg"},
-    "authentic_classical_figure_art": {"repo": "Mitsua/art-museums-pd-440k", "split": "train", "img_key": "jpg"},
-    "gpt_image_edit_1_5m": {"repo": "UCSC-VLAA/GPT-Image-Edit-1.5M", "split": "train", "img_key": "png"},
-    "google_nano_banana_edited": {"repo": "Tungtom2004/Google_Nano_Banana_Edited_Images", "split": "train", "img_key": "image"},
-    "krea2_wildcards": {"repo": "innofree/krea2-wildcards", "split": "train", "img_key": "image"},
-    "nano_banana_pro_gen": {"repo": "FlameF0X/nano-banana-pro-gen-zh-en", "split": "train", "img_key": "image"},
-    "ai_meme_macro_overlay": {"repo": "ideepankarsharma2003/AIGeneratedImages_Midjourney", "split": "train", "img_key": "image"},
-    "danbooru2026_aigc_wild": {"repo": "nyanko-devs/danbooru2026", "split": "train", "img_key": "webp"},
-    "gta5_driving_renders": {"repo": "Chris1/GTA5", "split": "train", "img_key": "image"},
-    "sdxl_photoreal_vehicles": {"repo": "diffusers-parti-prompts/sdxl-1.0", "split": "train", "img_key": "image"},
-    "game_screenshots_fantasy": {"repo": "badigadiii/game_screenshots_11k", "split": "train", "img_key": "image"},
-    "midjourney_v5_images": {"repo": "ehristoforu/midjourney-images", "split": "train", "img_key": "image"},
-    "sd3_medium_synths": {"repo": "VincHa/SD3_medium_synths", "split": "train", "img_key": "image"},
-    "tartanair2_ue5_cyberpunk": {"repo": "theairlabcmu/tartanair2", "split": "train", "img_key": "image"},
-    "open_images_v7": {"repo": "bitmind/open-images-v7", "split": "train", "img_key": "url"},
-    "authentic_glamour_portraits": {"repo": "mattymchen/celeba-hq", "split": "train", "img_key": "image"},
-    "sintel_blender_open_movie": {"repo": "badigadiii/game_screenshots_11k", "split": "train", "img_key": "image"},
-    "manga109_illustrations": {"repo": "hal-utokyo/Manga109-s", "split": "train", "img_key": "image"},
-}
-
-
-def try_fetch_image_from_hub(dataset_name: str, dest_path: Path) -> Path | None:
-    """Attempt dynamic on-demand retrieval of an image from its Hugging Face source."""
-    if dest_path.is_file():
-        return dest_path
-
-    cfg = HF_SOURCE_MAP.get(dataset_name)
-    if not cfg:
-        return None
-
-    match = re.search(r"_(\d{6})\.", dest_path.name)
-    if not match:
-        return None
-    target_idx = int(match.group(1))
-
-    try:
-        from datasets import load_dataset
-        token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
-        ds = load_dataset(cfg["repo"], split=cfg.get("split", "train"), streaming=True, token=token)
-        for i, item in enumerate(ds):
-            if i == target_idx:
-                img_val = item.get(cfg["img_key"])
-                if img_val is None:
-                    for k in ["image", "img", "file", "jpg", "png", "webp"]:
-                        if k in item and item[k] is not None:
-                            img_val = item[k]
-                            break
-                if img_val is None:
-                    return None
-                if isinstance(img_val, str) and img_val.startswith("http"):
-                    import urllib.request
-                    try:
-                        req = urllib.request.Request(img_val, headers={"User-Agent": "Mozilla/5.0"})
-                        with urllib.request.urlopen(req, timeout=10) as resp:
-                            pil_img = Image.open(io.BytesIO(resp.read()))
-                    except Exception:
-                        return None
-                elif isinstance(img_val, Image.Image):
-                    pil_img = img_val
-                elif isinstance(img_val, bytes):
-                    pil_img = Image.open(io.BytesIO(img_val))
-                elif isinstance(img_val, dict) and "bytes" in img_val:
-                    pil_img = Image.open(io.BytesIO(img_val["bytes"]))
-                elif isinstance(img_val, dict) and "path" in img_val:
-                    pil_img = Image.open(img_val["path"])
-                else:
-                    return None
-
-                dest_path.parent.mkdir(parents=True, exist_ok=True)
-                pil_img.convert("RGB").save(dest_path, format="JPEG", quality=95)
-                return dest_path
-            if i > target_idx:
-                break
-    except Exception:
-        return None
-    return None
-
-
 def verify_materialization(
     manifest_path: str | Path,
     *,
@@ -192,9 +111,7 @@ def verify_materialization(
         "missing_masks": missing_masks,
     }
     if (missing_images or missing_masks) and not allow_missing:
-        raise FileNotFoundError(
-            f"Manifest is not fully materialized: {result}"
-        )
+        raise FileNotFoundError(f"Manifest is not fully materialized: {result}")
     return result
 
 
@@ -207,8 +124,10 @@ class PairedImageDataset(Dataset[dict[str, Any]]):
         seed: int = 42,
         transform_families: tuple[Transformation, ...] | None = None,
         render_policy: RenderPolicy | str = RenderPolicy.SQUARE_JPEG95,
-        runtime_fetch: bool = True,
-        allow_missing: bool = True,
+        expected_split: str | None = None,
+        split: str | None = None,
+        runtime_fetch: bool = False,
+        allow_missing: bool = False,
     ) -> None:
         frame = load_manifest_frame(manifest_path)
         required = {"image_path", "label", "dataset"}
@@ -216,9 +135,34 @@ class PairedImageDataset(Dataset[dict[str, Any]]):
         if missing:
             raise ValueError(f"Manifest is missing columns: {sorted(missing)}")
 
+        target_split = expected_split or split
+        if target_split is not None:
+            target_split = target_split.strip().lower()
+
         root = Path(data_root) if data_root is not None else Path(manifest_path).parent
-        self.records = []
-        for row in frame.to_dict(orient="records"):
+        self.records: list[ManifestRecord] = []
+        for index, row in enumerate(frame.to_dict(orient="records")):
+            row_id_val = row.get("row_id")
+            row_id = (
+                str(row_id_val).strip()
+                if (row_id_val is not None and not pd.isna(row_id_val))
+                else f"{row.get('dataset', 'unknown')}_{index:06d}"
+            )
+
+            split_val = row.get("split")
+            row_split = (
+                str(split_val).strip().lower()
+                if (split_val is not None and not pd.isna(split_val))
+                else ""
+            )
+            if target_split is not None:
+                if not row_split:
+                    row_split = target_split
+                elif row_split != target_split:
+                    raise ValueError(
+                        f"Row {row_id} has split {row_split!r}, but expected split {target_split!r}"
+                    )
+
             path = Path(str(row["image_path"]).replace("\\", "/"))
             if not path.is_absolute():
                 path = root / path
@@ -233,26 +177,45 @@ class PairedImageDataset(Dataset[dict[str, Any]]):
                 ai_positive_val = int(raw_ai_pos)
             else:
                 ai_positive_val = 0 if prov == Provenance.AUTHENTIC else 1
+
+            gen_norm = normalize_generator(row.get("generator", ""), str(row["dataset"]))
+            gen_family = row.get("generator_family")
+            generator_family = (
+                str(gen_family).strip()
+                if (gen_family is not None and not pd.isna(gen_family))
+                else gen_norm
+            )
+            dup_grp = row.get("duplicate_group")
+            duplicate_group = (
+                str(dup_grp).strip() if (dup_grp is not None and not pd.isna(dup_grp)) else row_id
+            )
+            src_img_grp = row.get("source_image_group")
+            source_image_group = (
+                str(src_img_grp).strip()
+                if (src_img_grp is not None and not pd.isna(src_img_grp))
+                else row_id
+            )
+
             self.records.append(
                 ManifestRecord(
+                    row_id=row_id,
+                    split=row_split,
                     image_path=path,
                     provenance=prov,
-                    dataset=str(row["dataset"]),
-                    generator=normalize_generator(row.get("generator", ""), str(row["dataset"])),
-                    tamper_mask_path=mask_path,
                     ai_positive=ai_positive_val,
+                    dataset=str(row["dataset"]),
+                    generator=gen_norm,
+                    generator_family=generator_family,
+                    duplicate_group=duplicate_group,
+                    source_image_group=source_image_group,
+                    tamper_mask_path=mask_path,
                 )
             )
         self.seed = seed
         self.epoch = 0
         self.transform_families = transform_families
         self.render_policy = RenderPolicy(render_policy)
-        self.runtime_fetch = runtime_fetch
-        self.allow_missing = allow_missing
-        self._fallback_by_key: dict[tuple[int, int], list[ManifestRecord]] = {}
-        for rec in self.records:
-            if rec.image_path.is_file():
-                self._fallback_by_key.setdefault((int(rec.provenance), rec.ai_positive), []).append(rec)
+        self.target_split = target_split
 
     def __len__(self) -> int:
         return len(self.records)
@@ -266,16 +229,7 @@ class PairedImageDataset(Dataset[dict[str, Any]]):
         tamper_mask_path = record.tamper_mask_path
 
         if not image_path.is_file():
-            if self.runtime_fetch:
-                fetched = try_fetch_image_from_hub(record.dataset, image_path)
-                if fetched is not None and fetched.is_file():
-                    image_path = fetched
-            if not image_path.is_file() and self.allow_missing:
-                candidates = self._fallback_by_key.get((int(record.provenance), record.ai_positive))
-                if candidates:
-                    fallback_rec = candidates[index % len(candidates)]
-                    image_path = fallback_rec.image_path
-                    tamper_mask_path = fallback_rec.tamper_mask_path
+            raise FileNotFoundError(f"Missing image asset for row {record.row_id}: {image_path}")
 
         with Image.open(image_path) as source:
             raw = source.convert("RGB").copy()
@@ -284,7 +238,11 @@ class PairedImageDataset(Dataset[dict[str, Any]]):
         original = render_for_model(raw, self.render_policy, rng=rng)
 
         rendered_mask = None
-        if tamper_mask_path is not None and tamper_mask_path.is_file() and record.provenance is not Provenance.FULLY_AIGC:
+        if tamper_mask_path is not None and record.provenance is not Provenance.FULLY_AIGC:
+            if not tamper_mask_path.is_file():
+                raise FileNotFoundError(
+                    f"Missing tamper mask asset for row {record.row_id}: {tamper_mask_path}"
+                )
             with Image.open(tamper_mask_path) as source_mask:
                 raw_mask = source_mask.convert("L").copy()
             rendered_mask = render_mask_geometry(
@@ -294,17 +252,15 @@ class PairedImageDataset(Dataset[dict[str, Any]]):
                 rendered_size=original.size,
             )
         transform = (
-            sample_transform(rng, self.transform_families)
-            if self.transform_families
-            else None
+            sample_transform(rng, self.transform_families) if self.transform_families else None
         )
         transformed = (
-            apply_transform(original, transform, rng, mask=rendered_mask)
-            if transform
-            else original
+            apply_transform(original, transform, rng, mask=rendered_mask) if transform else original
         )
 
         return {
+            "row_id": record.row_id,
+            "split": record.split,
             "image_path": str(record.image_path),
             "original": original,
             "transformed": transformed,
@@ -312,6 +268,9 @@ class PairedImageDataset(Dataset[dict[str, Any]]):
             "ai_positive": record.ai_positive,
             "dataset": record.dataset,
             "generator": record.generator,
+            "generator_family": record.generator_family,
+            "duplicate_group": record.duplicate_group,
+            "source_image_group": record.source_image_group,
             "mask": rendered_mask,
             "transform": None if transform is None else transform.family.name.lower(),
         }
@@ -319,13 +278,20 @@ class PairedImageDataset(Dataset[dict[str, Any]]):
 
 def collate_pairs(samples: list[dict[str, Any]]) -> dict[str, Any]:
     return {
+        "row_id": [sample["row_id"] for sample in samples],
+        "split": [sample["split"] for sample in samples],
         "image_path": [sample["image_path"] for sample in samples],
         "original": [sample["original"] for sample in samples],
         "transformed": [sample["transformed"] for sample in samples],
         "provenance": torch.tensor([sample["provenance"] for sample in samples], dtype=torch.long),
-        "ai_positive": torch.tensor([sample["ai_positive"] for sample in samples], dtype=torch.float),
+        "ai_positive": torch.tensor(
+            [sample["ai_positive"] for sample in samples], dtype=torch.float
+        ),
         "dataset": [sample["dataset"] for sample in samples],
         "generator": [sample["generator"] for sample in samples],
+        "generator_family": [sample["generator_family"] for sample in samples],
+        "duplicate_group": [sample["duplicate_group"] for sample in samples],
+        "source_image_group": [sample["source_image_group"] for sample in samples],
         "mask": [sample["mask"] for sample in samples],
         "transform": [sample["transform"] for sample in samples],
     }

@@ -40,14 +40,16 @@ def test_paired_dataset_and_collation(tmp_path: Path) -> None:
     assert batch["provenance"].shape == (1,)
     assert batch["mask"] == [None]
 
+
 def test_verify_materialization_allow_missing(tmp_path: Path) -> None:
     manifest = tmp_path / "manifest.csv"
-    pd.DataFrame([
-        {"image_path": "missing.jpg", "label": 0, "dataset": "SID-Set"}
-    ]).to_csv(manifest, index=False)
+    pd.DataFrame([{"image_path": "missing.jpg", "label": 0, "dataset": "SID-Set"}]).to_csv(
+        manifest, index=False
+    )
 
     # Fail closed by default
     import pytest
+
     with pytest.raises(FileNotFoundError):
         verify_materialization(manifest, data_root=tmp_path)
 
@@ -57,25 +59,26 @@ def test_verify_materialization_allow_missing(tmp_path: Path) -> None:
     assert result["missing_images"] == 1
 
 
-def test_paired_dataset_allow_missing_fallback(tmp_path: Path) -> None:
+def test_paired_dataset_missing_image_raises_filenotfound(tmp_path: Path) -> None:
     # Create one materialized authentic image
     Image.new("RGB", (32, 24), color=(10, 20, 30)).save(tmp_path / "real.jpg")
     manifest = tmp_path / "manifest.csv"
-    pd.DataFrame([
-        {"image_path": "real.jpg", "label": 0, "dataset": "SID-Set", "ai_positive": 0},
-        {"image_path": "missing.jpg", "label": 0, "dataset": "SID-Set", "ai_positive": 0},
-    ]).to_csv(manifest, index=False)
+    pd.DataFrame(
+        [
+            {"image_path": "real.jpg", "label": 0, "dataset": "SID-Set", "ai_positive": 0},
+            {"image_path": "missing.jpg", "label": 0, "dataset": "SID-Set", "ai_positive": 0},
+        ]
+    ).to_csv(manifest, index=False)
 
     dataset = PairedImageDataset(
         manifest,
         data_root=tmp_path,
-        allow_missing=True,
         runtime_fetch=False,
     )
     assert len(dataset) == 2
     sample0 = dataset[0]
-    sample1 = dataset[1]
     assert sample0["ai_positive"] == 0
-    assert sample1["ai_positive"] == 0
-    assert sample0["original"].size == sample1["original"].size
+    import pytest
 
+    with pytest.raises(FileNotFoundError, match="Missing image asset"):
+        _ = dataset[1]

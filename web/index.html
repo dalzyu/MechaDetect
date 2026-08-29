@@ -532,7 +532,14 @@
         <span class="brand-title">NanoGuard</span>
       </a>
 
-      <button class="upload-btn" id="uploadBtn" type="button">Upload</button>
+      <div class="controls-wrap" style="display: flex; gap: 1rem; align-items: center;">
+        <label style="color: #a1a1aa; font-size: 0.875rem;">
+          <input type="checkbox" id="forceWasmCheckbox" style="margin-right: 0.25rem;">
+          Force WASM
+        </label>
+        <select id="modelSelect" class="upload-btn" style="background: #18181b; color: white; border: 1px solid #3f3f46; padding: 0.25rem 0.5rem;"></select>
+        <button class="upload-btn" id="uploadBtn" type="button">Upload</button>
+      </div>
     </header>
 
     <!-- Main Content Container -->
@@ -551,14 +558,14 @@
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
           </svg>
-          <span id="statusPillText">Detection runs locally with WebGPU</span>
+          <span id="statusPillText">Awaiting Model...</span>
         </div>
       </section>
 
       <!-- Processing Banner -->
       <div id="processingBanner">
         <div class="spinner"></div>
-        <span id="processingText">Loading Checkpoint 2 model into WebGPU...</span>
+        <span id="processingText">Loading model...</span>
       </div>
 
       <!-- Clean Empty State (Shown when no photos are uploaded yet) -->
@@ -611,6 +618,22 @@
             <div class="modal-info-card">
               <div class="info-title">Inference Time</div>
               <div class="info-val" id="modalLatency">-- ms</div>
+            </div>
+            <div class="modal-info-card">
+              <div class="info-title">Model Identity</div>
+              <div class="info-val" id="modalIdentity">--</div>
+            </div>
+            <div class="modal-info-card">
+              <div class="info-title">Quantization</div>
+              <div class="info-val" id="modalQuantization">--</div>
+            </div>
+            <div class="modal-info-card">
+              <div class="info-title">Calibrated Threshold</div>
+              <div class="info-val" id="modalThreshold">--</div>
+            </div>
+            <div class="modal-info-card">
+              <div class="info-title">Status</div>
+              <div class="info-val" id="modalStatus">--</div>
             </div>
           </div>
         </div>

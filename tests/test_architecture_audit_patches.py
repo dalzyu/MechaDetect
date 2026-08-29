@@ -6,6 +6,7 @@ from aigc_detector.losses import ai_classification_loss, confidence_gated_kl
 from aigc_detector.model import ProvenanceHead, ProvenanceOutput, binary_probabilities
 from scripts.distill_student import STUDENT_PRESETS, _slice_provenance_output, student_config
 
+
 def test_human_tampered_images_train_as_negative_target() -> None:
     """Human memes with ai_positive=0 must be supervised as 0.0, even with provenance=TAMPERED."""
     output = ProvenanceOutput(
@@ -79,7 +80,8 @@ def test_student_presets_and_loss_config_match_distillation_contract() -> None:
         config = student_config(teacher_config, variant)
         assert STUDENT_PRESETS[variant]["encoder_id"] == encoder_id
         assert STUDENT_PRESETS[variant]["encoder_dim"] == encoder_dim
-        assert STUDENT_PRESETS[variant]["max_updates"] == 1000
+        assert STUDENT_PRESETS[variant]["epochs"] == 2
+        assert "max_updates" not in config["training"]
         assert config["model"]["backbone_type"] == "dinov3"
         assert config["model"]["encoder_id"] == encoder_id
         assert config["model"]["encoder_dim"] == encoder_dim
@@ -87,7 +89,14 @@ def test_student_presets_and_loss_config_match_distillation_contract() -> None:
         assert config["training"]["encoder_lr"] == 2.0e-5
         assert config["training"]["layerwise_lr_decay"] == 0.85
         assert config["training"]["weight_decay"] == 0.01
-        assert config["training"]["required_world_size"] == 6
+        assert config["training"]["required_world_size"] == 2
+        assert config["training"]["epochs"] == 2
+        assert (
+            config["training"]["physical_batch_size"]
+            * config["training"]["gradient_accumulation"]
+            * config["training"]["required_world_size"]
+            == 48
+        )
         assert config["loss"] == {
             "provenance_original": 1.0,
             "provenance_transformed": 1.0,

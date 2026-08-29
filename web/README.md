@@ -1,6 +1,6 @@
 # NanoGuard: Client-Side WebGPU AIGC Detector
 
-NanoGuard is a lightweight, high-performance in-browser AI-generated image detection website built for **TechJam 2026**. It runs detection locally on the user's device via **WebGPU** (with automatic WebAssembly fallback) using an optimized ONNX export of **Checkpoint 2** (`models/teachers/iteration1/checkpoint2`).
+NanoGuard is a lightweight, high-performance in-browser AI-generated image detection website built for **TechJam 2026**. It runs detection locally on the user's device via **WebGPU** (with automatic WebAssembly fallback) using an optimized student model.
 
 ---
 
@@ -8,7 +8,7 @@ NanoGuard is a lightweight, high-performance in-browser AI-generated image detec
 
 - **Zero Server Inference Cost for TikTok**: By shifting provenance detection from cloud GPU clusters to client hardware (via WebGPU), TikTok can eliminate server-side inference overhead for millions of daily image uploads.
 - **Privacy Preserving**: Images never leave the user's device or browser tab.
-- **Ultra Low Latency**: Native GPU shader pipelines deliver real-time inference (sub-50ms).
+- **Ultra Low Latency**: Native GPU shader pipelines deliver real-time inference.
 - **Graceful Fallback**: Automatically falls back to WebAssembly (WASM CPU) if WebGPU is not supported by the client hardware/browser.
 
 ---
@@ -68,7 +68,8 @@ web/
 ├── app.js                     # WebGPU & ONNX Runtime Web client-side engine
 ├── serve.py                   # HTTP server with COOP/COEP isolation headers
 ├── model/
-│   └── checkpoint2.onnx       # Calibrated ONNX model for WebGPU execution
+│   ├── metadata.json          # Model configuration (updated by orchestration)
+│   └── (student_*.onnx)       # ONNX exports populated by the orchestration pipeline
 └── samples/                   # Pre-bundled authentic & AIGC test images
     ├── sample_authentic_imagenet.jpg
     └── sample_aigc_krea.jpg
@@ -76,13 +77,32 @@ web/
 
 ---
 
-## Exporting the Full DINOv3 ViT-H+ Checkpoint 2 to ONNX
+## Orchestrated Model Export
 
-To export or re-quantize the full teacher checkpoint directly into ONNX format:
+The student models and metadata shown in the UI are generated automatically.
+Do not manually edit `metadata.json` with fabricated paths.
 
-```bash
-python scripts/export_onnx_webgpu.py \
-  --config configs/teacher_dinov3_checkpoint2_full_data.yaml \
-  --checkpoint models/teachers/iteration1/checkpoint2/model-weights.safetensors \
-  --output web/model/checkpoint2.onnx
-```
+The full orchestration pipeline (run via the root training orchestrator) will:
+1. Distill each float student and independently promote only passing checkpoints.
+2. Train and gate ATT checkpoints, retaining the promoted float checkpoint when ATT fails.
+3. Export the selected float/ATT checkpoint to ONNX, then create and evaluate static INT8 PTQ.
+4. Copy the verified artifacts into `web/model/` and populate `metadata.json` from their sidecars.
+
+Before orchestration runs, the web application fails closed and displays a pending state.
+
+The metadata JSON schema enforces strict properties for validation:
+- \`default_model\`: `<id>`
+- \`students\`: Array of objects matching the artifact schema from \`PolishExportPTQ\`.
+  - \`id\`: string
+  - \`name\`: string
+  - \`path\`: string (relative path)
+  - \`model_family\`: string
+  - \`variant\`: string
+  - \`quantization\`: "float32" | "static_int8"
+  - \`calibrated_threshold\`: float (from actual passed evaluation, no fallback)
+  - \`manifest_digest\`: string
+  - \`evaluation_status\`: "promoted" | "experimental" (never "promoted" without evidence)
+  - \`input_size\`: array of ints (e.g. \`[3, 224, 224]\`)
+  - \`preprocessing_version\`: string (e.g. "2")
+  - \`artifact_sha256\`: string
+  - \`artifact_size_bytes\`: integer

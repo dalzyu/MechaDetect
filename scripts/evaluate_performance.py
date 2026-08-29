@@ -16,6 +16,7 @@ from PIL import Image
 from aigc_detector.config import load_config
 from aigc_detector.constants import PROVENANCE_NAMES, Provenance, Transformation
 from aigc_detector.dataset import load_manifest_frame, parse_provenance
+from aigc_detector.manifests import manifest_digest
 from aigc_detector.metrics import binary_auroc
 from aigc_detector.model import ai_generated_probability, binary_probabilities
 from aigc_detector.predict import _load_checkpoint
@@ -61,17 +62,16 @@ def summarize(
     probabilities: torch.Tensor,
     *,
     ai_target: torch.Tensor | None = None,
+    threshold: float = 0.5,
 ) -> dict[str, object]:
-    """Summarize binary Track 5 performance using explicit AI-positive labels."""
+    """Summarize binary Track 5 performance using explicit AI-positive labels and operating threshold."""
     from aigc_detector.metrics import balanced_accuracy, binary_auroc, confusion_matrix
 
     binary_target = (
-        ai_target.bool()
-        if ai_target is not None
-        else target != int(Provenance.AUTHENTIC)
+        ai_target.bool() if ai_target is not None else target != int(Provenance.AUTHENTIC)
     )
     binary_score = ai_generated_probability(probabilities)
-    binary_prediction = binary_score >= 0.5
+    binary_prediction = binary_score >= threshold
     matrix = confusion_matrix(binary_target, binary_prediction, classes=2)
     true_positive = int((binary_target & binary_prediction).sum())
     false_negative = int((binary_target & ~binary_prediction).sum())
@@ -82,9 +82,7 @@ def summarize(
     binary_recall = true_positive / positive_total if positive_total else None
     binary_specificity = true_negative / negative_total if negative_total else None
     binary_precision = (
-        true_positive / (true_positive + false_positive)
-        if true_positive + false_positive
-        else None
+        true_positive / (true_positive + false_positive) if true_positive + false_positive else None
     )
     binary_f1 = (
         2 * binary_precision * binary_recall / (binary_precision + binary_recall)
@@ -109,11 +107,10 @@ def summarize(
         "binary_f1": binary_f1,
         "balanced_accuracy": balanced_accuracy(matrix),
         "ai_positive_auroc": _finite(binary_auroc(binary_target.float(), binary_score)),
-        "authentic_recall": (
-            true_negative / authentic_total if authentic_total else None
-        ),
+        "authentic_recall": (true_negative / authentic_total if authentic_total else None),
         "binary_confusion_matrix": matrix.tolist(),
         "confusion_matrix": matrix.tolist(),
+        "threshold": threshold,
     }
 
 
@@ -194,6 +191,12 @@ def main() -> None:
         type=Path,
         help="Append completed rows here so a long evaluation can resume after interruption",
     )
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=None,
+        help="Operating decision threshold (defaults to calibrated_threshold from checkpoint metadata/report if available, else 0.5)",
+    )
     args = parser.parse_args()
 
     project_root = args.config.resolve().parent.parent
@@ -217,6 +220,7 @@ def main() -> None:
         content_key = "sha256" if "sha256" in frame.columns else "image_path"
         frame["_eval_weight"] = frame.groupby(content_key)[content_key].transform("size")
         frame = frame.drop_duplicates(content_key, keep="first").reset_index(drop=True)
+    evaluation_manifest_digest = manifest_digest(frame)
     model = build_model(config).to("cuda").eval()
     _load_checkpoint(model, args.checkpoint)
     torch.cuda.reset_peak_memory_stats()
@@ -256,9 +260,7 @@ def main() -> None:
             output_rows.append(row)
             target = PROVENANCE_NAMES.index(str(row["target"]))
             targets.append(target)
-            ai_targets.append(
-                int(row.get("ai_positive", target != int(Provenance.AUTHENTIC)))
-            )
+            ai_targets.append(int(row.get("ai_positive", target != int(Provenance.AUTHENTIC))))
             for condition in conditions:
                 condition_probabilities[condition].append(
                     torch.tensor(row["probabilities"][condition], dtype=torch.float32)
@@ -268,14 +270,7 @@ def main() -> None:
         state_path.parent.mkdir(parents=True, exist_ok=True)
         state_handle = state_path.open("a", encoding="utf-8")
         if not completed:
-            state_handle.write(
-                json.dumps(
-                    {
-                        "_meta": state_metadata
-                    }
-                )
-                + "\n"
-            )
+            state_handle.write(json.dumps({"_meta": state_metadata}) + "\n")
             state_handle.flush()
     for batch_start in range(0, len(records), args.batch_size):
         batch_rows = records[batch_start : batch_start + args.batch_size]
@@ -290,6 +285,7 @@ def main() -> None:
                 path = data_root / path
             if not path.is_file():
                 from aigc_detector.dataset import try_fetch_image_from_hub
+
                 fetched = try_fetch_image_from_hub(str(row.get("dataset", "")), path)
                 if fetched is not None and fetched.is_file():
                     path = fetched
@@ -303,9 +299,7 @@ def main() -> None:
             conditioned = [
                 image
                 if transform is None
-                else apply_transform(
-                    image, transform, Random(1000 + batch_start + offset)
-                )
+                else apply_transform(image, transform, Random(1000 + batch_start + offset))
                 for offset, image in enumerate(rendered_images)
             ]
             probability = infer_batch_views(
@@ -358,14 +352,43 @@ def main() -> None:
         str(output_rows[index].get("duplicate_group", output_rows[index]["image_path"]))
         for index in expanded_indices.tolist()
     ]
+    # Production evaluation requires an explicitly calibrated operating point,
+    # either from the CLI or the checkpoint's validated promotion metadata.
+    operating_threshold = args.threshold
+    if operating_threshold is None:
+        ckpt_dir = args.checkpoint.parent
+        for cand_name in ("metadata.json", "promotion_report.json"):
+            cand_file = ckpt_dir / cand_name
+            if not cand_file.is_file():
+                continue
+            c_data = json.loads(cand_file.read_text(encoding="utf-8"))
+            value = c_data.get("calibrated_threshold")
+            if value is not None:
+                operating_threshold = float(value)
+                break
+    if operating_threshold is None:
+        raise RuntimeError(
+            "A calibrated operating threshold is required. Pass --threshold or place "
+            "validated metadata.json/promotion_report.json beside the checkpoint."
+        )
+    if not 0.0 <= operating_threshold <= 1.0:
+        raise ValueError(f"Operating threshold must be in [0, 1], got {operating_threshold}")
+
     torch.cuda.synchronize()
     inference_seconds = time.perf_counter() - inference_started
-    metrics: dict[str, object] = {"conditions": {}}
+    metrics: dict[str, object] = {
+        "conditions": {},
+        "operating_threshold": operating_threshold,
+        "manifest_digest": evaluation_manifest_digest,
+    }
     for condition, values in condition_probabilities.items():
         probabilities = torch.stack(values)
         metric_probabilities = probabilities[expanded_indices]
         condition_metrics = summarize(
-            metric_target, metric_probabilities, ai_target=metric_ai_target
+            metric_target,
+            metric_probabilities,
+            ai_target=metric_ai_target,
+            threshold=operating_threshold,
         )
         condition_metrics["ai_positive_auroc_95ci"] = bootstrap_auroc_ci(
             metric_ai_target.float(),
@@ -393,6 +416,7 @@ def main() -> None:
                 metric_target[indices],
                 metric_clean[indices],
                 ai_target=metric_ai_target[indices],
+                threshold=operating_threshold,
             )
 
     generator_values = [str(row.get("generator", "")) for row in output_rows]
@@ -400,9 +424,7 @@ def main() -> None:
     metrics["per_ai_generator"] = {}
     authentic = metric_ai_target == 0
     for group in sorted(set(metric_generator_values)):
-        generator_mask = torch.tensor(
-            [value == group for value in metric_generator_values]
-        )
+        generator_mask = torch.tensor([value == group for value in metric_generator_values])
         positives = generator_mask & ~authentic
         comparison = positives | authentic
         if positives.any() and authentic.any():
@@ -410,6 +432,7 @@ def main() -> None:
                 metric_target[comparison],
                 metric_clean[comparison],
                 ai_target=metric_ai_target[comparison],
+                threshold=operating_threshold,
             )
     family_aurocs = [
         values["ai_positive_auroc"]

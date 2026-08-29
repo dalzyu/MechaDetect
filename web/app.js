@@ -1,6 +1,6 @@
 /**
  * NanoGuard - 100% In-Browser Client Inference Controller
- * Powered by WebGPU & MatMulNBits (4-bit block-wise weight quantization).
+ * Powered by WebGPU and ONNX Runtime Web.
  * Zero server-side inference: All detection executes on the user's client hardware.
  */
 
@@ -10,6 +10,8 @@ const state = {
   isReady: false,
   isLoading: false,
   loadError: null,
+  metadata: null,
+  activeModelInfo: null,
 };
 window.state = state;
 
@@ -22,25 +24,35 @@ const elements = {
   cardsGrid: document.getElementById('cardsGrid'),
   processingBanner: document.getElementById('processingBanner'),
   processingText: document.getElementById('processingText'),
+  modelSelect: document.getElementById('modelSelect'),
+  forceWasmCheckbox: document.getElementById('forceWasmCheckbox'),
   // Modal Elements
   modalBackdrop: document.getElementById('modalBackdrop'),
   modalCloseBtn: document.getElementById('modalCloseBtn'),
   modalImg: document.getElementById('modalImg'),
   modalVerdictText: document.getElementById('modalVerdictText'),
-  modalDot: document.getElementById('modalDot'),
+  modalLatency: document.getElementById('modalLatency'),
+  modalIdentity: document.getElementById('modalIdentity'),
+  modalQuantization: document.getElementById('modalQuantization'),
+  modalThreshold: document.getElementById('modalThreshold'),
+  modalStatus: document.getElementById('modalStatus'),
   modalScoreNum: document.getElementById('modalScoreNum'),
   modalBarFill: document.getElementById('modalBarFill'),
   modalTarget: document.getElementById('modalTarget'),
-  modalLatency: document.getElementById('modalLatency'),
+  modalDot: document.getElementById('modalDot'),
 };
 
 /**
  * Initialize ONNX Runtime Web session in the browser with WebGPU
  */
 async function initClientModel() {
-  if (state.isLoading || state.isReady) return;
+  if (state.isLoading) return;
   state.isLoading = true;
-
+  state.isReady = false;
+  if (state.ortSession) {
+    // Cannot trivially release in JS without reloading, but we just reassign
+    state.ortSession = null;
+  }
   try {
     const hasWebGPU = typeof navigator !== 'undefined' && !!navigator.gpu;
     
@@ -51,14 +63,25 @@ async function initClientModel() {
       ort.env.wasm.numThreads = Math.min(4, navigator.hardwareConcurrency || 2);
     }
 
-    elements.statusPillText.textContent = hasWebGPU 
-      ? 'Detection runs locally with WebGPU' 
-      : 'Detection runs locally with Client Hardware';
+    const modelInfo = state.activeModelInfo;
+    if (!modelInfo || !modelInfo.path || modelInfo.path === 'not_configured' || typeof modelInfo.calibrated_threshold !== 'number') {
+      elements.processingBanner.classList.remove('active');
+      elements.statusPillText.textContent = 'Model pending orchestration setup';
+      console.warn('[NanoGuard] Valid model not configured or evaluated. Waiting for orchestration to populate metadata.json.');
+      state.isLoading = false;
+      return;
+    }
+    const useWasmOnly = elements.forceWasmCheckbox.checked || !hasWebGPU;
+
+
+    elements.statusPillText.textContent = useWasmOnly
+      ? 'Detection runs locally with Client Hardware'
+      : 'Detection runs locally with WebGPU';
     elements.processingBanner.classList.add('active');
-    elements.processingText.textContent = 'Loading Checkpoint 2 (MatMulNBits WebGPU) into browser memory...';
+    elements.processingText.textContent = `Loading ${modelInfo.name} into browser memory...`;
 
     // Stream download model with live progress
-    const modelUrl = 'model/checkpoint2.onnx';
+    const modelUrl = modelInfo.path;
     const response = await fetch(modelUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch model: ${response.status} ${response.statusText}`);
@@ -80,11 +103,11 @@ async function initClientModel() {
         const pct = Math.round((receivedBytes / totalBytes) * 100);
         const mb = (receivedBytes / (1024 * 1024)).toFixed(0);
         const totalMb = (totalBytes / (1024 * 1024)).toFixed(0);
-        elements.processingText.textContent = `Loading Checkpoint 2 into browser (${mb} / ${totalMb} MB, ${pct}%)...`;
+        elements.processingText.textContent = `Loading ${modelInfo.name} into browser (${mb} / ${totalMb} MB, ${pct}%)...`;
       }
     }
 
-    elements.processingText.textContent = 'Compiling WebGPU MatMulNBits compute shaders...';
+    elements.processingText.textContent = `Compiling compute shaders for ${modelInfo.name}...`;
     const modelBuffer = new Uint8Array(receivedBytes);
     let offset = 0;
     for (const chunk of chunks) {
@@ -92,16 +115,15 @@ async function initClientModel() {
       offset += chunk.length;
     }
 
-    // Try WebGPU first, with seamless fallback to high-speed SIMD WASM
     try {
-      if (hasWebGPU) {
+      if (!useWasmOnly) {
         state.ortSession = await ort.InferenceSession.create(modelBuffer.buffer, {
-          executionProviders: ['webgpu', 'wasm'],
+          executionProviders: ['webgpu'],
           graphOptimizationLevel: 'all',
         });
         state.activeProvider = 'WebGPU';
       } else {
-        throw new Error('WebGPU adapter not available');
+        throw new Error('Forced WASM or WebGPU adapter not available');
       }
     } catch (epErr) {
       console.warn('[NanoGuard] Primary WebGPU notice, initializing WASM provider:', epErr);
@@ -111,7 +133,6 @@ async function initClientModel() {
       });
       state.activeProvider = 'WebAssembly';
     }
-
     state.isReady = true;
     elements.statusPillText.textContent = `Detection runs locally with ${state.activeProvider}`;
     elements.processingBanner.classList.remove('active');
@@ -121,7 +142,7 @@ async function initClientModel() {
     const msg = err?.message || String(err);
     console.error('[NanoGuard] Model initialization error:', err);
     elements.processingBanner.classList.remove('active');
-    elements.statusPillText.textContent = 'Detection runs locally with WebGPU';
+    elements.statusPillText.textContent = 'Model initialization failed';
   } finally {
     state.isLoading = false;
   }
@@ -178,7 +199,7 @@ async function executeInference(img, filename) {
   // If model is still loading, await completion
   if (!state.ortSession && state.isLoading) {
     elements.processingBanner.classList.add('active');
-    elements.processingText.textContent = 'Waiting for Checkpoint 2 model to finish loading in browser...';
+    elements.processingText.textContent = `Waiting for ${state.activeModelInfo.name} to finish loading in browser...`;
     while (state.isLoading && !state.ortSession) {
       await new Promise(r => setTimeout(r, 200));
     }
@@ -197,7 +218,7 @@ async function executeInference(img, filename) {
   // Run model directly on client hardware
   const results = await state.ortSession.run(feeds);
   const t1 = performance.now();
-  const latency = Math.max(16, Math.round(t1 - t0));
+  const latency = Math.round(t1 - t0);
 
   const outputName = state.ortSession.outputNames[0] || 'probabilities';
   const outputTensor = results[outputName] || Object.values(results)[0];
@@ -208,9 +229,9 @@ async function executeInference(img, filename) {
 
   const pAuth = Number(outputTensor.data[0]);
   const pAigc = Number(outputTensor.data[1]);
-  const isAigc = pAigc >= 0.5;
+  const isAigc = pAigc >= state.activeModelInfo.calibrated_threshold;
   const confidence = isAigc ? pAigc : pAuth;
-  const scorePercent = Math.max(51, Math.min(99, Math.round(confidence * 100)));
+  const scorePercent = Math.round(confidence * 100);
   const label = isAigc ? 'AIGC' : 'Original';
 
   console.log(`[NanoGuard] Client result for "${filename}":`, {
@@ -225,12 +246,13 @@ async function executeInference(img, filename) {
 
   return {
     isAigc,
+    pAuth,
+    pAigc,
+    modelInfo: state.activeModelInfo,
     scorePercent,
     label,
     latency,
     device: `${state.activeProvider} (100% Client-Side)`,
-    pAuth,
-    pAigc,
   };
 }
 
@@ -267,6 +289,7 @@ function insertCard(result, imageUrl, altText) {
       isAigc: result.isAigc,
       latency: result.latency,
       device: result.device,
+      modelInfo: result.modelInfo,
     });
   });
 
@@ -286,9 +309,12 @@ function openModal(data) {
   elements.modalDot.style.background = color;
   elements.modalScoreNum.style.color = color;
   elements.modalBarFill.style.background = color;
-
-  elements.modalTarget.textContent = data.device || 'WebGPU (100% Client-Side)';
-  elements.modalLatency.textContent = `${data.latency || 24} ms`;
+  elements.modalTarget.textContent = data.device;
+  elements.modalLatency.textContent = `${data.latency} ms`;
+  elements.modalIdentity.textContent = data.modelInfo.model_family || '--';
+  elements.modalQuantization.textContent = data.modelInfo.quantization || '--';
+  elements.modalThreshold.textContent = data.modelInfo.calibrated_threshold || '--';
+  elements.modalStatus.textContent = data.modelInfo.evaluation_status || '--';
 
   elements.modalBackdrop.classList.add('open');
 }
@@ -418,7 +444,50 @@ function setupListeners() {
   });
 }
 
+async function loadMetadataAndInit() {
+  try {
+    const res = await fetch('model/metadata.json');
+    const data = await res.json();
+    state.metadata = data;
+
+    if (!data.students || data.students.length === 0) {
+      console.warn('[NanoGuard] Metadata is empty. Pending orchestration.');
+      elements.modelSelect.innerHTML = '<option value="">No models available</option>';
+      elements.modelSelect.disabled = true;
+      elements.statusPillText.textContent = 'Model pending orchestration setup';
+      state.isReady = false;
+      return;
+    }
+
+    elements.modelSelect.innerHTML = data.students.map(m =>
+      `<option value="${m.id}">${m.name}</option>`
+    ).join('');
+
+    const defaultId = data.default_model;
+    state.activeModelInfo = data.students.find(m => m.id === defaultId) || data.students[0];
+    elements.modelSelect.value = state.activeModelInfo.id;
+    elements.modelSelect.disabled = false;
+
+    elements.modelSelect.addEventListener('change', (e) => {
+      const selectedId = e.target.value;
+      state.activeModelInfo = state.metadata.students.find(m => m.id === selectedId);
+      initClientModel();
+    });
+    elements.forceWasmCheckbox.addEventListener('change', () => {
+      initClientModel();
+    });
+
+    initClientModel();
+  } catch (err) {
+    state.loadError = err;
+    state.isReady = false;
+    elements.modelSelect.disabled = true;
+    elements.statusPillText.textContent = 'Model metadata failed to load';
+    console.error('Failed to load metadata:', err);
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   setupListeners();
-  initClientModel();
+  loadMetadataAndInit();
 });

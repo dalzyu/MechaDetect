@@ -8,7 +8,6 @@ from aigc_detector.manifests import (
     assign_splits,
     duplicate_groups,
     is_held_out_generator,
-    normalize_generator,
 )
 from aigc_detector.sampling import EpochWeightedSampler, generator_balanced_weights
 
@@ -21,6 +20,7 @@ def test_generator_holdout_registry_is_explicit_and_stable() -> None:
     assert is_held_out_generator("sdxl_1_0")
     assert is_held_out_generator("dalle2")
     assert not is_held_out_generator("stable_diffusion_1")
+
 
 def test_duplicate_clustering_links_exact_source_and_near_hashes() -> None:
     groups = duplicate_groups(
@@ -156,9 +156,7 @@ def test_epoch_sampler_skips_resumed_samples_without_loading_them() -> None:
 def test_distributed_epoch_sampler_gives_every_rank_equal_global_slices() -> None:
     weights = torch.tensor([0.1, 0.2, 0.3, 0.4])
     samplers = [
-        EpochWeightedSampler(
-            weights, samples=20, seed=42, rank=rank, world_size=6
-        )
+        EpochWeightedSampler(weights, samples=20, seed=42, rank=rank, world_size=6)
         for rank in range(6)
     ]
 

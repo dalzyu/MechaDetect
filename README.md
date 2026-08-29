@@ -137,85 +137,91 @@ TECHJAM_HF_HOME=E:/techjam26-runtime/huggingface
 TECHJAM_OUTPUT_ROOT=E:/techjam26-runtime/outputs
 ```
 
-### 3.3 Preparing the Full Training Split
+### 3.3 Preparing the Production Eligible Manifests
 
-Build the leakage-controlled production manifests from the SID, WildFake, and
-DiffusionForensics metadata files:
+Data prefetch and manifest generation are performed prior to DDP:
 
 ```bash
-uv run python scripts/data_prep/build_performance_manifests.py \
-  /path/to/sid_metadata.csv \
-  /path/to/wildfake_metadata.csv \
-  /path/to/diffusionforensics_metadata.csv \
-  --output-dir splits/performance \
-  --compute-hashes
+# 1. Prefetch source images to local NVMe
+uv run python scripts/data_prep/acquire_all_images.py \
+  --data-root "$TECHJAM_DATA_ROOT" \
+  --resume
+
+# 2. Freeze immutable eligible Parquet splits and 4,096-row calibration split
+uv run python scripts/data_prep/freeze_production_eligible.py \
+  --data-root "$TECHJAM_DATA_ROOT" \
+  --output-dir splits/production_eligible \
+  --calibration-size 4096 \
+  --strict \
+  --verify-bytes
 ```
 
-The builder creates `train.csv`, validation/test splits, and
-`manifest-report.json`. It rejects duplicate groups crossing splits and rejects
-the organizer's prohibited COCO val2017 and DALL-E Advanced demonstration
-samples from training. The trainer checks the prohibition again at launch.
+The builder creates `train.parquet`, `validation.parquet`, `test.parquet`, `test_unseen.parquet`,
+`calibration.parquet`, `exclusions.parquet`, and `audit_report.json`. Production loaders
+fail closed and forbid missing-image fallback substitution.
 
-### 3.4 Training the DINOv3 Teacher on Six GPUs
+### 3.4 Training the DINOv3 Teacher on Four RTX 4090 GPUs
 
-Training uses one process per GPU through PyTorch DistributedDataParallel.
-Run these commands on Linux with six CUDA devices visible.
+Training uses 4-GPU PyTorch DistributedDataParallel (DDP).
 
-Stage 1 freezes DINOv3 and trains the task-specific layers on clean originals.
-Its effective batch is `8 records/GPU × 1 accumulation × 6 GPUs = 48`:
+Stage 1 freezes the 840.6M-parameter DINOv3 backbone and trains the task-specific layers
+on downloaded-original views. Its effective batch is `6 records/GPU × 2 accumulation × 4 GPUs = 48`:
 
 ```bash
-uv run torchrun --standalone --nproc-per-node=6 \
+uv run torchrun --standalone --nproc-per-node=4 \
   -m aigc_detector.train \
   --config configs/teacher_dinov3_stage1_clean_frozen.yaml
 ```
 
-Choose the Stage 1 checkpoint using clean balanced accuracy and macro-F1.
-Stage 2 starts a new AdamW optimizer from those task-specific weights,
-unfreezes DINOv3, enables the EMA teacher, and trains original/transformed
-pairs. Its effective batch is `1 record/GPU × 8 accumulation × 6 GPUs = 48`:
+Stage 1 checkpoints are evaluated by `scripts/promote_teacher.py`. Stage 2 starts from
+the promoted Stage 1 weights, unfreezes the complete backbone, and trains original/transformed
+pairs. Its effective batch is `2 records/GPU × 6 accumulation × 4 GPUs = 48` (with `1 × 12 × 4` OOM fallback):
 
 ```bash
-uv run torchrun --standalone --nproc-per-node=6 \
+uv run torchrun --standalone --nproc-per-node=4 \
   -m aigc_detector.train \
   --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
-  --initial-checkpoint /absolute/path/to/checkpoint-step-N.pt
+  --initial-checkpoint outputs/teacher_stage1_clean_frozen/checkpoint-promoted.pt
 ```
 
-Resume an interrupted stage—including optimizer, scheduler, EMA, sampler
-position, and manifest identity—with:
+Resume an interrupted stage with:
 
 ```bash
-uv run torchrun --standalone --nproc-per-node=6 \
+uv run torchrun --standalone --nproc-per-node=4 \
   -m aigc_detector.train \
   --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
   --resume /absolute/path/to/checkpoint-step-N.pt
 ```
 
-Rank 0 alone writes logs, clean validation metrics, resolved config, and atomic
-checkpoints. For a one-GPU smoke run, replace `uv run torchrun ...` with `uv run python`
-add `--max-steps 2 --stage teacher-smoke`.
+### 3.5 Automated 4x RTX 4090 Gated Orchestration
 
-The complete operational plan—including hardware checks, failure rules,
-checkpoint selection, error analysis, Track 5 deliverables, and the future
-INT8 PTQ student—is in
+For a completely automated, resumable run covering preflight checks, data prefetch,
+teacher stages, concurrent student distillation, ATT hardening, ONNX export, static INT8 PTQ,
+and Hugging Face Hub uploads:
+
+```bash
+bash cluster_setup.sh        # Run once on fresh cluster instance
+bash orchestrate_4x4090.sh   # Run full 21-stage state machine
+```
+
+The complete operational plan is in
+[`docs/production_training_and_delivery_plan.md`](docs/production_training_and_delivery_plan.md) and
 [`docs/teacher_training_plan.md`](docs/teacher_training_plan.md).
-
-### 3.5 Evaluating a Checkpoint
+### 3.6 Evaluating a Checkpoint
 
 Run clean evaluation and the complete single-transform robustness grid on a
 candidate production checkpoint:
 
 ```bash
 uv run python scripts/evaluate_performance.py \
-  --manifest splits/performance/test_unseen.csv \
+  --manifest splits/production_eligible/test_unseen.parquet \
   --checkpoint /path/to/checkpoint-step-N.pt \
   --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
   --output outputs/teacher-clean-unseen.json \
   --batch-size 1
 
 uv run python scripts/evaluate_performance.py \
-  --manifest splits/performance/test_unseen.csv \
+  --manifest splits/production_eligible/test_unseen.parquet \
   --checkpoint /path/to/checkpoint-step-N.pt \
   --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
   --output outputs/teacher-robustness-unseen.json \
@@ -223,7 +229,7 @@ uv run python scripts/evaluate_performance.py \
   --batch-size 1
 ```
 
-### 3.6 Predicting on an Image Directory
+### 3.7 Predicting on an Image Directory
 Generate Track 5 predictions (`pred = P(AI-generated or AI-edited)`) for submissions:
 ```bash
 uv run python -m aigc_detector.predict \
@@ -233,7 +239,7 @@ uv run python -m aigc_detector.predict \
   --checkpoint /path/to/checkpoint-step-N.pt
 ```
 
-### 3.7 Running Tests
+### 3.8 Running Tests
 ```bash
 uv run python -m pytest tests/ -q
 ```

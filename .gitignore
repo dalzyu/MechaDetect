@@ -19,6 +19,7 @@ artifacts/
 100+ AI_Images from ewan.zip
 gmorinan_memes.zip
 Data Collection - Sheet1.csv
+gpt-image-2-synthetic-images.zip
 splits/**/*.parquet
 splits/**/*.arrow
 splits/**/hf_dataset/
@@ -40,7 +41,10 @@ TikTok TechJam 2026 Information Document.zip
 newer image model data(do not use for training)/
 tmp/
 
-# Model binaries and web model directory
-*.onnx
-web/model/
-
+.runtime/
+hf_transparency_package/
+outputs/**/*.log
+outputs/**/*.pt
+outputs/**/*.pth
+outputs/**/*.ckpt
+web/model/student_*.onnx

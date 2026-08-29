@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from typing import Any
 
 import torch
 from torch.utils.data import Sampler
@@ -39,8 +40,8 @@ def generator_balanced_weights(
         raise ValueError("max_ratio must be at least 1")
 
     labels = [int(value) for value in (ai_positive if ai_positive is not None else provenance)]
-    class_targets = {0: 0.50, 1: 0.50} if ai_positive is not None else (
-        targets or DEFAULT_CLASS_TARGETS
+    class_targets = (
+        {0: 0.50, 1: 0.50} if ai_positive is not None else (targets or DEFAULT_CLASS_TARGETS)
     )
     groups: dict[tuple[int, str], list[int]] = {}
     class_counts: dict[int, int] = {}
@@ -57,13 +58,10 @@ def generator_balanced_weights(
     # bounds each row's amplification while retaining exact class mass.
     weights = torch.zeros(len(labels), dtype=torch.double)
     group_total_by_class = {
-        label: sum(1 for key in groups if key[0] == label)
-        for label in class_targets
+        label: sum(1 for key in groups if key[0] == label) for label in class_targets
     }
     for (label, _generator), indices in groups.items():
-        raw = float(class_targets[label]) / (
-            group_total_by_class[label] * len(indices)
-        )
+        raw = float(class_targets[label]) / (group_total_by_class[label] * len(indices))
         natural = float(class_targets[label]) / class_counts[label]
         capped = min(raw, max_ratio * natural)
         weights[indices] = capped
@@ -133,9 +131,7 @@ class EpochWeightedSampler(Sampler[int]):
 
     def set_start_offset(self, offset: int) -> None:
         if not 0 <= offset <= self.samples_per_rank:
-            raise ValueError(
-                f"Sampler offset {offset} is outside [0, {self.samples_per_rank}]"
-            )
+            raise ValueError(f"Sampler offset {offset} is outside [0, {self.samples_per_rank}]")
         self.start_offset = offset
 
     def __iter__(self):
@@ -144,11 +140,111 @@ class EpochWeightedSampler(Sampler[int]):
         # number of samples. Equal rank lengths are required to avoid DDP
         # deadlocks when one GPU reaches backward() before another.
         total_size = self.samples_per_rank * self.world_size
-        indices = torch.multinomial(
-            self.weights, total_size, replacement=True, generator=generator
-        )
+        indices = torch.multinomial(self.weights, total_size, replacement=True, generator=generator)
         indices = indices[self.rank : total_size : self.world_size]
         return iter(indices[self.start_offset :].tolist())
 
     def __len__(self) -> int:
         return self.samples_per_rank - self.start_offset
+
+
+class DeterministicDistributedCoverageSampler(Sampler[int]):
+    """Deterministic no-replacement distributed sampler with minimal equal-rank padding.
+
+    Guarantees complete coverage of all unique dataset rows within each epoch
+    without replacement, adding the minimal deterministic padding required to ensure
+    all distributed ranks execute identical microstep counts (preventing DDP deadlocks).
+    """
+
+    def __init__(
+        self,
+        dataset_size: int,
+        *,
+        seed: int = 42,
+        rank: int = 0,
+        world_size: int = 1,
+        epoch: int = 0,
+        start_offset: int = 0,
+    ) -> None:
+        if dataset_size <= 0:
+            raise ValueError(f"dataset_size must be positive, got {dataset_size}")
+        if world_size <= 0:
+            raise ValueError(f"world_size must be positive, got {world_size}")
+        if not 0 <= rank < world_size:
+            raise ValueError(f"rank {rank} is outside [0, {world_size})")
+
+        self.dataset_size = dataset_size
+        self.seed = seed
+        self.rank = rank
+        self.world_size = world_size
+        self.epoch = epoch
+        self.samples_per_rank = (dataset_size + world_size - 1) // world_size
+        self.total_samples = self.samples_per_rank * world_size
+        self.num_padding = self.total_samples - dataset_size
+        self.start_offset = 0
+        self.set_start_offset(start_offset)
+        self._last_epoch_indices: list[int] | None = None
+
+    def set_epoch(self, epoch: int) -> None:
+        self.epoch = epoch
+
+    def set_start_offset(self, offset: int) -> None:
+        if not 0 <= offset <= self.samples_per_rank:
+            raise ValueError(f"Sampler offset {offset} is outside [0, {self.samples_per_rank}]")
+        self.start_offset = offset
+
+    def get_epoch_indices(self) -> list[int]:
+        """Return the complete global index sequence (with minimal padding) for current epoch."""
+        generator = torch.Generator().manual_seed(self.seed + self.epoch)
+        shuffled = torch.randperm(self.dataset_size, generator=generator).tolist()
+        if self.num_padding > 0:
+            shuffled.extend(shuffled[: self.num_padding])
+        return shuffled
+
+    def __iter__(self):
+        global_indices = self.get_epoch_indices()
+        rank_indices = global_indices[self.rank : self.total_samples : self.world_size]
+        self._last_epoch_indices = rank_indices
+        return iter(rank_indices[self.start_offset :])
+
+    def __len__(self) -> int:
+        return self.samples_per_rank - self.start_offset
+
+    def get_coverage_report(self) -> dict[str, Any]:
+        """Report unique rows, total draws, padded repeats, and per-rank properties."""
+        return {
+            "dataset_size": self.dataset_size,
+            "unique_rows_covered": self.dataset_size,
+            "samples_per_rank": self.samples_per_rank,
+            "total_draws": self.total_samples,
+            "num_padding": self.num_padding,
+            "padded_repeats": self.num_padding,
+            "missing_rows": 0,
+            "world_size": self.world_size,
+            "rank": self.rank,
+            "epoch": self.epoch,
+            "start_offset": self.start_offset,
+        }
+
+
+DistributedCoverageSampler = DeterministicDistributedCoverageSampler
+
+
+def build_coverage_sampler(
+    dataset_size: int,
+    *,
+    seed: int,
+    rank: int = 0,
+    world_size: int = 1,
+    epoch: int = 0,
+    start_offset: int = 0,
+) -> DeterministicDistributedCoverageSampler:
+    """Convenience constructor for DeterministicDistributedCoverageSampler."""
+    return DeterministicDistributedCoverageSampler(
+        dataset_size,
+        seed=seed,
+        rank=rank,
+        world_size=world_size,
+        epoch=epoch,
+        start_offset=start_offset,
+    )

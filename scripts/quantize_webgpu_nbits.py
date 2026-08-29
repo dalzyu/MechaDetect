@@ -1,90 +1,99 @@
 #!/usr/bin/env python3
-"""Quantize Checkpoint 2 using MatMulNBits (INT4 block-wise quantization) for WebGPU."""
+"""Inspect ONNX models for static INT8 verification and reject INT4/dynamic claims.
+
+Provides machine-verifiable graph inspection to prove static INT8 quantization and
+strictly reject INT4 MatMulNBits or dynamic-only claims.
+"""
 
 from __future__ import annotations
 
+import argparse
+import json
+import logging
 import sys
-import time
 from pathlib import Path
 
-import onnx
-from onnxruntime.quantization.matmul_nbits_quantizer import MatMulNBitsQuantizer
-
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT / "src"))
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+if str(REPO_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT / "src"))
+_onnx_pkg = REPO_ROOT / ".runtime" / "onnx_packages"
+if _onnx_pkg.exists() and str(_onnx_pkg) not in sys.path:
+    sys.path.insert(0, str(_onnx_pkg))
 
-import torch
-import torch.nn as nn
-from aigc_detector.runtime import load_local_environment
-from aigc_detector.config import load_config
-from aigc_detector.train import build_model
-from aigc_detector.predict import _load_checkpoint
+import onnx
 
+from aigc_detector.static_int8 import inspect_and_verify_static_int8
 
-class WebGPUModelWrapper(nn.Module):
-    def __init__(self, model: nn.Module) -> None:
-        super().__init__()
-        self.model = model
-
-    def forward(self, pixel_values: torch.Tensor) -> torch.Tensor:
-        raw_logit = self.model.forward_tensor(pixel_values)
-        p_aigc = torch.sigmoid(raw_logit)
-        p_auth = 1.0 - p_aigc
-        return torch.stack((p_auth, p_aigc), dim=-1)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger(__name__)
 
 
-def main():
-    load_local_environment(REPO_ROOT)
-    config = load_config(REPO_ROOT / "configs" / "teacher_dinov3_checkpoint2_full_data.yaml")
+def inspect_model_cli(model_path: Path, output_json: Path | None = None) -> int:
+    """Inspect ONNX model graph to verify static INT8 and reject INT4 or dynamic-only claims."""
+    model_path = Path(model_path).resolve()
+    if not model_path.exists():
+        logger.error("Model file not found: %s", model_path)
+        return 2
 
-    print("[1/3] Building model & loading safetensors...")
-    model = build_model(config).eval()
-    _load_checkpoint(
-        model,
-        REPO_ROOT / "models" / "teachers" / "iteration1" / "checkpoint2" / "model-weights.safetensors",
+    logger.info("Inspecting ONNX graph structure for: %s", model_path)
+    result = inspect_and_verify_static_int8(model_path)
+    result_dict = result.to_dict()
+
+    print("\n=======================================================")
+    print("           ONNX GRAPH VERIFICATION REPORT")
+    print("=======================================================")
+    print(f"Model Path:              {model_path}")
+    print(f"File Size:               {model_path.stat().st_size / 1e6:.2f} MB")
+    print(f"Total Graph Nodes:       {result.total_nodes}")
+    print(f"Quantization Type:       {result.quantization_type}")
+    print(f"Static INT8 Verified:    {result.static_int8_verified}")
+    print(f"INT4 Detected:           {result.int4_detected} (MatMulNBits={result.matmul_nbits_count})")
+    print(f"Dynamic-Only Detected:   {result.dynamic_only_detected} (DynamicQuant={result.dynamic_quant_count})")
+    print(f"QDQ Node Count:          {result.qdq_node_count}")
+    print(f"QLinear Node Count:      {result.qlinear_node_count}")
+    print(f"Preserved Sensitive Ops: {result.preserved_sensitive_ops}")
+    print("-------------------------------------------------------")
+    print(f"VERIFICATION STATUS:     {'PASSED (Static INT8)' if result.passed else 'FAILED'}")
+
+    if result.rejection_reasons:
+        print("\nRejection Reasons:")
+        for r in result.rejection_reasons:
+            print(f"  ❌ {r}")
+    else:
+        print("\n  ✅ Verified static INT8 QDQ graph. Zero MatMulNBits. Zero dynamic-only quant.")
+    print("=======================================================\n")
+
+    if output_json:
+        output_json.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_json, "w", encoding="utf-8") as f:
+            json.dump(result_dict, f, indent=2)
+        logger.info("Verification JSON report saved to: %s", output_json)
+
+    return 0 if result.passed else 1
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Inspect ONNX models for static INT8 verification and reject INT4/dynamic claims."
     )
-    wrapper = WebGPUModelWrapper(model).eval()
-
-    tmp_fp32_dir = REPO_ROOT / "tmp" / "export_fp32"
-    tmp_fp32_dir.mkdir(parents=True, exist_ok=True)
-    tmp_fp32_onnx = tmp_fp32_dir / "model.onnx"
-
-    print(f"[2/3] Exporting base ONNX model to {tmp_fp32_onnx}...")
-    dummy_input = torch.randn(1, 3, 224, 224, dtype=torch.float32)
-    torch.onnx.export(
-        wrapper,
-        dummy_input,
-        str(tmp_fp32_onnx),
-        export_params=True,
-        opset_version=17,
-        do_constant_folding=True,
-        input_names=["pixel_values"],
-        output_names=["probabilities"],
-        dynamo=False,
+    parser.add_argument(
+        "--inspect-model",
+        type=Path,
+        required=True,
+        help="Inspect an ONNX model to verify static INT8 and reject INT4/dynamic-only claims",
     )
-    print("Base export complete!")
-
-    output_path = REPO_ROOT / "web" / "model" / "checkpoint2.onnx"
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    print(f"[3/3] Applying MatMulNBits (4-bit block-wise quantization for WebGPU)...")
-    # Load onnx model proto
-    onnx_model = onnx.load(str(tmp_fp32_onnx), load_external_data=True)
-    
-    # 4-bit quantization with block size 32 (high accuracy for vision transformers)
-    quantizer = MatMulNBitsQuantizer(
-        model=onnx_model,
-        bits=4,
-        block_size=32,
-        is_symmetric=True,
+    parser.add_argument(
+        "--report-json",
+        type=Path,
+        default=None,
+        help="Optional destination path for machine-readable inspection JSON",
     )
-    quantizer.process()
+    args = parser.parse_args()
 
-    print(f"Saving quantized model to {output_path}...")
-    onnx.save_model(quantizer.model.model, str(output_path), save_as_external_data=False)
-    
-    file_size_mb = output_path.stat().st_size / (1024 * 1024)
-    print(f"Done! Quantized WebGPU model saved: {output_path} ({file_size_mb:.1f} MB)")
+    exit_code = inspect_model_cli(args.inspect_model, args.report_json)
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
