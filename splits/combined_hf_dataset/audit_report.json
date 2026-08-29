@@ -1,0 +1,60 @@
+{
+  "total_rows": 123252,
+  "split_counts": {
+    "train": 74450,
+    "validation": 20459,
+    "test": 16121,
+    "test_unseen": 12222
+  },
+  "purged_sources": [
+    "animagine_xl_artist_comparison",
+    "civitai_photoreal_diffusion",
+    "novelai_artist_comparison",
+    "yesbut_satire_comics"
+  ],
+  "counts_by_dataset": {
+    "sid": 30000,
+    "wildfake": 15000,
+    "diffusionforensics": 12000,
+    "artic_dataset": 10000,
+    "open_images_v7": 10000,
+    "art_museums_pd": 8000,
+    "gpt_image_edit_1_5m": 5000,
+    "flux_reason_6m": 5000,
+    "ideogram_27k": 3000,
+    "google_nano_banana_edited": 2500,
+    "krea2_wildcards": 2500,
+    "gmorinan_memes": 2300,
+    "midjourney_v6_recap": 2000,
+    "nano_banana_pro_gen": 2000,
+    "authentic_glamour_portraits": 1500,
+    "imgflip_memes": 1500,
+    "ai_meme_macro_overlay": 1300,
+    "authentic_classical_figure_art": 1000,
+    "danbooru_pre2020_human": 1000,
+    "manga109_illustrations": 1000,
+    "midjourney_v5_images": 1000,
+    "sd3_medium_synths": 1000,
+    "danbooru2026_aigc_wild": 500,
+    "gta5_driving_renders": 500,
+    "midjourney_fantasy_environments": 500,
+    "tartanair2_ue5_cyberpunk": 500,
+    "flux_cyberpunk_scifi": 500,
+    "sdxl_photoreal_vehicles": 500,
+    "ai_reaction_banners": 450,
+    "multioff_memes": 300,
+    "scam_ai_social_posts": 300,
+    "game_screenshots_fantasy": 250,
+    "sintel_blender_open_movie": 250,
+    "ewan_gpt_images": 102
+  },
+  "ai_positive_counts": {
+    "1": 63785,
+    "0": 59467
+  },
+  "provenance_counts": {
+    "authentic": 55367,
+    "fully_aigc": 44560,
+    "tampered": 23325
+  }
+}

@@ -16,16 +16,6 @@ class TransformSpec:
     severity: float
 
 
-_CHAIN_ORDER = {
-    Transformation.CROP: 0,
-    Transformation.RESIZE: 1,
-    Transformation.COLOR: 2,
-    Transformation.BLUR: 3,
-    Transformation.NOISE: 4,
-    Transformation.JPEG: 5,
-}
-
-
 def sample_transform(
     rng: Random, families: tuple[Transformation, ...] | None = None
 ) -> TransformSpec:
@@ -42,25 +32,21 @@ def sample_transform(
     return TransformSpec(family=family, severity=float(severity))
 
 
-def sample_transform_chain(
+def apply_transform(
+    image: Image.Image,
+    spec: TransformSpec,
     rng: Random,
-    chain_length_probabilities: dict[int, float],
-    families: tuple[Transformation, ...] | None = None,
-) -> tuple[TransformSpec, ...]:
-    candidates = families or tuple(Transformation)
-    lengths = tuple(sorted(chain_length_probabilities))
-    weights = tuple(chain_length_probabilities[length] for length in lengths)
-    length = rng.choices(lengths, weights=weights, k=1)[0]
-    if not 0 <= length <= len(candidates):
-        raise ValueError(f"Invalid transform-chain length {length}")
-    if length == 0:
-        return ()
-    selected_families = rng.sample(list(candidates), k=length)
-    specs = tuple(sample_transform(rng, (family,)) for family in selected_families)
-    return tuple(sorted(specs, key=lambda spec: _CHAIN_ORDER[spec.family]))
+    *,
+    mask: Image.Image | None = None,
+    min_mask_retention: float = 0.5,
+) -> Image.Image:
+    """Apply one content-preserving transform.
 
-
-def apply_transform(image: Image.Image, spec: TransformSpec, rng: Random) -> Image.Image:
+    A localized edit must remain visible when crop augmentation is sampled;
+    otherwise the positive label becomes contradictory.  The crop sampler
+    therefore retries deterministic random windows and finally centers the
+    window on the mask centroid.
+    """
     image = image.convert("RGB")
     width, height = image.size
 
@@ -99,18 +85,35 @@ def apply_transform(image: Image.Image, spec: TransformSpec, rng: Random) -> Ima
         keep = spec.severity
         crop_width = max(1, round(width * keep))
         crop_height = max(1, round(height * keep))
-        left = (width - crop_width) // 2
-        top = (height - crop_height) // 2
+        crop_mask = None
+        total_mask_area = 0
+        if mask is not None:
+            crop_mask = np.asarray(mask.convert("L"), dtype=np.uint8) > 0
+            total_mask_area = int(crop_mask.sum())
+
+        def retained(left: int, top: int) -> int:
+            if crop_mask is None or total_mask_area == 0:
+                return total_mask_area
+            return int(crop_mask[top : top + crop_height, left : left + crop_width].sum())
+
+        max_left = width - crop_width
+        max_top = height - crop_height
+        for _ in range(16):
+            left = rng.randint(0, max_left) if max_left else 0
+            top = rng.randint(0, max_top) if max_top else 0
+            if total_mask_area == 0 or retained(left, top) / total_mask_area >= min_mask_retention:
+                cropped = image.crop((left, top, left + crop_width, top + crop_height))
+                return cropped.resize((width, height), Image.Resampling.BICUBIC)
+
+        if total_mask_area:
+            ys, xs = np.nonzero(crop_mask)
+            center_x, center_y = int(xs.mean()), int(ys.mean())
+            left = min(max(center_x - crop_width // 2, 0), max_left)
+            top = min(max(center_y - crop_height // 2, 0), max_top)
+        else:
+            left = max_left // 2
+            top = max_top // 2
         cropped = image.crop((left, top, left + crop_width, top + crop_height))
         return cropped.resize((width, height), Image.Resampling.BICUBIC)
 
     raise ValueError(f"Unsupported transformation family: {spec.family}")
-
-
-def apply_transform_chain(
-    image: Image.Image, specs: tuple[TransformSpec, ...], rng: Random
-) -> Image.Image:
-    result = image
-    for spec in specs:
-        result = apply_transform(result, spec, rng)
-    return result

@@ -1,11 +1,12 @@
 # TechJam 2026: Robust Image Provenance Detection
 
-Production-ready architecture for robust three-class image provenance detection:
-1. **`authentic`**: Pristine real-world scene capture. Content-preserving transformations do not alter this class.
-2. **`tampered`**: Authentic scene containing localized semantic additions, removals, splices, or generative inpainting.
-3. **`fully_aigc`**: Visual content synthesized end-to-end by a generative model (GAN or diffusion).
+Research and training code for binary Track 5 AI-provenance detection:
+1. **`authentic`**: Human-created imagery; content-preserving transformations do not alter this class.
+2. **AI-positive**: Both AI-edited/tampered imagery and fully generated imagery.
 
-Transformations (JPEG, blur, resize, noise, color, crop) are used as robustness augmentations and evaluation stress-tests; the model directly predicts semantic provenance rather than inferring edit history.
+The internal dataset metadata preserves `tampered` and `fully_aigc` subtype
+labels for provenance reporting and optional edit-mask localization, but the
+image-level model objective treats both as the same positive class.
 
 ---
 
@@ -22,19 +23,21 @@ Following a 4-hour controlled tournament across 4× NVIDIA RTX 4090s on 12,000 g
 | **Strict-Unseen AUROC (480 img)** | **0.9794** [0.9689, 0.9899] | **0.9946** [0.9899, 0.9981] | 0.9548 [0.9331, 0.9721] |
 | **TechJam Proxy AUROC (COCO vs DALL·E 3)** | **0.9978** [0.9955, 0.9995] | 0.9538 [0.9344, 0.9692] | 0.9235 [0.8942, 0.9455] |
 | **DALL·E 3 Generator Recall** | **96.5%** (193/200 correct) | 48.5% (82 misclassified as tampered) | 65.5% (64 misclassified) |
-| **Compound Robustness (Crop+Resize+JPEG)** | **0.9712 AUROC** | 0.9400 AUROC | 0.8140 AUROC |
 | **Aspect Ratio Shortcut Accuracy (Chance=33%)**| **54.66%** (Near-chance / invariant) | **86.61%** (Severe shortcut leak) | **80.53%** (Severe shortcut leak) |
 | **Adaptation Speed (Time per Update)** | **~1.8 seconds** | ~35.0 seconds (19.4× slower) | ~14.0 seconds |
 
 Full empirical findings, 16-condition robustness tables, and failure analyses:
 - Comprehensive findings: [`docs/backbone_bakeoff_findings.md`](docs/backbone_bakeoff_findings.md)
 - Executive decision & checkpoint handoff: [`docs/backbone_bakeoff_decision.md`](docs/backbone_bakeoff_decision.md)
+- Production teacher plan: [`docs/teacher_training_plan.md`](docs/teacher_training_plan.md)
+- Consolidated teacher training run record and published weights: [`docs/training_run_consolidated.md`](docs/training_run_consolidated.md)
 
 ---
 
 ## 2. Model Architecture
 
-The architecture decouples global generative artifact detection from localized patch tampering:
+The image-level model is binary. A global AI-evidence branch and a token-aware
+edit-localization branch feed one shared AI-positive classifier:
 
 ```
 [ Input RGB Image ]
@@ -47,20 +50,23 @@ The architecture decouples global generative artifact detection from localized p
        │  (Output: B × N × 512 adapted tokens)
        ├───────────────────────────────────────────────┐
        ▼                                               ▼
-[ AIGC Query Pool Head ]                    [ Token-Aware Tamper Head ]
+[ Global AI-Evidence Head ]                 [ Edit Localization Head ]
 • 4 learned query vectors                   • Token-level linear classifier
-• Multi-head cross-attention over tokens    • Top-5% patch pooling
+• Multi-head cross-attention                • Top-5% patch pooling
 • Mean + Std summary pooling                • Softmax attention pooling
-• MLP projection → aigc_logit               • MLP projection → tamper_logit
        │                                               │
        └───────────────────────┬───────────────────────┘
                                ▼
-            [ Hierarchical Probabilities Engine ]
-            • P(fully_aigc) = sigmoid(aigc_logit)
-            • P(tampered)   = (1 - P(fully_aigc)) * sigmoid(tamper_logit)
-            • P(authentic)  = (1 - P(fully_aigc)) * (1 - sigmoid(tamper_logit))
-            • Probabilities sum to 1.0; fully-AIGC samples do not incur tamper loss
+             [ Binary AI-Positive Classifier ]
+             • ai_positive_logit
+             • P(AI-positive) = sigmoid(logit)
+             • P(authentic) = 1 - P(AI-positive)
+             • Fully generated and AI-edited share this target
 ```
+
+The edit-localization branch may receive patch-mask supervision where masks
+exist. It is not trained to distinguish fully generated images from edited
+images.
 
 ### Optional Dual-Stream Spectral Expert
 For frequency-domain residual detection, an optional ConvNeXt-Tiny stream processes RGB + fixed high-pass spatial residuals (`conv2d` with discrete derivative kernels) augmented with a 32-bin radial 2D FFT energy projection, dynamically fused via learned sigmoid gates.
@@ -86,50 +92,103 @@ TECHJAM_HF_HOME=E:/techjam26-runtime/huggingface
 TECHJAM_OUTPUT_ROOT=E:/techjam26-runtime/outputs
 ```
 
-### 3.3 Training the Winning DINOv3 Model
-To train the adapted DINOv3 model (final 25% transformer blocks unfrozen with layerwise learning rate decay 0.85):
+### 3.3 Preparing the Full Training Split
+
+Build the leakage-controlled production manifests from the SID, WildFake, and
+DiffusionForensics metadata files:
+
 ```bash
-python -m aigc_detector.train --config configs/bakeoff_adapt_dinov3.yaml
+python scripts/data_prep/build_performance_manifests.py \
+  /path/to/sid_metadata.csv \
+  /path/to/wildfake_metadata.csv \
+  /path/to/diffusionforensics_metadata.csv \
+  --output-dir splits/performance \
+  --compute-hashes
 ```
 
-To run full teacher training with synthetic multi-transform augmentation and EMA guidance:
+The builder creates `train.csv`, validation/test splits, and
+`manifest-report.json`. It rejects duplicate groups crossing splits and rejects
+the organizer's prohibited COCO val2017 and DALL-E Advanced demonstration
+samples from training. The trainer checks the prohibition again at launch.
+
+### 3.4 Training the DINOv3 Teacher on Six GPUs
+
+Training uses one process per GPU through PyTorch DistributedDataParallel.
+Run these commands on Linux with six CUDA devices visible.
+
+Stage 1 freezes DINOv3 and trains the task-specific layers on clean originals.
+Its effective batch is `8 records/GPU × 1 accumulation × 6 GPUs = 48`:
+
 ```bash
-python -m aigc_detector.train --config configs/teacher_dinov3_production.yaml
+torchrun --standalone --nproc-per-node=6 \
+  -m aigc_detector.train \
+  --config configs/teacher_dinov3_stage1_clean_frozen.yaml
 ```
 
-### 3.4 Evaluating a Checkpoint
-Run evaluation on clean probe images or across the 16-condition single-transform robustness grid:
-```bash
-# Clean evaluation on the strict-unseen benchmark (480 images)
-python scripts/evaluate_performance.py \
-  --manifest manifests/strict_unseen_probe.csv \
-  --checkpoint outputs/bakeoff/adapt_dinov3/checkpoint-step-188.pt \
-  --config configs/bakeoff_adapt_dinov3.yaml \
-  --output outputs/eval_results.json \
-  --batch-size 8
+Choose the Stage 1 checkpoint using clean balanced accuracy and macro-F1.
+Stage 2 starts a new AdamW optimizer from those task-specific weights,
+unfreezes DINOv3, enables the EMA teacher, and trains original/transformed
+pairs. Its effective batch is `1 record/GPU × 8 accumulation × 6 GPUs = 48`:
 
-# 16-condition single-transform robustness evaluation
+```bash
+torchrun --standalone --nproc-per-node=6 \
+  -m aigc_detector.train \
+  --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
+  --initial-checkpoint /absolute/path/to/checkpoint-step-N.pt
+```
+
+Resume an interrupted stage—including optimizer, scheduler, EMA, sampler
+position, and manifest identity—with:
+
+```bash
+torchrun --standalone --nproc-per-node=6 \
+  -m aigc_detector.train \
+  --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
+  --resume /absolute/path/to/checkpoint-step-N.pt
+```
+
+Rank 0 alone writes logs, clean validation metrics, resolved config, and atomic
+checkpoints. For a one-GPU smoke run, replace `torchrun ...` with `python` and
+add `--max-steps 2 --stage teacher-smoke`.
+
+The complete operational plan—including hardware checks, failure rules,
+checkpoint selection, error analysis, Track 5 deliverables, and the future
+INT8 PTQ student—is in
+[`docs/teacher_training_plan.md`](docs/teacher_training_plan.md).
+
+### 3.5 Evaluating a Checkpoint
+
+Run clean evaluation and the complete single-transform robustness grid on a
+candidate production checkpoint:
+
+```bash
 python scripts/evaluate_performance.py \
-  --manifest manifests/strict_unseen_probe.csv \
-  --checkpoint outputs/bakeoff/adapt_dinov3/checkpoint-step-188.pt \
-  --config configs/bakeoff_adapt_dinov3.yaml \
-  --output outputs/eval_robustness.json \
-  --limit 120 \
+  --manifest splits/performance/test_unseen.csv \
+  --checkpoint /path/to/checkpoint-step-N.pt \
+  --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
+  --output outputs/teacher-clean-unseen.json \
+  --batch-size 1
+
+python scripts/evaluate_performance.py \
+  --manifest splits/performance/test_unseen.csv \
+  --checkpoint /path/to/checkpoint-step-N.pt \
+  --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
+  --output outputs/teacher-robustness-unseen.json \
   --robustness \
-  --batch-size 8
+  --batch-size 1
 ```
 
-### 3.5 Predicting on an Image Directory
-Generate predictions (`pred = P(fully_aigc)`) for test submissions:
+### 3.6 Predicting on an Image Directory
+Generate Track 5 predictions (`pred = P(AI-generated or AI-edited)`) for submissions:
 ```bash
 python -m aigc_detector.predict \
   --input-dir /path/to/images \
   --output predictions.json \
-  --config configs/bakeoff_adapt_dinov3.yaml \
-  --checkpoint outputs/bakeoff/adapt_dinov3/checkpoint-step-188.pt
+  --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
+  --checkpoint /path/to/checkpoint-step-N.pt
 ```
 
-### 3.6 Running Tests
+### 3.7 Running Tests
 ```bash
 python -m pytest tests/ -q
 ```
@@ -141,26 +200,98 @@ python -m pytest tests/ -q
 ```text
 techjam26/
 ├── configs/                       # Production and experiment configurations
-│   ├── bakeoff_adapt_dinov3.yaml  # Winning DINOv3 adaptation config (8 layers unfrozen)
-│   ├── teacher_dinov3_production.yaml # Production robust teacher training config
+│   ├── bakeoff/                    # Completed backbone tournament configs
+│   ├── teacher_dinov3_stage1_clean_frozen.yaml
+│   ├── teacher_dinov3_stage2_paired_unfrozen.yaml
 │   └── ...
 ├── docs/                          # Tournament decisions, findings, and design history
 │   ├── backbone_bakeoff_findings.md # Complete 3-way empirical report
 │   ├── backbone_bakeoff_decision.md # Executive winner decision & catalog
+│   ├── teacher_training_plan.md   # Authoritative two-stage teacher plan
 │   └── archive/                   # Historical execution and PoC plans
 ├── outputs/bakeoff/               # Exfiltrated evaluation results and raw JSON metrics
 ├── scripts/                       # Essential CLI tools (training, eval, prediction)
-│   ├── evaluate_performance.py    # Standardized provenance & robustness evaluator
-│   ├── cache_backbone_features.py # Fast multi-GPU token extraction
-│   └── probe_feature_shortcuts.py # Linear shortcut audit probe (aspect ratio & dataset)
-├── src/aigc_detector/             # Modular core library
-│   ├── model.py                   # Backbones, token adapter, dual-task provenance heads
+│   ├── model.py                   # Backbones, binary AI head, edit localization
 │   ├── train.py                   # Optimization loop, layerwise decay, EMA, checkpointing
-│   ├── predict.py                 # Batch inference and submission export
-│   ├── losses.py                  # Hierarchical cross-entropy, focal BCE, Dice loss
+│   ├── predict.py                 # Binary batch inference and submission export
+│   ├── losses.py                  # Binary BCE, focal BCE, Dice, consistency losses
 │   ├── transforms.py              # Perturbation pipeline (JPEG, blur, noise, resize, crop)
 │   ├── sampling.py                # Generator-balanced stratified sampling
 │   ├── preprocessing.py           # Standardized geometry and image normalization
 │   └── metrics.py                 # AUROC, AUPRC, balanced accuracy, confusion matrix
 └── tests/                         # Unit and integration test suite
 ```
+
+---
+
+## 5. Track 5 Submission Interface
+
+### Solution and stack
+
+The model uses PyTorch for optimization and DDP, Hugging Face Transformers for
+the pinned DINOv3 encoder and image processor, torchvision for the optional
+ConvNeXt spectral branch, Pillow/NumPy for deterministic transformations, and
+pandas/PyYAML for manifests and configuration.
+
+Training data is drawn from SID, WildFake, and DiffusionForensics under their
+respective licenses and usage terms. The production split is grouped by exact
+and perceptual duplicate identity and separates unseen generator families.
+COCO val2017 and DALL-E Advanced organizer demonstration data is explicitly
+blocked from training.
+
+### Required prediction format
+
+`python -m aigc_detector.predict` recursively reads an image directory and
+writes a JSON array. `pred` is the combined probability that an image is fully
+AI-generated or AI-edited:
+
+```json
+[
+  {
+    "image_path": "relative/path/example.jpg",
+    "pred": 0.8731
+  }
+]
+```
+
+The internal model distinguishes fully generated images from locally
+AI-edited images for diagnostics and localization. Track 5 treats both as the
+same positive class, so the exported score is their probability sum.
+
+### Artifacts still produced after training
+
+The final selected checkpoint must be accompanied by:
+
+1. clean, seen-generator, unseen-generator, and transformation-grid results;
+2. false-positive and false-negative analysis with threshold tradeoffs;
+3. the future float student and calibrated INT8 PTQ export comparison; and
+4. a demo video showing setup, directory inference, output JSON, robustness
+   results, and known limitations.
+
+These results are intentionally not prefilled: they must come from the selected
+full-scale checkpoint.
+
+---
+
+## 6. Known Limitations
+
+- This is a probabilistic detector, not a cryptographic provenance proof,
+  watermark verifier, copyright decision, or authorship certificate.
+- The optional edit-localization output requires localized-edit coverage and
+  mask quality. It is not a second image-level provenance classifier.
+- Heavy crop, resize, blur, or JPEG processing can remove evidence; unusual
+  authentic post-processing can resemble generative artifacts.
+- The full DINOv3 teacher is intended for training and distillation, not
+  resource-constrained deployment. Deployment uses the separately validated
+  INT8 student.
+- The production teacher metrics, error analysis, and INT8 student comparison
+  remain pending until their corresponding runs are complete.
+
+---
+
+## 7. Team Contributions
+
+Contributor identities and role allocation were not provided in this
+repository context. The submitting team must add each member's name and exact
+contributions before Track 5 submission; this repository does not invent or
+attribute work without confirmation.

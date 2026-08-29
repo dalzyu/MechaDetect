@@ -18,6 +18,24 @@ def test_ema_updates_and_temporarily_swaps_trainable_parameters() -> None:
     assert torch.allclose(model.weight, changed)
 
 
+def test_ema_functional_forward_does_not_replace_live_parameters() -> None:
+    model = nn.Linear(2, 1)
+    ema = ParameterEMA(model, decay=0.5)
+    with torch.no_grad():
+        model.weight.add_(2.0)
+    live_weight = model.weight.detach().clone()
+    inputs = torch.tensor([[1.0, -1.0]])
+
+    expected = torch.nn.functional.linear(
+        inputs, ema.shadow["weight"], ema.shadow["bias"]
+    )
+    actual = ema.forward(model, inputs)
+
+    assert torch.allclose(actual, expected)
+    assert torch.equal(model.weight, live_weight)
+    assert model.training
+
+
 def test_confidence_gated_kl_ignores_uncertain_teacher() -> None:
     student = torch.tensor([[0.8, 0.1, 0.1]], requires_grad=True)
     teacher = torch.tensor([[0.4, 0.3, 0.3]])

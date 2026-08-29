@@ -23,54 +23,31 @@ from aigc_detector.metrics import (
 from aigc_detector.predict import _load_checkpoint
 from aigc_detector.runtime import load_local_environment
 from aigc_detector.train import build_model
-from aigc_detector.transforms import TransformSpec, apply_transform_chain
+from aigc_detector.transforms import TransformSpec, apply_transform
 
 
 @dataclass(frozen=True)
 class EvaluationCondition:
     name: str
-    specs: tuple[TransformSpec, ...]
+    spec: TransformSpec | None
 
 
 CONDITIONS = (
-    EvaluationCondition("downloaded_original", ()),
-    EvaluationCondition("jpeg_90", (TransformSpec(Transformation.JPEG, 90.0),)),
-    EvaluationCondition("jpeg_70", (TransformSpec(Transformation.JPEG, 70.0),)),
-    EvaluationCondition("jpeg_50", (TransformSpec(Transformation.JPEG, 50.0),)),
-    EvaluationCondition("jpeg_30", (TransformSpec(Transformation.JPEG, 30.0),)),
-    EvaluationCondition("blur_05", (TransformSpec(Transformation.BLUR, 0.5),)),
-    EvaluationCondition("blur_10", (TransformSpec(Transformation.BLUR, 1.0),)),
-    EvaluationCondition("blur_20", (TransformSpec(Transformation.BLUR, 2.0),)),
-    EvaluationCondition("resize_050", (TransformSpec(Transformation.RESIZE, 0.5),)),
-    EvaluationCondition("resize_025", (TransformSpec(Transformation.RESIZE, 0.25),)),
-    EvaluationCondition("noise_002", (TransformSpec(Transformation.NOISE, 0.02),)),
-    EvaluationCondition("noise_005", (TransformSpec(Transformation.NOISE, 0.05),)),
-    EvaluationCondition("noise_010", (TransformSpec(Transformation.NOISE, 0.10),)),
-    EvaluationCondition("color_jitter", (TransformSpec(Transformation.COLOR, 0.2),)),
-    EvaluationCondition("crop_080", (TransformSpec(Transformation.CROP, 0.8),)),
-    EvaluationCondition(
-        "resize_025_jpeg_50",
-        (
-            TransformSpec(Transformation.RESIZE, 0.25),
-            TransformSpec(Transformation.JPEG, 50.0),
-        ),
-    ),
-    EvaluationCondition(
-        "crop_080_resize_050_jpeg_70",
-        (
-            TransformSpec(Transformation.CROP, 0.8),
-            TransformSpec(Transformation.RESIZE, 0.5),
-            TransformSpec(Transformation.JPEG, 70.0),
-        ),
-    ),
-    EvaluationCondition(
-        "blur_10_resize_050_jpeg_70",
-        (
-            TransformSpec(Transformation.BLUR, 1.0),
-            TransformSpec(Transformation.RESIZE, 0.5),
-            TransformSpec(Transformation.JPEG, 70.0),
-        ),
-    ),
+    EvaluationCondition("downloaded_original", None),
+    EvaluationCondition("jpeg_90", TransformSpec(Transformation.JPEG, 90.0)),
+    EvaluationCondition("jpeg_70", TransformSpec(Transformation.JPEG, 70.0)),
+    EvaluationCondition("jpeg_50", TransformSpec(Transformation.JPEG, 50.0)),
+    EvaluationCondition("jpeg_30", TransformSpec(Transformation.JPEG, 30.0)),
+    EvaluationCondition("blur_05", TransformSpec(Transformation.BLUR, 0.5)),
+    EvaluationCondition("blur_10", TransformSpec(Transformation.BLUR, 1.0)),
+    EvaluationCondition("blur_20", TransformSpec(Transformation.BLUR, 2.0)),
+    EvaluationCondition("resize_050", TransformSpec(Transformation.RESIZE, 0.5)),
+    EvaluationCondition("resize_025", TransformSpec(Transformation.RESIZE, 0.25)),
+    EvaluationCondition("noise_002", TransformSpec(Transformation.NOISE, 0.02)),
+    EvaluationCondition("noise_005", TransformSpec(Transformation.NOISE, 0.05)),
+    EvaluationCondition("noise_010", TransformSpec(Transformation.NOISE, 0.10)),
+    EvaluationCondition("color_jitter", TransformSpec(Transformation.COLOR, 0.2)),
+    EvaluationCondition("crop_080", TransformSpec(Transformation.CROP, 0.8)),
 )
 
 
@@ -116,9 +93,9 @@ def _run_condition(
         for offset, record in enumerate(batch_records):
             with Image.open(record.image_path) as source:
                 image = source.convert("RGB").copy()
-            if condition.specs:
+            if condition.spec is not None:
                 item_seed = seed + condition_index * 1_000_003 + start + offset
-                image = apply_transform_chain(image, condition.specs, Random(item_seed))
+                image = apply_transform(image, condition.spec, Random(item_seed))
             images.append(image)
             targets.append(int(record.provenance))
         output = model(images)

@@ -26,7 +26,7 @@ def main() -> None:
         manifest,
         data_root=config["paths"]["data_root"],
         render_policy=config["preprocessing"]["policy"],
-        chain_length_probabilities={1: 1.0},
+        transform_families=None,
     )
     masked_index = next(
         (

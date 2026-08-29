@@ -57,7 +57,6 @@ Evaluate all three in parallel on the same fixed suite:
 - 120-image balanced single-transform grid containing every official family and
   severity.
 - Shortcut probes: train a linear classifier on the frozen features to predict the source dataset and original aspect ratio. 
-- No multi-transform chains.
 
 Save every prediction for paired bootstrap analysis. Eliminate the lowest-ranked
 backbone. Do not tune thresholds on these evaluation images.
@@ -184,7 +183,6 @@ After training is locked, run the full evaluation suite once per model:
 - Full evaluation-only COCO val2017 versus DALL·E Advanced proxy.
 - Every organizer-listed single transform and severity.
 - Shortcut probes: measure linear-probe accuracy for dataset identity and original aspect ratio.
-- Chain stress test, reported separately and excluded from primary ranking.
 - One-view inference for the primary comparison; three-view results are secondary.
 
 Calibrate the binary threshold only on the calibration split. Never tune it on an
@@ -221,7 +219,7 @@ Secondary metrics:
 - Tamper AUROC and SID area-bucket results.
 - Calibration error and false-positive rate at the chosen operating point.
 - Throughput, latency, peak VRAM, and parameter count.
-- Multi-transform chain stress results.
+- Single-transform stress results.
 
 Internal ranking score:
 

@@ -430,8 +430,7 @@
     "mean_generator_auroc": 0.994565968712171,
     "worst_generator_auroc": 0.965833306312561,
     "mean_transformed_auroc": null,
-    "worst_transformed_auroc": null,
-    "secondary_chain_auroc": null
+    "worst_transformed_auroc": null
   },
   "efficiency": {
     "images": 480,

@@ -13,13 +13,13 @@ from PIL import Image
 
 from .adaptation import load_trainable_encoder_state
 from .config import load_config
-from .constants import PROVENANCE_NAMES, Transformation
+from .constants import Transformation
 from .ema import load_ema_parameters
-from .model import hierarchical_probabilities
+from .model import ai_generated_probability, binary_probabilities
 from .preprocessing import RenderPolicy, render_for_model
 from .runtime import load_local_environment
 from .train import build_model
-from .transforms import TransformSpec, apply_transform_chain
+from .transforms import TransformSpec, apply_transform
 
 _IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 
@@ -47,9 +47,8 @@ def _load_checkpoint(model: torch.nn.Module, path: Path) -> None:
         model.aigc_gate.load_state_dict(payload["aigc_gate"])
         model.tamper_gate.load_state_dict(payload["tamper_gate"])
 
-    if "ema" in payload:
+    if "ema" in payload and payload.get("selection", {}).get("use_ema", True):
         load_ema_parameters(model, payload["ema"])
-
 
 @torch.inference_mode()
 def predict_directory(
@@ -61,13 +60,11 @@ def predict_directory(
     preprocess_inputs: bool = True,
     three_view: bool = False,
 ) -> None:
-    """Run batch provenance inference over all supported images in `input_dir`.
+    """Run batch binary AI-provenance inference over all supported images.
 
-    Outputs a JSON list of predictions containing:
-    - `image_path`: Relative or absolute path to the input image
-    - `pred`: P(fully_aigc) probability float in [0.0, 1.0] for competition submission
-    - `provenance_pred`: Predicted argmax class name ("authentic", "tampered", "fully_aigc")
-    - `provenance`: Dict of individual class probabilities summing to 1.0
+    Outputs contain ``pred`` and the two probabilities ``authentic`` and
+    ``ai_positive``. Internal source metadata may still use the three-value
+    dataset vocabulary, but inference does not classify positive subtypes.
     """
     project_root = config_path.resolve().parent.parent
     load_local_environment(project_root)
@@ -99,39 +96,33 @@ def predict_directory(
             # Multi-view test-time augmentation: clean + JPEG90 + resize 0.8
             views.extend(
                 (
-                    apply_transform_chain(
-                        image,
-                        (TransformSpec(Transformation.JPEG, 90.0),),
-                        Random(90),
-                    ),
-                    apply_transform_chain(
-                        image,
-                        (TransformSpec(Transformation.RESIZE, 0.8),),
-                        Random(80),
-                    ),
+                    apply_transform(image, TransformSpec(Transformation.JPEG, 90.0), Random(90)),
+                    apply_transform(image, TransformSpec(Transformation.RESIZE, 0.8), Random(80)),
                 )
             )
 
         with autocast:
             outputs = [model([view]) for view in views]
 
-        # Aggregate multi-view logits and compute hierarchical probabilities
-        mean_aigc_logit = torch.stack([out.aigc_logit.float() for out in outputs]).mean(0)
-        mean_tamper_logit = torch.stack([out.tamper_logit.float() for out in outputs]).mean(0)
-        provenance = hierarchical_probabilities(mean_aigc_logit, mean_tamper_logit)[0].cpu()
+        # Aggregate multi-view binary logits.
+        mean_ai_positive_logit = torch.stack(
+            [out.ai_positive_logit.float() for out in outputs]
+        ).mean(0)
+        probabilities = binary_probabilities(mean_ai_positive_logit)[0].cpu()
 
-        top_confidence, top_class = provenance.max(dim=0)
+        top_confidence, top_class = probabilities.max(dim=0)
         if min_confidence is not None and top_confidence.item() < min_confidence:
             continue
 
+        binary_names = ("authentic", "ai_positive")
         predictions.append(
             {
                 "image_path": str(path),
-                "pred": round(provenance[2].item(), 6),
-                "provenance_pred": PROVENANCE_NAMES[top_class.item()],
+                "pred": round(ai_generated_probability(probabilities).item(), 6),
+                "provenance_pred": binary_names[top_class.item()],
                 "provenance": {
-                    name: round(provenance[index].item(), 6)
-                    for index, name in enumerate(PROVENANCE_NAMES)
+                    name: round(probabilities[index].item(), 6)
+                    for index, name in enumerate(binary_names)
                 },
             }
         )
@@ -150,7 +141,7 @@ def main() -> None:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("configs/teacher_dinov3_production.yaml"),
+        default=Path("configs/teacher_dinov3_stage2_paired_unfrozen.yaml"),
         help="Configuration YAML path.",
     )
     parser.add_argument("--min-confidence", type=float, help="Optional minimum confidence threshold.")

@@ -36,7 +36,7 @@ def main() -> None:
     torch.cuda.reset_peak_memory_stats(device)
     with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
         output = model([image])
-        loss = output.aigc_logit.mean() + output.tamper_logit.mean()
+        loss = output.ai_positive_logit.mean()
     loss.backward()
     if model.token_adapter[1].weight.grad is None:
         raise RuntimeError("Adapter backward pass produced no gradient")

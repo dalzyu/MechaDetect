@@ -43,6 +43,11 @@ class CachedFeatureDataset(Dataset[dict[str, Any]]):
 
 
 def collate_cached_features(samples: list[dict[str, Any]]) -> dict[str, Any]:
+    # NOTE: original_tokens and transformed_tokens point to the SAME cached
+    # tokens. This is intentional for frozen-backbone screening where transform
+    # consistency losses are disabled. If you enable provenance_transformed,
+    # prediction_consistency, or feature_consistency losses with cached
+    # features, those loss terms will be trivially zero with no error.
     return {
         "original_tokens": [sample["tokens"] for sample in samples],
         "transformed_tokens": [sample["tokens"] for sample in samples],

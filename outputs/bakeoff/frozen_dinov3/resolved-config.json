@@ -54,9 +54,6 @@
     "ema_consistency": 0.0
   },
   "transforms": {
-    "families": [],
-    "chain_length_probabilities": {
-      "0": 1.0
-    }
+    "families": []
   }
 }

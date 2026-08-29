@@ -1,0 +1,65 @@
+seed: 42
+paths:
+  data_root: ${TECHJAM_DATA_ROOT}
+  train_manifest: splits/checkpoint2_materialized/all.parquet
+  val_manifest: splits/checkpoint2_materialized/all.parquet
+  output_root: ${TECHJAM_OUTPUT_ROOT}
+  require_materialized: true
+  initial_checkpoint: ${TECHJAM_OUTPUT_ROOT}/teacher_stage2_paired_unfrozen/checkpoint-best.pt
+preprocessing:
+  policy: square_jpeg95
+  version: 2
+model:
+  backbone_type: dinov3
+  encoder_id: facebook/dinov3-vith16plus-pretrain-lvd1689m
+  encoder_revision: c807c9eeea853df70aec4069e6f56b28ddc82acc
+  image_size: 224
+  encoder_dtype: float32
+  encoder_dim: 1280
+  trunk_dim: 512
+  use_token_adapter: true
+  branch_dim: 256
+  dropout: 0.1
+  freeze_encoder: false
+  trainable_last_layers: 0
+  gradient_checkpointing: true
+  spectral_expert: true
+  spectral_image_size: 384
+training:
+  stage: teacher_checkpoint2_production_full_data
+  epochs: 1
+  max_updates: 250
+  physical_batch_size: 4
+  gradient_accumulation: 2
+  required_world_size: 6
+  num_workers: 8
+  optimizer: adamw
+  precision: bf16
+  encoder_lr: 1.0e-6
+  layerwise_lr_decay: 0.85
+  heads_lr: 3.0e-5
+  weight_decay: 0.01
+  gradient_clip_norm: 1.0
+  warmup_fraction: 0.0
+  generator_balanced_sampler: true
+  sampler_max_ratio: 5.0
+  checkpoint_interval: 250
+  validation_interval: 0
+  validation_rows: 0
+  validation_batch_size: 8
+  validation_workers: 4
+  ema:
+    enabled: true
+    decay: 0.999
+    start_update: 0
+    confidence_threshold: 0.80
+loss:
+  provenance_original: 1.0
+  provenance_transformed: 1.0
+  prediction_consistency: 0.5
+  feature_consistency: 0.2
+  mask_focal: 0.5
+  mask_dice: 0.5
+  ema_consistency: 0.5
+transforms:
+  families: [jpeg, blur, resize, noise, color, crop]

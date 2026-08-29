@@ -13,7 +13,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--evaluation", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--parameters", type=int, default=610_919_189)
+    parser.add_argument("--parameters", type=int, default=840_592_640)
     args = parser.parse_args()
     report = json.loads(args.evaluation.read_text(encoding="utf-8"))
     conditions = report["conditions"]
@@ -24,14 +24,14 @@ def main() -> None:
         "",
         "## Clean and transformed performance",
         "",
-        "| Condition | Fully-AIGC AUROC | AUROC drop | Binary accuracy | "
+        "| Condition | AI-positive AUROC | AUROC drop | Binary accuracy | "
         "Binary balanced accuracy |",
         "|---|---:|---:|---:|---:|",
     ]
     for name, values in conditions.items():
         lines.append(
-            f"| {name} | {percent(values['fully_aigc_auroc'])} | "
-            f"{percent(values['fully_aigc_auroc_drop'])} | "
+            f"| {name} | {percent(values['ai_positive_auroc'])} | "
+            f"{percent(values['ai_positive_auroc_drop'])} | "
             f"{percent(values['binary_accuracy'])} | "
             f"{percent(values['binary_balanced_accuracy'])} |"
         )
@@ -41,26 +41,31 @@ def main() -> None:
             "",
             "## Generator generalisation",
             "",
-            "Each generator family is ranked against the same held-out non-AIGC pool.",
+            "Each AI generator/edit family is ranked against the same authentic pool.",
             "",
             "| Generator | AUROC | Accuracy |",
             "|---|---:|---:|",
         ]
     )
-    for name, values in report["per_aigc_generator"].items():
+    for name, values in report["per_ai_generator"].items():
         lines.append(
-            f"| {name} | {percent(values['fully_aigc_auroc'])} | {percent(values['accuracy'])} |"
+            f"| {name} | {percent(values['ai_positive_auroc'])} | "
+            f"{percent(values['binary_accuracy'])} |"
         )
+
+    def ai_score(row: dict[str, object]) -> float:
+        probabilities = row["probabilities"]["clean"]
+        return float(probabilities[1])
 
     rows = report.get("rows", [])
     false_positives = sorted(
-        (row for row in rows if row["target"] != "fully_aigc"),
-        key=lambda row: row["probabilities"]["clean"][2],
+        (row for row in rows if row["target"] == "authentic"),
+        key=ai_score,
         reverse=True,
     )[:5]
     false_negatives = sorted(
-        (row for row in rows if row["target"] == "fully_aigc"),
-        key=lambda row: row["probabilities"]["clean"][2],
+        (row for row in rows if row["target"] != "authentic"),
+        key=ai_score,
     )[:5]
     lines.extend(
         [
@@ -69,28 +74,28 @@ def main() -> None:
             "",
             "### Highest-risk false positives",
             "",
-            "| Image | Target | P(fully AIGC) |",
+            "| Image | Target | P(AI-generated or edited) |",
             "|---|---|---:|",
         ]
     )
     for row in false_positives:
         lines.append(
             f"| `{row['image_path']}` | {row['target']} | "
-            f"{percent(row['probabilities']['clean'][2])} |"
+            f"{percent(ai_score(row))} |"
         )
     lines.extend(
         [
             "",
             "### Highest-risk false negatives",
             "",
-            "| Image | Generator | P(fully AIGC) |",
+            "| Image | Generator | P(AI-generated or edited) |",
             "|---|---|---:|",
         ]
     )
     for row in false_negatives:
         lines.append(
             f"| `{row['image_path']}` | {row['generator']} | "
-            f"{percent(row['probabilities']['clean'][2])} |"
+            f"{percent(ai_score(row))} |"
         )
 
     lines.extend(

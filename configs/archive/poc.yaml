@@ -21,7 +21,7 @@ model:
   gradient_checkpointing: true
 
 training:
-  stage: sanity_canonical_chains
+  stage: sanity_single_transform
   epochs: 3
   physical_batch_size: 1
   gradient_accumulation: 16
@@ -41,10 +41,6 @@ loss:
 
 transforms:
   families: [jpeg, blur, resize, noise, color, crop]
-  chain_length_probabilities:
-    1: 0.4
-    2: 0.4
-    3: 0.2
   jpeg: [90, 70, 50, 30]
   blur: [0.5, 1.0, 2.0]
   resize: [0.5, 0.25]

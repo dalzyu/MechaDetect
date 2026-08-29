@@ -1,0 +1,340 @@
+{
+  "manifest_sha256": "1666d608ddfb3610d28d832d81fc3f64fa6db964c7a3496dfeac4e3247d73c4b",
+  "total_rows": 38964,
+  "split_counts": {
+    "train": 22483,
+    "validation": 8217,
+    "test": 5189,
+    "test_unseen": 3075
+  },
+  "counts_by_split_and_source": {
+    "train": {
+      "dank_learning_templates/tampered": 254,
+      "diffusionforensics/authentic": 1901,
+      "diffusionforensics/fully_aigc": 2032,
+      "gmorinan_memes/tampered": 138,
+      "sid/authentic": 4384,
+      "sid/fully_aigc": 3116,
+      "sid/tampered": 4332,
+      "wildfake/authentic": 3169,
+      "wildfake/fully_aigc": 3157
+    },
+    "validation": {
+      "dank_learning_templates/tampered": 76,
+      "diffusionforensics/authentic": 638,
+      "diffusionforensics/fully_aigc": 438,
+      "gmorinan_memes/tampered": 32,
+      "sid/authentic": 1663,
+      "sid/fully_aigc": 1208,
+      "sid/tampered": 1627,
+      "wildfake/authentic": 1251,
+      "wildfake/fully_aigc": 1284
+    },
+    "test": {
+      "dank_learning_templates/tampered": 58,
+      "diffusionforensics/authentic": 404,
+      "diffusionforensics/fully_aigc": 703,
+      "gmorinan_memes/tampered": 31,
+      "sid/authentic": 961,
+      "sid/fully_aigc": 731,
+      "sid/tampered": 928,
+      "wildfake/authentic": 659,
+      "wildfake/fully_aigc": 714
+    },
+    "test_unseen": {
+      "diffusionforensics/fully_aigc": 2624,
+      "sid/tampered": 15,
+      "wildfake/fully_aigc": 436
+    }
+  },
+  "ai_positive_distribution": {
+    "train": {
+      "ai_positive_0": 9846,
+      "ai_positive_1": 12637
+    },
+    "validation": {
+      "ai_positive_0": 3660,
+      "ai_positive_1": 4557
+    },
+    "test": {
+      "ai_positive_0": 2113,
+      "ai_positive_1": 3076
+    },
+    "test_unseen": {
+      "ai_positive_1": 3075
+    }
+  },
+  "duplicate_groups_count": 37919,
+  "quality_score_mean": 0.8499999999999999,
+  "quality_score_min": 0.85,
+  "quality_score_max": 0.85,
+  "forbidden_demo_check_passed": true,
+  "generator_registry": [
+    {
+      "dataset": "dank_learning_templates",
+      "generator_family": "human",
+      "split": "train"
+    },
+    {
+      "dataset": "dank_learning_templates",
+      "generator_family": "human",
+      "split": "validation"
+    },
+    {
+      "dataset": "dank_learning_templates",
+      "generator_family": "human",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "adm",
+      "split": "train"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "adm",
+      "split": "validation"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "adm",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "dalle2",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "dalle2",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "ddpm",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "iddpm",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "iddpm",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "if",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "if",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "ldm",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "ldm",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "midjourney",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "midjourney",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "pndm",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "pndm",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "real",
+      "split": "train"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "real",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "real",
+      "split": "validation"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "sdv1",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "sdv1",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "sdv1_new1",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "sdv1_new1",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "sdv1_new2",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "sdv1_new2",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "sdv2",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "sdv2",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "vqdiffusion",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "vqdiffusion",
+      "split": "test"
+    },
+    {
+      "dataset": "gmorinan_memes",
+      "generator_family": "human",
+      "split": "test"
+    },
+    {
+      "dataset": "gmorinan_memes",
+      "generator_family": "human",
+      "split": "train"
+    },
+    {
+      "dataset": "gmorinan_memes",
+      "generator_family": "human",
+      "split": "validation"
+    },
+    {
+      "dataset": "sid",
+      "generator_family": "sid_generator",
+      "split": "train"
+    },
+    {
+      "dataset": "sid",
+      "generator_family": "sid_generator",
+      "split": "validation"
+    },
+    {
+      "dataset": "sid",
+      "generator_family": "sid_generator",
+      "split": "test"
+    },
+    {
+      "dataset": "sid",
+      "generator_family": "sid_generator",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "afhq",
+      "split": "train"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "afhq",
+      "split": "validation"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "afhq",
+      "split": "test"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "celebahq",
+      "split": "test"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "celebahq",
+      "split": "validation"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "celebahq",
+      "split": "train"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "ddim",
+      "split": "validation"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "ddim",
+      "split": "train"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "ddim",
+      "split": "test"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "ddpm",
+      "split": "validation"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "ddpm",
+      "split": "train"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "ddpm",
+      "split": "test"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "vqdm",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "vqdm",
+      "split": "test"
+    }
+  ],
+  "generated_at": "2026-08-28T22:21:06.571199+00:00"
+}

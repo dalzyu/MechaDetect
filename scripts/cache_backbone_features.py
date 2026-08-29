@@ -60,7 +60,7 @@ def main() -> None:
         manifest,
         data_root=config["paths"]["data_root"],
         seed=int(config["seed"]),
-        chain_length_probabilities={0: 1.0},
+        transform_families=(),
         render_policy=config.get("preprocessing", {}).get("policy", "square_jpeg95"),
     )
     if not 0 <= args.shard_index < args.num_shards:

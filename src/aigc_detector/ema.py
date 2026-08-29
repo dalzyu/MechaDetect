@@ -26,6 +26,29 @@ class ParameterEMA:
         for name, average in self.shadow.items():
             average.lerp_(parameters[name].detach(), 1.0 - self.decay)
 
+    @torch.no_grad()
+    def forward(self, model: nn.Module, *args: Any, **kwargs: Any) -> Any:
+        """Evaluate with EMA parameters without copying or swapping model weights.
+
+        ``functional_call`` substitutes the shadow tensors only for this
+        forward. For the fully trainable DINOv3 teacher this avoids allocating
+        a temporary multi-gigabyte clone on every micro-step.
+        """
+        from torch.func import functional_call
+
+        training = model.training
+        try:
+            model.eval()
+            return functional_call(
+                model,
+                self.shadow,
+                args=args,
+                kwargs=kwargs,
+                strict=False,
+            )
+        finally:
+            model.train(training)
+
     @contextmanager
     def average_parameters(self, model: nn.Module) -> Any:
         parameters = dict(model.named_parameters())
@@ -53,7 +76,14 @@ class ParameterEMA:
             raise TypeError("EMA shadow state must be a dictionary")
         if set(shadow) != set(self.shadow):
             raise RuntimeError("EMA checkpoint parameters do not match the model")
-        self.shadow = {name: value for name, value in shadow.items() if isinstance(value, Tensor)}
+
+        restored: dict[str, Tensor] = {}
+        for name, current in self.shadow.items():
+            value = shadow[name]
+            if not isinstance(value, Tensor):
+                raise TypeError(f"EMA value for {name} is not a tensor")
+            restored[name] = value.to(device=current.device, dtype=current.dtype)
+        self.shadow = restored
 
 
 @torch.no_grad()

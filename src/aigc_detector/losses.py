@@ -3,34 +3,22 @@ from __future__ import annotations
 """Loss functions and multi-objective optimization for robust provenance detection.
 
 Mathematical formulations:
-1. Hierarchical Classification Loss:
-   - Global AIGC Loss: Binary cross-entropy on whether the image is fully synthesized:
-         L_aigc = BCE(aigc_logit, y_aigc)
-   - Conditional Tamper Loss: Computed ONLY over authentic/tampered images:
-         L_tamper = BCE(tamper_logit[non_aigc], y_tamper[non_aigc])
-   - Total Classification: L_cls = L_aigc + L_tamper
-   - Why exclude fully-AIGC images from tamper loss?
-     Generative models frequently produce local inconsistencies or artifacts (e.g. garbled text).
-     Forcing the tamper branch to score these as "untampered" creates gradient conflict with the
-     global AIGC head. Decoupling them allows each head to specialize cleanly.
+1. Binary AI-positive Classification Loss:
+   - Authentic images are negative.
+   - Fully generated and AI-edited images are positive.
+   - `L_cls = BCE(ai_positive_logit, provenance != AUTHENTIC)`.
 
-2. Localized Tamper Mask Supervision:
-   - For images with ground-truth binary tampering masks (e.g. SID-Set spliced regions),
-     masks are converted to fractional patch occupancy and supervised using:
-     - Focal BCE Loss: Focuses gradient updates on hard-to-classify boundary patches (gamma = 2.0).
-     - Soft Dice Loss: Maximizes area overlap between predicted suspicious patches and ground truth.
-         L_mask = L_focal + L_dice
+2. Localized Edit Mask Supervision:
+   - For images with ground-truth binary edit masks, masks are converted to
+     fractional patch occupancy and supervised using focal BCE and soft Dice.
 
-3. Representation & Prediction Consistency:
-   - When an image undergoes content-preserving transformations T(x) (JPEG, blur, noise, crop):
-     - Prediction Consistency: MSE between probabilities P(x) and P(T(x)).
-     - Feature Consistency: Cosine distance between normalized feature vectors.
-   - Enforces that compression or resizing cannot easily flip provenance classifications.
+3. Transformation Consistency:
+   - Prediction consistency uses the two-class [authentic, AI-positive]
+     probabilities.
+   - Feature consistency uses cosine distance between normalized embeddings.
 
-4. Teacher Distillation (EMA Consistency):
-   - Confidence-Gated KL Divergence between student probabilities on transformed images
-     and an exponential moving average (EMA) teacher model on clean images.
-   - Distillation only applies when the teacher model is highly confident (confidence >= threshold, default 0.80).
+4. Teacher Distillation:
+   - Confidence-gated KL divergence matches the EMA teacher's binary output.
 """
 
 from dataclasses import dataclass
@@ -47,45 +35,22 @@ from .model import ProvenanceOutput
 class LossWeights:
     """Relative hyperparameter weights balancing the multi-objective loss components."""
 
-    provenance_original: float = 1.0       # Hierarchical cross-entropy on clean images
-    provenance_transformed: float = 1.0    # Hierarchical cross-entropy on transformed images
-    prediction_consistency: float = 0.5    # MSE between clean and transformed output probabilities
+    provenance_original: float = 1.0       # Binary AI-positive BCE on clean images
+    provenance_transformed: float = 1.0    # Binary AI-positive BCE on transformed images
+    prediction_consistency: float = 0.5    # MSE between clean and transformed probabilities
     feature_consistency: float = 0.0       # Cosine distance between clean and transformed embeddings
-    mask_focal: float = 1.0                # Focal BCE loss on localized tamper patch masks
-    mask_dice: float = 1.0                 # Soft Dice loss on localized tamper patch masks
+    mask_focal: float = 1.0                # Focal BCE loss on localized edit masks
+    mask_dice: float = 1.0                 # Soft Dice loss on localized edit masks
     ema_consistency: float = 0.0           # Confidence-gated KL divergence from EMA teacher
 
 
-def hierarchical_classification_loss(output: ProvenanceOutput, provenance: Tensor) -> Tensor:
-    """Compute hierarchical classification loss over a batch of images.
-
-    Decouples global generative detection from localized manipulation detection.
-    Fully-AIGC samples are cleanly excluded from the tamper classification loss.
-
-    Args:
-        output: Model output container containing `aigc_logit` and `tamper_logit`.
-        provenance: Ground-truth integer labels [B] where values match `Provenance` enum:
-                    0 = AUTHENTIC, 1 = TAMPERED, 2 = FULLY_AIGC.
-
-    Returns:
-        Scalar loss tensor combining global AIGC loss and conditional tamper loss.
-    """
-    # 1. Global AI generation decision: Is the image fully synthetic?
-    aigc_target = (provenance == int(Provenance.FULLY_AIGC)).float()
-    aigc_loss = F.binary_cross_entropy_with_logits(output.aigc_logit, aigc_target)
-
-    # 2. Conditional tamper decision: Conditioned on NOT being fully synthetic, was it manipulated?
-    non_aigc = provenance != int(Provenance.FULLY_AIGC)
-    if non_aigc.any():
-        tamper_target = (provenance[non_aigc] == int(Provenance.TAMPERED)).float()
-        tamper_loss = F.binary_cross_entropy_with_logits(
-            output.tamper_logit[non_aigc], tamper_target
-        )
+def ai_classification_loss(output: ProvenanceOutput, target: Tensor) -> Tensor:
+    """Classify authentic/human-edited images as negative (0) and AI as positive (1)."""
+    if target.dtype.is_floating_point:
+        ai_target = target
     else:
-        tamper_loss = output.tamper_logit.sum() * 0.0
-
-    return aigc_loss + tamper_loss
-
+        ai_target = (target != int(Provenance.AUTHENTIC)).float()
+    return F.binary_cross_entropy_with_logits(output.ai_positive_logit, ai_target)
 
 def focal_bce_with_logits(logits: Tensor, target: Tensor, gamma: float = 2.0) -> Tensor:
     """Focal Binary Cross-Entropy with logits for handling extreme class imbalance in patch masks.
@@ -143,29 +108,34 @@ def confidence_gated_kl(
     student_probabilities: Tensor,
     teacher_probabilities: Tensor,
     threshold: float = 0.8,
+    student_logit: Tensor | None = None,
 ) -> Tensor:
-    """Compute KL divergence from EMA teacher to student, gated on high teacher confidence.
-
-    Only transfers supervision when the teacher's maximum class probability exceeds `threshold`.
-    Prevents noisy teacher pseudo-labels from corrupting student representation learning.
-    """
+    """Compute KL divergence from EMA teacher to student, gated on high teacher confidence."""
     confidence = teacher_probabilities.max(dim=-1).values
     eligible = confidence >= threshold
     if not eligible.any():
         return student_probabilities.sum() * 0.0
 
+    if student_logit is not None:
+        eligible_logits = student_logit[eligible]
+        student_log_probs = torch.stack(
+            (F.logsigmoid(-eligible_logits), F.logsigmoid(eligible_logits)), dim=-1
+        )
+    else:
+        student_log_probs = student_probabilities[eligible].clamp_min(1e-7).log()
+
     return F.kl_div(
-        student_probabilities[eligible].clamp_min(1e-7).log(),
+        student_log_probs,
         teacher_probabilities[eligible],
         reduction="batchmean",
     )
-
 
 def provenance_robustness_loss(
     original: ProvenanceOutput,
     transformed: ProvenanceOutput,
     *,
-    provenance: Tensor,
+    provenance: Tensor | None = None,
+    ai_target: Tensor | None = None,
     weights: LossWeights | None = None,
     token_mask_targets: list[Tensor | None] | None = None,
     teacher_probabilities: Tensor | None = None,
@@ -187,10 +157,12 @@ def provenance_robustness_loss(
     """
     weights = weights or LossWeights()
 
-    # 1. Classification losses on clean and transformed views
-    prov_orig = hierarchical_classification_loss(original, provenance)
-    prov_trans = hierarchical_classification_loss(transformed, provenance)
-
+    # 1. Binary AI-positive classification on clean and transformed views.
+    target = ai_target if ai_target is not None else provenance
+    if target is None:
+        raise ValueError("Either ai_target or provenance must be provided")
+    prov_orig = ai_classification_loss(original, target)
+    prov_trans = ai_classification_loss(transformed, target)
     # 2. Representation & prediction consistency under transformations
     pred_consistency = F.mse_loss(original.probabilities, transformed.probabilities)
     feat_consistency = (
@@ -210,6 +182,7 @@ def provenance_robustness_loss(
             transformed.probabilities,
             teacher_probabilities,
             teacher_confidence_threshold,
+            student_logit=transformed.ai_positive_logit,
         )
         if teacher_probabilities is not None
         else transformed.probabilities.sum() * 0.0

@@ -61,6 +61,3 @@ loss:
 
 transforms:
   families: [jpeg, blur, resize, noise, color, crop]
-  chain_length_probabilities:
-    0: 0.25
-    1: 0.75

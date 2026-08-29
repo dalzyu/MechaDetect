@@ -14,6 +14,14 @@ splits/*.csv
 splits/**/*.csv
 checkpoints/
 artifacts/
+
+# Training-run source archives and generated split payloads stay outside Git.
+100+ AI_Images from ewan.zip
+gmorinan_memes.zip
+Data Collection - Sheet1.csv
+splits/**/*.parquet
+splits/**/*.arrow
+splits/**/hf_dataset/
 cache/
 debug_transforms/
 validation/

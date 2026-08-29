@@ -116,7 +116,7 @@ def main() -> None:
     parser.add_argument("--allow-shortfall", action="store_true")
     args = parser.parse_args()
 
-    project_root = Path(__file__).resolve().parents[1]
+    project_root = Path(__file__).resolve().parents[2]
     load_local_environment(project_root)
     data_root = Path(os.environ["TECHJAM_DATA_ROOT"])
     frames = [pd.read_csv(path) for path in args.inputs]

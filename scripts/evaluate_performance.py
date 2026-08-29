@@ -15,45 +15,40 @@ from PIL import Image
 
 from aigc_detector.config import load_config
 from aigc_detector.constants import PROVENANCE_NAMES, Provenance, Transformation
-from aigc_detector.dataset import parse_provenance
-from aigc_detector.metrics import balanced_accuracy, binary_auroc, confusion_matrix, macro_f1
-from aigc_detector.model import hierarchical_probabilities
+from aigc_detector.dataset import load_manifest_frame, parse_provenance
+from aigc_detector.metrics import binary_auroc
+from aigc_detector.model import ai_generated_probability, binary_probabilities
 from aigc_detector.predict import _load_checkpoint
 from aigc_detector.preprocessing import RenderPolicy, render_for_model
 from aigc_detector.runtime import load_local_environment
 from aigc_detector.train import build_model
-from aigc_detector.transforms import TransformSpec, apply_transform_chain
+from aigc_detector.transforms import TransformSpec, apply_transform
 
 
 def _jpeg90(image: Image.Image) -> Image.Image:
-    return apply_transform_chain(image, (TransformSpec(Transformation.JPEG, 90.0),), Random(900))
+    return apply_transform(image, TransformSpec(Transformation.JPEG, 90.0), Random(900))
 
 
 def _alternate_resolution(image: Image.Image) -> Image.Image:
-    return apply_transform_chain(image, (TransformSpec(Transformation.RESIZE, 0.8),), Random(800))
+    return apply_transform(image, TransformSpec(Transformation.RESIZE, 0.8), Random(800))
 
 
-ROBUSTNESS_CONDITIONS: dict[str, tuple[TransformSpec, ...]] = {
-    "clean": (),
-    "jpeg90": (TransformSpec(Transformation.JPEG, 90.0),),
-    "jpeg70": (TransformSpec(Transformation.JPEG, 70.0),),
-    "jpeg50": (TransformSpec(Transformation.JPEG, 50.0),),
-    "jpeg30": (TransformSpec(Transformation.JPEG, 30.0),),
-    "blur0.5": (TransformSpec(Transformation.BLUR, 0.5),),
-    "blur1": (TransformSpec(Transformation.BLUR, 1.0),),
-    "blur2": (TransformSpec(Transformation.BLUR, 2.0),),
-    "resize_half": (TransformSpec(Transformation.RESIZE, 0.5),),
-    "resize_quarter": (TransformSpec(Transformation.RESIZE, 0.25),),
-    "noise0.02": (TransformSpec(Transformation.NOISE, 0.02),),
-    "noise0.05": (TransformSpec(Transformation.NOISE, 0.05),),
-    "noise0.10": (TransformSpec(Transformation.NOISE, 0.10),),
-    "color20": (TransformSpec(Transformation.COLOR, 0.20),),
-    "crop80": (TransformSpec(Transformation.CROP, 0.80),),
-    "crop_resize_jpeg": (
-        TransformSpec(Transformation.CROP, 0.8),
-        TransformSpec(Transformation.RESIZE, 0.5),
-        TransformSpec(Transformation.JPEG, 70.0),
-    ),
+ROBUSTNESS_CONDITIONS: dict[str, TransformSpec | None] = {
+    "clean": None,
+    "jpeg90": TransformSpec(Transformation.JPEG, 90.0),
+    "jpeg70": TransformSpec(Transformation.JPEG, 70.0),
+    "jpeg50": TransformSpec(Transformation.JPEG, 50.0),
+    "jpeg30": TransformSpec(Transformation.JPEG, 30.0),
+    "blur0.5": TransformSpec(Transformation.BLUR, 0.5),
+    "blur1": TransformSpec(Transformation.BLUR, 1.0),
+    "blur2": TransformSpec(Transformation.BLUR, 2.0),
+    "resize_half": TransformSpec(Transformation.RESIZE, 0.5),
+    "resize_quarter": TransformSpec(Transformation.RESIZE, 0.25),
+    "noise0.02": TransformSpec(Transformation.NOISE, 0.02),
+    "noise0.05": TransformSpec(Transformation.NOISE, 0.05),
+    "noise0.10": TransformSpec(Transformation.NOISE, 0.10),
+    "color20": TransformSpec(Transformation.COLOR, 0.20),
+    "crop80": TransformSpec(Transformation.CROP, 0.80),
 }
 
 
@@ -61,11 +56,23 @@ def _finite(value: float) -> float | None:
     return value if math.isfinite(value) else None
 
 
-def summarize(target: torch.Tensor, probabilities: torch.Tensor) -> dict[str, object]:
-    prediction = probabilities.argmax(-1)
-    matrix = confusion_matrix(target, prediction)
-    binary_target = target == int(Provenance.FULLY_AIGC)
-    binary_prediction = probabilities[:, 2] >= 0.5
+def summarize(
+    target: torch.Tensor,
+    probabilities: torch.Tensor,
+    *,
+    ai_target: torch.Tensor | None = None,
+) -> dict[str, object]:
+    """Summarize binary Track 5 performance using explicit AI-positive labels."""
+    from aigc_detector.metrics import balanced_accuracy, binary_auroc, confusion_matrix
+
+    binary_target = (
+        ai_target.bool()
+        if ai_target is not None
+        else target != int(Provenance.AUTHENTIC)
+    )
+    binary_score = ai_generated_probability(probabilities)
+    binary_prediction = binary_score >= 0.5
+    matrix = confusion_matrix(binary_target, binary_prediction, classes=2)
     true_positive = int((binary_target & binary_prediction).sum())
     false_negative = int((binary_target & ~binary_prediction).sum())
     true_negative = int((~binary_target & ~binary_prediction).sum())
@@ -75,7 +82,9 @@ def summarize(target: torch.Tensor, probabilities: torch.Tensor) -> dict[str, ob
     binary_recall = true_positive / positive_total if positive_total else None
     binary_specificity = true_negative / negative_total if negative_total else None
     binary_precision = (
-        true_positive / (true_positive + false_positive) if true_positive + false_positive else None
+        true_positive / (true_positive + false_positive)
+        if true_positive + false_positive
+        else None
     )
     binary_f1 = (
         2 * binary_precision * binary_recall / (binary_precision + binary_recall)
@@ -84,14 +93,10 @@ def summarize(target: torch.Tensor, probabilities: torch.Tensor) -> dict[str, ob
         and binary_precision + binary_recall
         else None
     )
-    non_aigc = target != int(Provenance.FULLY_AIGC)
-    authentic_total = int((target == int(Provenance.AUTHENTIC)).sum())
-    authentic_correct = int(
-        ((target == int(Provenance.AUTHENTIC)) & (prediction == int(Provenance.AUTHENTIC))).sum()
-    )
+    authentic_total = int((~binary_target).sum())
     return {
         "n": len(target),
-        "accuracy": float((prediction == target).float().mean()),
+        "accuracy": (true_positive + true_negative) / len(target),
         "binary_accuracy": (true_positive + true_negative) / len(target),
         "binary_balanced_accuracy": (
             (binary_recall + binary_specificity) / 2
@@ -102,22 +107,12 @@ def summarize(target: torch.Tensor, probabilities: torch.Tensor) -> dict[str, ob
         "binary_specificity": binary_specificity,
         "binary_precision": binary_precision,
         "binary_f1": binary_f1,
-        "binary_confusion_matrix": [
-            [true_negative, false_positive],
-            [false_negative, true_positive],
-        ],
         "balanced_accuracy": balanced_accuracy(matrix),
-        "macro_f1": macro_f1(matrix),
-        "fully_aigc_auroc": _finite(
-            binary_auroc((target == int(Provenance.FULLY_AIGC)).float(), probabilities[:, 2])
+        "ai_positive_auroc": _finite(binary_auroc(binary_target.float(), binary_score)),
+        "authentic_recall": (
+            true_negative / authentic_total if authentic_total else None
         ),
-        "tamper_auroc": _finite(
-            binary_auroc(
-                (target[non_aigc] == int(Provenance.TAMPERED)).float(),
-                probabilities[non_aigc, 1],
-            )
-        ),
-        "authentic_recall": authentic_correct / authentic_total if authentic_total else None,
+        "binary_confusion_matrix": matrix.tolist(),
         "confusion_matrix": matrix.tolist(),
     }
 
@@ -126,13 +121,27 @@ def bootstrap_auroc_ci(
     target: torch.Tensor,
     score: torch.Tensor,
     *,
+    groups: list[str] | None = None,
     iterations: int = 200,
     seed: int = 42,
 ) -> list[float] | None:
+    """Bootstrap AUROC by duplicate group, never by correlated rows."""
     generator = torch.Generator().manual_seed(seed)
+    if groups is None:
+        group_values = [str(index) for index in range(len(target))]
+    else:
+        if len(groups) != len(target):
+            raise ValueError("groups must have one value per target")
+        group_values = groups
+    unique_groups = list(dict.fromkeys(group_values))
+    group_indices = [
+        torch.tensor([index for index, value in enumerate(group_values) if value == group])
+        for group in unique_groups
+    ]
     values = []
     for _ in range(iterations):
-        indices = torch.randint(len(target), (len(target),), generator=generator)
+        selected = torch.randint(len(group_indices), (len(group_indices),), generator=generator)
+        indices = torch.cat([group_indices[int(index)] for index in selected])
         value = binary_auroc(target[indices], score[indices])
         if math.isfinite(value):
             values.append(value)
@@ -152,23 +161,23 @@ def infer_batch_views(
     view_functions: list[Callable[[Image.Image], Image.Image]] = [lambda value: value]
     if three_view:
         view_functions.extend((_jpeg90, _alternate_resolution))
-    aigc_logits = []
-    tamper_logits = []
+    ai_positive_logits = []
     with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
         for function in view_functions:
             output = model([function(image) for image in images])
-            aigc_logits.append(output.aigc_logit.float())
-            tamper_logits.append(output.tamper_logit.float())
-    return hierarchical_probabilities(
-        torch.stack(aigc_logits).mean(0), torch.stack(tamper_logits).mean(0)
-    ).cpu()
+            ai_positive_logits.append(output.ai_positive_logit.float())
+    return binary_probabilities(torch.stack(ai_positive_logits).mean(0)).cpu()
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--checkpoint", type=Path, required=True)
-    parser.add_argument("--config", type=Path, default=Path("configs/teacher_dinov3_production.yaml"))
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=Path("configs/teacher_dinov3_stage2_paired_unfrozen.yaml"),
+    )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--three-view", action="store_true")
     parser.add_argument("--robustness", action="store_true")
@@ -193,7 +202,7 @@ def main() -> None:
     data_root = Path(
         config["paths"].get("data_root") or os.environ.get("TECHJAM_DATA_ROOT", "data")
     )
-    frame = pd.read_csv(args.manifest).fillna("")
+    frame = load_manifest_frame(args.manifest).fillna("")
     if args.per_class:
         frame = pd.concat(
             [
@@ -214,25 +223,30 @@ def main() -> None:
     torch.cuda.synchronize()
     inference_started = time.perf_counter()
     policy = RenderPolicy(config.get("preprocessing", {}).get("policy", "square_jpeg95"))
-    conditions = ROBUSTNESS_CONDITIONS if args.robustness else {"clean": ()}
+    conditions = ROBUSTNESS_CONDITIONS if args.robustness else {"clean": None}
     condition_probabilities: dict[str, list[torch.Tensor]] = {name: [] for name in conditions}
-    targets = []
-    weights = []
-    output_rows = []
+    targets: list[int] = []
+    ai_targets: list[int] = []
+    weights: list[int] = []
+    output_rows: list[dict[str, object]] = []
     records = frame.to_dict(orient="records")
     state_path = args.state
     completed: dict[int, dict[str, object]] = {}
+    state_metadata = {
+        "manifest": str(args.manifest.resolve()),
+        "checkpoint": str(args.checkpoint.resolve()),
+        "config": str(args.config.resolve()),
+        "conditions": list(conditions),
+        "three_view": bool(args.three_view),
+        "rows": len(records),
+    }
     state_handle = None
     if state_path is not None and state_path.exists():
         with state_path.open("r", encoding="utf-8") as handle:
             for line in handle:
                 item = json.loads(line)
                 if "_meta" in item:
-                    expected = {
-                        "manifest": str(args.manifest.resolve()),
-                        "conditions": list(conditions),
-                        "rows": len(records),
-                    }
+                    expected = state_metadata
                     if item["_meta"] != expected:
                         raise RuntimeError("Evaluation state does not match this manifest/config")
                 else:
@@ -242,6 +256,9 @@ def main() -> None:
             output_rows.append(row)
             target = PROVENANCE_NAMES.index(str(row["target"]))
             targets.append(target)
+            ai_targets.append(
+                int(row.get("ai_positive", target != int(Provenance.AUTHENTIC)))
+            )
             for condition in conditions:
                 condition_probabilities[condition].append(
                     torch.tensor(row["probabilities"][condition], dtype=torch.float32)
@@ -254,11 +271,7 @@ def main() -> None:
             state_handle.write(
                 json.dumps(
                     {
-                        "_meta": {
-                            "manifest": str(args.manifest.resolve()),
-                            "conditions": list(conditions),
-                            "rows": len(records),
-                        }
+                        "_meta": state_metadata
                     }
                 )
                 + "\n"
@@ -272,18 +285,27 @@ def main() -> None:
         rendered_images = []
         new_state_rows = []
         for offset, row in enumerate(batch_rows):
-            path = Path(str(row["image_path"]))
+            path = Path(str(row["image_path"]).replace("\\", "/"))
             if not path.is_absolute():
                 path = data_root / path
+            if not path.is_file():
+                from aigc_detector.dataset import try_fetch_image_from_hub
+                fetched = try_fetch_image_from_hub(str(row.get("dataset", "")), path)
+                if fetched is not None and fetched.is_file():
+                    path = fetched
             with Image.open(path) as source:
                 downloaded = source.convert("RGB").copy()
             rendered_images.append(
                 render_for_model(downloaded, policy, rng=Random(42 + batch_start + offset))
             )
         batch_condition_probabilities: dict[str, torch.Tensor] = {}
-        for condition, chain in conditions.items():
+        for condition, transform in conditions.items():
             conditioned = [
-                apply_transform_chain(image, chain, Random(1000 + batch_start + offset))
+                image
+                if transform is None
+                else apply_transform(
+                    image, transform, Random(1000 + batch_start + offset)
+                )
                 for offset, image in enumerate(rendered_images)
             ]
             probability = infer_batch_views(
@@ -299,45 +321,62 @@ def main() -> None:
                 for condition, values in batch_condition_probabilities.items()
             }
             target = int(parse_provenance(row["label"], str(row["dataset"])))
+            raw_ai_positive = row.get("ai_positive", "")
+            ai_positive = (
+                int(raw_ai_positive)
+                if str(raw_ai_positive).strip() != ""
+                else int(target != int(Provenance.AUTHENTIC))
+            )
             targets.append(target)
+            ai_targets.append(ai_positive)
             output_row = {
                 "image_path": str(row["image_path"]),
                 "dataset": str(row["dataset"]),
                 "generator": str(row.get("generator_family", row.get("generator", ""))),
                 "target": PROVENANCE_NAMES[target],
+                "ai_positive": ai_positive,
                 "probabilities": row_probabilities,
                 "weight": int(row.get("_eval_weight", 1)),
+                "duplicate_group": str(
+                    row.get("duplicate_group", row.get("sha256", row["image_path"]))
+                ),
             }
             output_rows.append(output_row)
             weights.append(int(row.get("_eval_weight", 1)))
             new_state_rows.append({"_index": batch_start + offset, "row": output_row})
-        if state_handle is not None:
-            for item in new_state_rows:
-                state_handle.write(json.dumps(item) + "\n")
-            state_handle.flush()
-        progress = min(batch_start + args.batch_size, len(records))
+        progress = min(batch_start + args.batch_size, len(frame))
         if progress % 50 < args.batch_size or progress == len(frame):
             print(f"evaluated {progress}/{len(frame)}", flush=True)
 
     target_tensor = torch.tensor(targets)
+    ai_target_tensor = torch.tensor(ai_targets, dtype=torch.long)
     weight_tensor = torch.tensor(weights, dtype=torch.long)
     expanded_indices = torch.repeat_interleave(torch.arange(len(target_tensor)), weight_tensor)
     metric_target = target_tensor[expanded_indices]
+    metric_ai_target = ai_target_tensor[expanded_indices]
+    metric_groups = [
+        str(output_rows[index].get("duplicate_group", output_rows[index]["image_path"]))
+        for index in expanded_indices.tolist()
+    ]
     torch.cuda.synchronize()
     inference_seconds = time.perf_counter() - inference_started
     metrics: dict[str, object] = {"conditions": {}}
     for condition, values in condition_probabilities.items():
         probabilities = torch.stack(values)
         metric_probabilities = probabilities[expanded_indices]
-        condition_metrics = summarize(metric_target, metric_probabilities)
-        condition_metrics["fully_aigc_auroc_95ci"] = bootstrap_auroc_ci(
-            (metric_target == int(Provenance.FULLY_AIGC)).float(), metric_probabilities[:, 2]
+        condition_metrics = summarize(
+            metric_target, metric_probabilities, ai_target=metric_ai_target
+        )
+        condition_metrics["ai_positive_auroc_95ci"] = bootstrap_auroc_ci(
+            metric_ai_target.float(),
+            ai_generated_probability(metric_probabilities),
+            groups=metric_groups,
         )
         metrics["conditions"][condition] = condition_metrics
-    clean_auroc = metrics["conditions"]["clean"]["fully_aigc_auroc"]
+    clean_auroc = metrics["conditions"]["clean"]["ai_positive_auroc"]
     for condition_metrics in metrics["conditions"].values():
-        transformed_auroc = condition_metrics["fully_aigc_auroc"]
-        condition_metrics["fully_aigc_auroc_drop"] = (
+        transformed_auroc = condition_metrics["ai_positive_auroc"]
+        condition_metrics["ai_positive_auroc_drop"] = (
             clean_auroc - transformed_auroc
             if clean_auroc is not None and transformed_auroc is not None
             else None
@@ -350,31 +389,38 @@ def main() -> None:
     for group in sorted(set(metric_dataset_values)):
         indices = torch.tensor([value == group for value in metric_dataset_values])
         if int(indices.sum()) >= 2:
-            metrics["per_dataset"][group] = summarize(metric_target[indices], metric_clean[indices])
+            metrics["per_dataset"][group] = summarize(
+                metric_target[indices],
+                metric_clean[indices],
+                ai_target=metric_ai_target[indices],
+            )
 
     generator_values = [str(row.get("generator", "")) for row in output_rows]
     metric_generator_values = [generator_values[index] for index in expanded_indices.tolist()]
-    metrics["per_aigc_generator"] = {}
-    non_aigc = metric_target != int(Provenance.FULLY_AIGC)
+    metrics["per_ai_generator"] = {}
+    authentic = metric_ai_target == 0
     for group in sorted(set(metric_generator_values)):
-        generator_mask = torch.tensor([value == group for value in metric_generator_values])
-        positives = generator_mask & ~(metric_target != int(Provenance.FULLY_AIGC))
-        comparison = positives | non_aigc
-        if positives.any() and non_aigc.any():
-            metrics["per_aigc_generator"][group] = summarize(
-                metric_target[comparison], metric_clean[comparison]
+        generator_mask = torch.tensor(
+            [value == group for value in metric_generator_values]
+        )
+        positives = generator_mask & ~authentic
+        comparison = positives | authentic
+        if positives.any() and authentic.any():
+            metrics["per_ai_generator"][group] = summarize(
+                metric_target[comparison],
+                metric_clean[comparison],
+                ai_target=metric_ai_target[comparison],
             )
     family_aurocs = [
-        values["fully_aigc_auroc"]
-        for values in metrics["per_aigc_generator"].values()
-        if values["fully_aigc_auroc"] is not None
+        values["ai_positive_auroc"]
+        for values in metrics["per_ai_generator"].values()
+        if values["ai_positive_auroc"] is not None
     ]
     primary_transformed_aurocs = [
-        values["fully_aigc_auroc"]
+        values["ai_positive_auroc"]
         for name, values in metrics["conditions"].items()
-        if name not in {"clean", "crop_resize_jpeg"} and values["fully_aigc_auroc"] is not None
+        if name != "clean" and values["ai_positive_auroc"] is not None
     ]
-    chain_auroc = metrics["conditions"].get("crop_resize_jpeg", {}).get("fully_aigc_auroc")
     metrics["selection_summary"] = {
         "mean_generator_auroc": sum(family_aurocs) / len(family_aurocs) if family_aurocs else None,
         "worst_generator_auroc": min(family_aurocs) if family_aurocs else None,
@@ -384,7 +430,6 @@ def main() -> None:
         "worst_transformed_auroc": min(primary_transformed_aurocs)
         if primary_transformed_aurocs
         else None,
-        "secondary_chain_auroc": chain_auroc,
     }
     metrics["efficiency"] = {
         "images": int(weight_tensor.sum()),

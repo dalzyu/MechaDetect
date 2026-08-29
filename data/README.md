@@ -11,7 +11,7 @@ image_path,label,dataset,official_split,generator,manipulation_family,
 source_image_group,width,height,file_format,tamper_mask_path
 ```
 
-Canonical provenance labels are:
+Canonical source-provenance labels are:
 
 ```text
 authentic
@@ -19,7 +19,15 @@ tampered
 fully_aigc
 ```
 
+The Track 5 image-level target is binary:
+
+```text
+authentic -> 0
+tampered  -> 1
+fully_aigc -> 1
+```
+
 SID numeric labels are converted as `0 -> authentic`, `1 -> fully_aigc`, and
-`2 -> tampered`. Preserve official dataset splits and keep related source-image
-families together.
+`2 -> tampered`. Preserve the subtype label in manifests, but train the image
+head on the binary target and keep related source-image families together.
 

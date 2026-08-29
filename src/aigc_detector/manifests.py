@@ -25,6 +25,14 @@ GENERATOR_ALIASES = {
     "sd_v2": "stable_diffusion_2",
     "dall_e_2": "dalle_2",
     "dall_e_3": "dalle_3",
+    "midjourney_v6": "midjourney_6",
+    "midjourney_v5": "midjourney_5",
+    "sd3": "sd_3_medium",
+    "sd_3": "sd_3_medium",
+    "stable_diffusion_3": "sd_3_medium",
+    "stable_diffusion_3_5": "sd_3_5",
+    "sd35": "sd_3_5",
+    "gpt_4o_image": "gpt_image",
 }
 
 
@@ -36,9 +44,24 @@ def normalize_generator(value: Any, dataset: str = "") -> str:
     return GENERATOR_ALIASES.get(normalized, normalized)
 
 
+HELD_OUT_GENERATOR_FAMILIES = frozenset(
+    {
+        "flux_1_dev",
+        "nano_banana_pro",
+        "novelai_anime_v3",
+        "midjourney",
+        "sdxl_1_0",
+        "dalle2",
+        "dalle_2",
+    }
+)
+
+
 def is_held_out_generator(family: str, seed: int = 42, modulus: int = 5) -> bool:
-    digest = hashlib.sha256(f"seed{seed}:{family}".encode()).digest()
-    return int.from_bytes(digest[:8], "big") % modulus == 0
+    """Return whether a generator belongs to the locked unseen registry."""
+    del seed, modulus
+    normalized = normalize_generator(family)
+    return normalized in HELD_OUT_GENERATOR_FAMILIES
 
 
 def file_sha256(path: str | Path, chunk_size: int = 1024 * 1024) -> str:
@@ -75,22 +98,26 @@ class _DisjointSet:
         left_root, right_root = self.find(left), self.find(right)
         if left_root != right_root:
             self.parent[right_root] = left_root
-
-
 def duplicate_groups(
     sha256_values: list[str],
     perceptual_hashes: list[int],
     source_groups: list[str],
     *,
+    perceptual_hashes_2: list[int] | None = None,
     max_hamming_distance: int = 4,
 ) -> list[str]:
-    """Cluster exact, linked-source, and near duplicates using four 16-bit LSH bands."""
+    """Cluster exact, linked-source, and dual near-duplicate hashes."""
     if not (len(sha256_values) == len(perceptual_hashes) == len(source_groups)):
+        raise ValueError("Duplicate inputs must have equal lengths")
+    second = perceptual_hashes_2 or [0] * len(perceptual_hashes)
+    if len(second) != len(perceptual_hashes):
         raise ValueError("Duplicate inputs must have equal lengths")
     sets = _DisjointSet(len(sha256_values))
     exact: dict[str, int] = {}
     sources: dict[str, int] = {}
-    bands: dict[tuple[int, int], list[int]] = defaultdict(list)
+    bands: dict[tuple[int, int, int], list[int]] = defaultdict(list)
+    first_shifts = (0, 13, 26, 39, 52)
+    second_shifts = tuple(range(0, 64, 8))
     for index, (sha256, phash, source) in enumerate(
         zip(sha256_values, perceptual_hashes, source_groups, strict=True)
     ):
@@ -104,14 +131,23 @@ def duplicate_groups(
             else:
                 sources[source] = index
         candidates: set[int] = set()
-        for band in range(4):
-            key = (band, (phash >> (band * 16)) & 0xFFFF)
-            candidates.update(bands[key])
+        for band, shift in enumerate(first_shifts):
+            candidates.update(bands[(0, band, (phash >> shift) & 0x1FFF)])
+        for band, shift in enumerate(second_shifts):
+            candidates.update(bands[(1, band, (second[index] >> shift) & 0xFF)])
         for other in candidates:
-            if (phash ^ perceptual_hashes[other]).bit_count() <= max_hamming_distance:
+            first_match = (phash ^ perceptual_hashes[other]).bit_count() <= max_hamming_distance
+            second_match = (
+                second[index] != 0
+                and second[other] != 0
+                and (second[index] ^ second[other]).bit_count() <= 6
+            )
+            if first_match or second_match:
                 sets.union(index, other)
-        for band in range(4):
-            bands[(band, (phash >> (band * 16)) & 0xFFFF)].append(index)
+        for band, shift in enumerate(first_shifts):
+            bands[(0, band, (phash >> shift) & 0x1FFF)].append(index)
+        for band, shift in enumerate(second_shifts):
+            bands[(1, band, (second[index] >> shift) & 0xFF)].append(index)
     roots = [sets.find(index) for index in range(len(sha256_values))]
     canonical = {
         root: f"duplicate_{position:08d}" for position, root in enumerate(sorted(set(roots)))

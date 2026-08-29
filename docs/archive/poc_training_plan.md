@@ -355,7 +355,6 @@ protocol is:
 ~~~
 25% clean views
 75% exactly one transformation
-0% multi-transformation chains
 ~~~
 
 Balance single transformations across every organizer-listed family and severity.
@@ -369,18 +368,15 @@ Single operations:
 - JPEG quality sampled continuously from 30 through 95.
 - Continuous blur, noise, color, and sharpening.
 
-Realistic chains are a secondary ablation only:
 
 ~~~
-resize -> sharpen or blur -> JPEG
-crop -> resize -> JPEG
 noise -> denoise or sharpen -> JPEG
 screenshot-like resize -> re-encode
 ~~~
 
-Run the chain-heavy recipe separately. Keep it only if it improves mean and
+Run the robustness recipe separately. Keep it only if it improves mean and
 worst-case single-transform results without reducing clean performance. Do not
-mix chain-heavy results into the primary model-selection score.
+mix secondary results into the primary model-selection score.
 
 Evaluate held-out codec and interpolation implementations.
 
@@ -401,7 +397,6 @@ Report one-view and three-view results separately.
 - DiffusionForensics non-ADM generators.
 - Held-out rendering implementations.
 - Every organizer-listed single perturbation and severity.
-- Chained perturbations as a separately labelled secondary stress test.
 
 The two private images are informational only. The unfinished private
 collection is reserved for final teacher evaluation.
@@ -533,5 +528,4 @@ Required tests:
 - The local RTX 4080 is for decisions; the final teacher uses a rented cluster.
 - Transformation detection, RL on the detector, domain-adversarial training, and
   public localization output remain out of scope.
-- Multi-transform chains remain a secondary ablation unless they prove beneficial
   on the organizer-aligned single-transform protocol.

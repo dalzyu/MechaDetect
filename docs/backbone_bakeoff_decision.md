@@ -16,7 +16,6 @@ All candidates were screened and evaluated under strict fairness contracts:
 - Identical 12,000 clean training subset (`ablation12k.csv`)
 - Identical sample order, random seed (42), effective batch size (64), and optimizer budget (188 updates)
 - Identical common 512-dimensional token adapter and dual-task provenance heads (AIGC learned query pool + token-level tamper classifier)
-- Zero exposure to multi-transform chains during screening
 
 | Evaluation Metric | DINOv3 ViT-H+/16 (Frozen) | DINOv3 ViT-H+/16 (Adapted) | PE-Spatial-G/14 (Frozen) | Gemma 4 Tower (Frozen) | Winning Model |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -30,7 +29,6 @@ All candidates were screened and evaluated under strict fairness contracts:
 | **TechJam Proxy AUROC (COCO vs DALL·E 3)** | **0.9978** [0.9955, 0.9995] | **0.9973** [0.9940, 0.9991] | 0.9538 [0.9344, 0.9692] | 0.9235 [0.8942, 0.9455] | **DINOv3** (+0.044 AUROC) |
 | **TechJam Proxy DALL·E 3 Recall** | **96.5%** (193/200) | **95.5%** (191/200) | 48.5% (97/200) | 65.5% (131/200) | **DINOv3** (+47.0% recall) |
 | **Robustness Clean AUROC** | 0.9731 | — | **0.9856** | 0.9115 | **PE-Spatial** |
-| **Compound Degradation (Crop+Resize+JPEG70)** | **0.9712** | — | 0.9400 | 0.8140 | **DINOv3** (+0.031 AUROC) |
 | **JPEG 30 Compression AUROC** | 0.9388 (drop: 0.034) | — | **0.9517** (drop: 0.034) | 0.8785 (drop: 0.033) | **PE-Spatial** |
 | **Blur 2.0 Defocus AUROC** | 0.9731 (drop: 0.000) | — | **0.9886** (drop: -0.003) | 0.9251 (drop: -0.014) | **PE-Spatial** |
 | **Shortcut Probe: Dataset Balanced Acc** | **89.28%** (Chance = 33.3%) | — | 96.93% | 94.68% | **DINOv3** (Less biased) |
@@ -50,8 +48,8 @@ All candidates were screened and evaluated under strict fairness contracts:
 - The linear shortcut probes on frozen tokens revealed that **both PE-Spatial (86.61%) and Gemma 4 (80.53%) leak massive aspect ratio shortcuts** into their feature spaces. Models relying on these representations are vulnerable to classifying images based on aspect ratio cues rather than generative artifacts.
 - **DINOv3 scored 54.66%** (near random chance 33.3%), proving genuine spatial invariant representation learning.
 
-### 3. Compound Degradation Robustness
-- In real-world social media pipelines, images undergo compound transformations (cropping + downscaling + JPEG recompression).
+### 3. Single-Transform Robustness
+- The primary robustness target is the complete single-transform severity grid.
 - Under `Crop 80% + Resize 50% + JPEG 70`, **DINOv3 maintained 0.9712 AUROC** (only a 0.0019 drop from clean).
 - **PE-Spatial** dropped to **0.9400** (-0.0456 drop).
 - **Gemma 4** collapsed to **0.8140** (-0.0975 drop).
@@ -88,61 +86,18 @@ All checkpoints and evaluation logs are persisted in `outputs/bakeoff/`:
 
 ---
 
-## 5. Exact Production Configuration for Teacher Training & Student Distillation
+## 5. Production Teacher Training Decision
 
-```yaml
-seed: 42
-paths:
-  train_manifest: manifests/ablation12k.csv
-  val_manifest: manifests/strict_unseen_probe.csv
-  output_root: outputs/teacher_dinov3
-preprocessing:
-  policy: square_jpeg95
-  version: 2
-model:
-  backbone_type: dinov3
-  encoder_id: facebook/dinov3-vith16plus-pretrain-lvd1689m
-  encoder_revision: c807c9eeea853df70aec4069e6f56b28ddc82acc
-  image_size: 224
-  encoder_dim: 1280
-  trunk_dim: 512
-  branch_dim: 256
-  dropout: 0.1
-  freeze_encoder: false
-  trainable_last_layers: 8
-  gradient_checkpointing: true
-  spectral_expert: true
-  spectral_image_size: 384
-training:
-  stage: teacher_full_training
-  epochs: 5
-  physical_batch_size: 8
-  gradient_accumulation: 8
-  precision: bf16
-  encoder_lr: 3.0e-6
-  layerwise_lr_decay: 0.85
-  heads_lr: 1.0e-4
-  weight_decay: 0.01
-  gradient_clip_norm: 1.0
-  warmup_fraction: 0.05
-  generator_balanced_sampler: true
-  ema:
-    enabled: true
-    decay: 0.999
-    confidence_threshold: 0.80
-loss:
-  provenance_original: 1.0
-  provenance_transformed: 1.0
-  prediction_consistency: 0.5
-  feature_consistency: 0.2
-  mask_focal: 0.5
-  mask_dice: 0.5
-  ema_consistency: 0.5
-transforms:
-  families: [jpeg, blur, resize, noise, color, crop]
-  chain_length_probabilities:
-    0: 0.25
-    1: 0.30
-    2: 0.30
-    3: 0.15
-```
+Teacher training proceeds in two stages:
+
+1. Freeze the complete DINOv3 backbone and train the task-specific teacher
+   layers on untransformed downloaded originals.
+2. Initialize from the selected Stage 1 checkpoint, unfreeze the complete
+   DINOv3 backbone, and train end to end on downloaded-original/transformed
+   pairs. The primary run uses one post-processing transformation per pair.
+
+The authoritative procedure and runnable configs are:
+
+- [`teacher_training_plan.md`](teacher_training_plan.md)
+- `configs/teacher_dinov3_stage1_clean_frozen.yaml`
+- `configs/teacher_dinov3_stage2_paired_unfrozen.yaml`

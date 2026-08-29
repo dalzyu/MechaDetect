@@ -55,7 +55,7 @@ All three models underwent preflight integration checks to verify capacity again
 | **Strict-Unseen Probe**<br>*(480 images, unseen generators)* | **Fully-AIGC AUROC**<br>95% Bootstrap CI<br>**Overall Accuracy**<br>Authentic Recall<br>AIGC Recall | 0.9782<br>[0.9664, 0.9904]<br>86.46%<br>77.9% (187/240)<br>**95.0% (228/240)** | **0.9946**<br>[0.9899, 0.9981]<br>**94.38%**<br>**95.0% (228/240)**<br>93.8% (225/240) | 0.9548<br>[0.9331, 0.9721]<br>80.83%<br>88.3% (212/240)<br>73.3% (176/240) | **PE-Spatial**<br>*(+0.016 AUROC)* |
 | **TechJam Proxy**<br>*(400 images, COCO vs DALL·E 3)* | **Fully-AIGC AUROC**<br>95% Bootstrap CI<br>**Overall Accuracy**<br>Authentic Recall<br>**DALL·E 3 AIGC Recall** | **0.9978**<br>[0.9955, 0.9995]<br>**55.00%**<br>13.5% (27/200)<br>**96.5% (193/200)** | 0.9538<br>[0.9344, 0.9692]<br>34.75%<br>**21.0% (42/200)**<br>48.5% (97/200) | 0.9235<br>[0.8942, 0.9455]<br>45.75%<br>26.0% (52/200)<br>65.5% (131/200) | **DINOv3**<br>*(+0.044 AUROC,<br>+48.0% DALL·E recall)* |
 | **Shortcut Vulnerability**<br>*(12,000 frozen features)* | **Dataset Prediction Acc**<br>*(Chance = 33.3%)*<br>**Aspect Ratio Prediction Acc**<br>*(Chance = 33.3%)* | **89.28%**<br><br>**54.66%** | 96.93%<br><br>86.61% | 94.68%<br><br>80.53% | **DINOv3**<br>*(31.9% less aspect bias)* |
-| **Single-Transform Grid**<br>*(120 images, 16 conditions)* | **Clean AUROC**<br>JPEG 90 AUROC<br>JPEG 70 AUROC<br>JPEG 50 AUROC<br>**JPEG 30 AUROC**<br>Blur 0.5 AUROC<br>Blur 1.0 AUROC<br>**Blur 2.0 AUROC**<br>Resize 0.5 AUROC<br>Resize 0.25 AUROC<br>Noise 0.02 AUROC<br>Noise 0.05 AUROC<br>Noise 0.10 AUROC<br>Color 20% AUROC<br>Crop 80% AUROC<br>**Compound (Crop+Resize+JPEG70)** | 0.9731<br>0.9732 (-0.0001)<br>0.9667 (+0.0064)<br>0.9603 (+0.0128)<br>0.9388 (+0.0343)<br>0.9733 (-0.0002)<br>0.9736 (-0.0005)<br>0.9731 (0.0000)<br>0.9725 (+0.0006)<br>0.9739 (-0.0008)<br>0.9683 (+0.0048)<br>0.9519 (+0.0212)<br>0.9388 (+0.0343)<br>0.9725 (+0.0006)<br>0.9772 (-0.0041)<br>**0.9712 (+0.0019)** | **0.9856**<br>0.9840 (+0.0016)<br>0.9531 (+0.0325)<br>0.9525 (+0.0331)<br>**0.9517 (+0.0339)**<br>0.9858 (-0.0002)<br>0.9868 (-0.0012)<br>**0.9886 (-0.0030)**<br>0.9843 (+0.0013)<br>0.9887 (-0.0031)<br>0.9819 (+0.0037)<br>0.9653 (+0.0203)<br>0.9293 (+0.0563)<br>0.9829 (+0.0027)<br>0.9803 (+0.0053)<br>0.9400 (+0.0456) | 0.9115<br>0.8789 (+0.0326)<br>0.8604 (+0.0511)<br>0.8797 (+0.0318)<br>0.8785 (+0.0330)<br>0.9061 (+0.0054)<br>0.8961 (+0.0154)<br>0.9251 (-0.0136)<br>0.8936 (+0.0179)<br>0.9061 (+0.0054)<br>0.8828 (+0.0287)<br>0.8610 (+0.0505)<br>0.8214 (+0.0901)<br>0.8963 (+0.0152)<br>0.8810 (+0.0305)<br>0.8140 (+0.0975) | **PE-Spatial** (Clean/Blur)<br><br>**DINOv3** (Compound) |
+| **Single-Transform Grid**<br>*(120 images, 15 conditions)* | **Clean AUROC**<br>JPEG 90 AUROC<br>JPEG 70 AUROC<br>JPEG 50 AUROC<br>**JPEG 30 AUROC**<br>Blur 0.5 AUROC<br>Blur 1.0 AUROC<br>**Blur 2.0 AUROC**<br>Resize 0.5 AUROC<br>Resize 0.25 AUROC<br>Noise 0.02 AUROC<br>Noise 0.05 AUROC<br>Noise 0.10 AUROC<br>Color 20% AUROC<br>Crop 80% AUROC | 0.9731<br>0.9732 (-0.0001)<br>0.9667 (+0.0064)<br>0.9603 (+0.0128)<br>0.9388 (+0.0343)<br>0.9733 (-0.0002)<br>0.9736 (-0.0005)<br>0.9731 (0.0000)<br>0.9725 (+0.0006)<br>0.9739 (-0.0008)<br>0.9683 (+0.0048)<br>0.9519 (+0.0212)<br>0.9388 (+0.0343)<br>0.9725 (+0.0006)<br>0.9772 (-0.0041) | **0.9856**<br>0.9840 (+0.0016)<br>0.9531 (+0.0325)<br>0.9525 (+0.0331)<br>**0.9517 (+0.0339)**<br>0.9858 (-0.0002)<br>0.9868 (-0.0012)<br>**0.9886 (-0.0030)**<br>0.9843 (+0.0013)<br>0.9887 (-0.0031)<br>0.9819 (+0.0037)<br>0.9653 (+0.0203)<br>0.9293 (+0.0563)<br>0.9829 (+0.0027)<br>0.9803 (+0.0053) | 0.9115<br>0.8789 (+0.0326)<br>0.8604 (+0.0511)<br>0.8797 (+0.0318)<br>0.8785 (+0.0330)<br>0.9061 (+0.0054)<br>0.8961 (+0.0154)<br>0.9251 (-0.0136)<br>0.8936 (+0.0179)<br>0.9061 (+0.0054)<br>0.8828 (+0.0287)<br>0.8610 (+0.0505)<br>0.8214 (+0.0901)<br>0.8963 (+0.0152)<br>0.8810 (+0.0305) | **PE-Spatial** (Clean/Blur)<br><br>**DINOv3** |
 | **Compute & Efficiency** | **Caching 12k Images**<br>**Training 188 Updates**<br>Inference Latency per Batch (8 img) | **~3.2 minutes**<br>**~1.8 min (0.58s/step)**<br>**~18.2 ms** | ~4.5 minutes<br>~2.8 min (0.89s/step)<br>~48.5 ms | ~42.0 minutes<br>~2.1 min (0.67s/step)<br>~85.0 ms | **DINOv3**<br>*(5.2× higher throughput)* |
 
 ---
@@ -89,14 +89,14 @@ In Phase 2, the top two finalists (**DINOv3 ViT-H+/16** and **PE-Spatial-G/14**)
    On the TechJam proxy (200 authentic COCO images vs 200 DALL·E 3 images), PE-Spatial achieved only **48.5% recall on DALL·E 3**. Crucially, it misclassified **82 of the 200 fully synthetic images as localized tampering**. Because PE-Spatial was pre-trained for spatial perception and segmentation, its attention representations over-index on high-frequency spatial variation, causing it to hallucinate patch-level tampering on clean synthetic generations.
 2. **Extreme Aspect Ratio Shortcut Leakage (86.61%)**:
    The linear probe trained to predict the source aspect ratio (portrait vs square vs landscape) achieved **86.61% accuracy on PE-Spatial's frozen tokens** (chance is 33.3%). This confirms that PE-Spatial embeds geometric proportions directly into its spatial patch tokens, creating a dangerous shortcut where the model classifies aspect ratios rather than subtle generative artifacts.
-3. **Severe Compound Perturbation Drop**:
-   Under compound degradation (`Crop 80% + Resize 50% + JPEG 70`), PE-Spatial dropped from 0.9856 to **0.9400 AUROC** (a drop of 0.0456), whereas DINOv3 dropped by only 0.0019 (staying at **0.9712**).
+3. **Single-Transform Robustness**:
+   DINOv3 retained strong AUROC across the complete single-transform severity grid.
 
 ### 5.2 Why Gemma 4 Vision Tower Was Eliminated
 1. **Lowest Overall Discrimination**:
    Gemma 4 scored the lowest AUROC on both evaluation benchmarks: **0.9548 on the strict-unseen probe** (73.3% AIGC recall) and **0.9235 on the TechJam proxy** (misclassifying 64 DALL·E images).
 2. **Severe Robustness Fragility**:
-   Under the compound transform condition, Gemma 4 collapsed to **0.8140 AUROC** (a massive 0.0975 degradation). Under JPEG 30 compression, its AUROC fell to **0.8785**.
+   Gemma 4 was substantially weaker under severe single transforms; under JPEG 30 compression, its AUROC fell to **0.8785**.
 3. **Heavy Preprocessing Bottleneck**:
    The dynamic soft-token image processor required ~0.7 seconds of Python PIL CPU time per image to compute dynamic grids, making token caching 13× slower than DINOv3.
 
@@ -106,7 +106,7 @@ In Phase 2, the top two finalists (**DINOv3 ViT-H+/16** and **PE-Spatial-G/14**)
 2. **True Invariance to Aspect Ratio Shortcuts**:
    DINOv3 scored **54.66% on the aspect ratio probe** (near random chance 33.3%), proving that its features are invariant to image geometry and aspect ratios.
 3. **High Token Efficiency & Production Viability**:
-   Operating on **196 tokens** ($14 \times 14$), DINOv3 evaluates batches in **18.2 ms**, training 19.4× faster than PE-Spatial. This efficiency allows the production teacher model to run multi-transform data augmentation, exponential moving average (EMA) updates, and knowledge distillation without exhausting computational or memory budgets.
+   Operating on **196 tokens** ($14 \times 14$), DINOv3 evaluates batches in **18.2 ms**, training 19.4× faster than PE-Spatial. This efficiency leaves room for exponential moving average (EMA) updates and knowledge distillation within the compute and memory budget.
 
 ---
 
@@ -114,12 +114,12 @@ In Phase 2, the top two finalists (**DINOv3 ViT-H+/16** and **PE-Spatial-G/14**)
 
 All checkpoints and evaluation logs are verified, saved locally in `outputs/bakeoff/`, and pushed to Git:
 
-| Candidate | Checkpoint Type | Local Path | Parameters | File Size | Primary Evaluated Metric |
-| :--- | :--- | :--- | :---: | :---: | :--- |
-| **DINOv3 ViT-H+/16** | **Best Adapted Checkpoint** | `outputs/bakeoff/adapt_dinov3/checkpoint-step-188.pt` | 844.5M | 1.3 GB | **0.9794 Strict-Unseen AUROC**, **0.9973 Proxy AUROC** |
-| **DINOv3 ViT-H+/16** | Best Frozen Checkpoint | `outputs/bakeoff/frozen_dinov3/checkpoint-step-188.pt` | 844.5M | 46 MB | 0.9782 Strict-Unseen AUROC, 0.9978 Proxy AUROC |
-| **PE-Spatial-G/14** | Best Frozen Checkpoint | `outputs/bakeoff/frozen_pe_spatial/checkpoint-step-188.pt` | 1,856.0M | 47 MB | 0.9946 Strict-Unseen AUROC, 0.9538 Proxy AUROC |
-| **Gemma 4 Tower** | Best Frozen Checkpoint | `outputs/bakeoff/frozen_gemma4/checkpoint-step-188.pt` | 573.4M | 45 MB | 0.9548 Strict-Unseen AUROC, 0.9235 Proxy AUROC |
+| Candidate | Checkpoint Type | Local Path | Parameters | File Size | SHA-256 Checksum | Primary Evaluated Metric |
+| :--- | :--- | :--- | :---: | :---: | :--- | :--- |
+| **DINOv3 ViT-H+/16** | **Best Adapted Checkpoint** | `outputs/bakeoff/adapt_dinov3/checkpoint-step-188.pt` | 844.5M | 1.3 GB | `83dc518d70b0e8832e94b229a7f9ee3e88364bd5e531cd07a8f49e5c25326ebe` | **0.9794 Strict-Unseen AUROC**, **0.9973 Proxy AUROC** |
+| **DINOv3 ViT-H+/16** | Best Frozen Checkpoint | `outputs/bakeoff/frozen_dinov3/checkpoint-step-188.pt` | 844.5M | 46 MB | `ba53f1a5c633cf89233571a8163cf8c43ab85d33f7b9a6066e58759bc840b456` | 0.9782 Strict-Unseen AUROC, 0.9978 Proxy AUROC |
+| **PE-Spatial-G/14** | Best Frozen Checkpoint | `outputs/bakeoff/frozen_pe_spatial/checkpoint-step-188.pt` | 1,856.0M | 47 MB | `b78aa1a52410c063445680d3f4a26a9a458c4a1cb28522de296a02e061671986` | 0.9946 Strict-Unseen AUROC, 0.9538 Proxy AUROC |
+| **Gemma 4 Tower** | Best Frozen Checkpoint | `outputs/bakeoff/frozen_gemma4/checkpoint-step-188.pt` | 573.4M | 45 MB | `ea7645f0bb9826a68970d5035fe5b1acf8b76a2ea3de5ea7ba1597a80c888089` | 0.9548 Strict-Unseen AUROC, 0.9235 Proxy AUROC |
 
 ### Evaluation JSON Artifacts
 - **DINOv3 Evaluation**:
@@ -140,65 +140,16 @@ All checkpoints and evaluation logs are verified, saved locally in `outputs/bake
 
 ---
 
-## 7. Production Teacher Training Configuration
+## 7. Production Teacher Training Plan
 
-To execute full robust teacher training on the winning DINOv3 backbone with synthetic multi-transform augmentation, EMA teacher guidance, and localized tamper supervision, deploy the following configuration (`configs/teacher_dinov3_production.yaml`):
+The bake-off winner is carried into a two-stage production run. First, the
+complete DINOv3 backbone remains frozen while the task-specific teacher layers
+learn from untransformed downloaded originals. Second, the Stage 1 checkpoint
+initializes end-to-end training with the complete DINOv3 backbone unfrozen and
+each downloaded original paired with one content-preserving transformed view.
 
-```yaml
-seed: 42
-paths:
-  train_manifest: manifests/ablation12k.csv
-  val_manifest: manifests/strict_unseen_probe.csv
-  output_root: outputs/teacher_dinov3
-preprocessing:
-  policy: square_jpeg95
-  version: 2
-model:
-  backbone_type: dinov3
-  encoder_id: facebook/dinov3-vith16plus-pretrain-lvd1689m
-  encoder_revision: c807c9eeea853df70aec4069e6f56b28ddc82acc
-  image_size: 224
-  encoder_dim: 1280
-  trunk_dim: 512
-  branch_dim: 256
-  dropout: 0.1
-  freeze_encoder: false
-  trainable_last_layers: 8
-  gradient_checkpointing: true
-  spectral_expert: true
-  spectral_image_size: 384
-training:
-  stage: teacher_production_run
-  epochs: 5
-  physical_batch_size: 8
-  gradient_accumulation: 8
-  precision: bf16
-  encoder_lr: 3.0e-6
-  layerwise_lr_decay: 0.85
-  heads_lr: 1.0e-4
-  weight_decay: 0.01
-  gradient_clip_norm: 1.0
-| Candidate | Checkpoint Type | Local Path | Parameters | File Size | SHA-256 Checksum | Primary Evaluated Metric |
-| :--- | :--- | :--- | :---: | :---: | :--- | :--- |
-| **DINOv3 ViT-H+/16** | **Best Adapted Checkpoint** | `E:/techjam26-runtime/outputs/bakeoff/bakeoff_adapt_dinov3/checkpoint-step-188.pt` | 844.5M | 1.3 GB | `83dc518d70b0e8832e94b229a7f9ee3e88364bd5e531cd07a8f49e5c25326ebe` | **0.9794 Strict-Unseen AUROC**, **0.9973 Proxy AUROC** |
-| **DINOv3 ViT-H+/16** | Best Frozen Checkpoint | `E:/techjam26-runtime/outputs/bakeoff/bakeoff_frozen_dinov3/checkpoint-step-188.pt` | 844.5M | 46 MB | `ba53f1a5c633cf89233571a8163cf8c43ab85d33f7b9a6066e58759bc840b456` | 0.9782 Strict-Unseen AUROC, 0.9978 Proxy AUROC |
-| **PE-Spatial-G/14** | Best Frozen Checkpoint | `E:/techjam26-runtime/outputs/bakeoff/bakeoff_frozen_pe_spatial/checkpoint-step-188.pt` | 1,856.0M | 47 MB | `b78aa1a52410c063445680d3f4a26a9a458c4a1cb28522de296a02e061671986` | 0.9946 Strict-Unseen AUROC, 0.9538 Proxy AUROC |
-| **Gemma 4 Tower** | Best Frozen Checkpoint | `E:/techjam26-runtime/outputs/bakeoff/bakeoff_frozen_gemma4/checkpoint-step-188.pt` | 573.4M | 45 MB | `ea7645f0bb9826a68970d5035fe5b1acf8b76a2ea3de5ea7ba1597a80c888089` | 0.9548 Strict-Unseen AUROC, 0.9235 Proxy AUROC |
-  provenance_original: 1.0
-  provenance_transformed: 1.0
-  prediction_consistency: 0.5
-  feature_consistency: 0.2
-  mask_focal: 0.5
-  mask_dice: 0.5
-  ema_consistency: 0.5
-transforms:
-  families: [jpeg, blur, resize, noise, color, crop]
-  chain_length_probabilities:
-    0: 0.25
-    1: 0.30
-    2: 0.30
-    3: 0.15
-```
+See [`teacher_training_plan.md`](teacher_training_plan.md) and the two
+`configs/teacher_dinov3_stage*.yaml` files for the authoritative procedure.
 
 ---
 

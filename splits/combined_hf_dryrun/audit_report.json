@@ -1,0 +1,225 @@
+{
+  "manifest_sha256": "a29a486b971bddb6edc01b50665395f7626e72509f67cb65dd7bc2564ac642a3",
+  "total_rows": 75,
+  "split_counts": {
+    "train": 44,
+    "validation": 6,
+    "test": 12,
+    "test_unseen": 13
+  },
+  "counts_by_split_and_source": {
+    "train": {
+      "art_museums_pd/authentic": 3,
+      "artic_dataset/authentic": 4,
+      "diffusionforensics/fully_aigc": 2,
+      "gmorinan_memes/tampered": 3,
+      "gpt_image_edit_1_5m/tampered": 5,
+      "ideogram_27k/fully_aigc": 4,
+      "imgflip_memes/tampered": 5,
+      "krea2_wildcards/fully_aigc": 2,
+      "multioff_memes/tampered": 4,
+      "open_images_v7/authentic": 5,
+      "sid/authentic": 1,
+      "sid/fully_aigc": 1,
+      "sid/tampered": 2,
+      "wildfake/fully_aigc": 3
+    },
+    "validation": {
+      "diffusionforensics/fully_aigc": 1,
+      "gmorinan_memes/tampered": 1,
+      "krea2_wildcards/fully_aigc": 2,
+      "sid/fully_aigc": 1,
+      "wildfake/fully_aigc": 1
+    },
+    "test": {
+      "art_museums_pd/authentic": 2,
+      "artic_dataset/authentic": 1,
+      "gmorinan_memes/tampered": 1,
+      "google_nano_banana_edited/tampered": 5,
+      "ideogram_27k/fully_aigc": 1,
+      "krea2_wildcards/fully_aigc": 1,
+      "multioff_memes/tampered": 1
+    },
+    "test_unseen": {
+      "diffusionforensics/fully_aigc": 2,
+      "flux_reason_6m/fully_aigc": 5,
+      "nano_banana_pro_gen/fully_aigc": 5,
+      "wildfake/fully_aigc": 1
+    }
+  },
+  "ai_positive_distribution": {
+    "train": {
+      "ai_positive_0": 25,
+      "ai_positive_1": 19
+    },
+    "validation": {
+      "ai_positive_0": 1,
+      "ai_positive_1": 5
+    },
+    "test": {
+      "ai_positive_0": 5,
+      "ai_positive_1": 7
+    },
+    "test_unseen": {
+      "ai_positive_1": 13
+    }
+  },
+  "duplicate_groups_count": 63,
+  "quality_score_mean": 0.9113333333333332,
+  "quality_score_min": 0.85,
+  "quality_score_max": 0.95,
+  "forbidden_demo_check_passed": true,
+  "generator_registry": [
+    {
+      "dataset": "art_museums_pd",
+      "generator_family": "authentic",
+      "split": "test"
+    },
+    {
+      "dataset": "art_museums_pd",
+      "generator_family": "authentic",
+      "split": "train"
+    },
+    {
+      "dataset": "artic_dataset",
+      "generator_family": "authentic",
+      "split": "train"
+    },
+    {
+      "dataset": "artic_dataset",
+      "generator_family": "authentic",
+      "split": "test"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "adm",
+      "split": "train"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "adm",
+      "split": "validation"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "dalle2",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "diffusionforensics",
+      "generator_family": "ldm",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "flux_reason_6m",
+      "generator_family": "flux_1_dev",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "gmorinan_memes",
+      "generator_family": "human",
+      "split": "train"
+    },
+    {
+      "dataset": "gmorinan_memes",
+      "generator_family": "human",
+      "split": "test"
+    },
+    {
+      "dataset": "gmorinan_memes",
+      "generator_family": "human",
+      "split": "validation"
+    },
+    {
+      "dataset": "google_nano_banana_edited",
+      "generator_family": "nano_banana",
+      "split": "test"
+    },
+    {
+      "dataset": "gpt_image_edit_1_5m",
+      "generator_family": "gpt_image_1",
+      "split": "train"
+    },
+    {
+      "dataset": "ideogram_27k",
+      "generator_family": "ideogram_v2",
+      "split": "test"
+    },
+    {
+      "dataset": "ideogram_27k",
+      "generator_family": "ideogram_v2",
+      "split": "train"
+    },
+    {
+      "dataset": "imgflip_memes",
+      "generator_family": "human",
+      "split": "train"
+    },
+    {
+      "dataset": "krea2_wildcards",
+      "generator_family": "krea_2",
+      "split": "train"
+    },
+    {
+      "dataset": "krea2_wildcards",
+      "generator_family": "krea_2",
+      "split": "validation"
+    },
+    {
+      "dataset": "krea2_wildcards",
+      "generator_family": "krea_2",
+      "split": "test"
+    },
+    {
+      "dataset": "multioff_memes",
+      "generator_family": "human",
+      "split": "test"
+    },
+    {
+      "dataset": "multioff_memes",
+      "generator_family": "human",
+      "split": "train"
+    },
+    {
+      "dataset": "nano_banana_pro_gen",
+      "generator_family": "nano_banana_pro",
+      "split": "test_unseen"
+    },
+    {
+      "dataset": "open_images_v7",
+      "generator_family": "authentic",
+      "split": "train"
+    },
+    {
+      "dataset": "sid",
+      "generator_family": "sid_generator",
+      "split": "train"
+    },
+    {
+      "dataset": "sid",
+      "generator_family": "sid_generator",
+      "split": "validation"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "ddim",
+      "split": "train"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "ddpm",
+      "split": "train"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "ddpm",
+      "split": "validation"
+    },
+    {
+      "dataset": "wildfake",
+      "generator_family": "vqdm",
+      "split": "test_unseen"
+    }
+  ],
+  "generated_at": "2026-08-28T18:11:54.315964+00:00"
+}

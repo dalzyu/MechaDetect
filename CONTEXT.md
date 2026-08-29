@@ -29,6 +29,17 @@ _Avoid_: Tampering, editing
 
 As of 28 August 2026, the TechJam organizer expects evaluation to most likely
 apply one post-processing transformation at a time. Primary model selection uses
-clean images and the complete single-transform severity grid. Multi-transform
-chains are a separately reported research ablation and must not replace the
-single-transform benchmark.
+clean images and the complete single-transform severity grid.
+
+## Teacher training decision
+
+DINOv3 ViT-H+/16 won the backbone bake-off against PE-Spatial-G/14 and the
+Gemma 4 vision tower. Train the production teacher in two stages:
+
+1. Freeze the complete DINOv3 backbone and train on untransformed downloaded
+   originals.
+2. Initialize from the selected Stage 1 checkpoint, unfreeze the complete
+   DINOv3 backbone, and train end to end on downloaded-original/transformed
+   pairs. Use one post-processing transformation per pair for the primary run.
+
+See `docs/teacher_training_plan.md` for the authoritative procedure.

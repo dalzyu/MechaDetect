@@ -8,7 +8,7 @@ from aigc_detector.preprocessing import infer_token_grid, mask_to_token_occupanc
 from aigc_detector.transforms import (
     TransformSpec,
     apply_transform,
-    sample_transform_chain,
+    sample_transform,
 )
 
 
@@ -31,16 +31,9 @@ def test_transform_preserves_shape_and_changes_pixels(family, severity) -> None:
     assert ImageChops.difference(image, transformed).getbbox() is not None
 
 
-def test_sample_transform_chain_has_unique_families_in_realistic_order() -> None:
-    chain = sample_transform_chain(Random(42), {3: 1.0})
-    families = [spec.family for spec in chain]
-    assert len(families) == len(set(families)) == 3
-    if Transformation.JPEG in families:
-        assert families[-1] is Transformation.JPEG
-
-
-def test_transform_chain_can_preserve_a_clean_view() -> None:
-    assert sample_transform_chain(Random(42), {0: 1.0}) == ()
+def test_sample_transform_selects_one_family() -> None:
+    transform = sample_transform(Random(42))
+    assert transform.family in tuple(Transformation)
 
 
 def test_mask_occupancy_matches_square_gemma_grid() -> None:
