@@ -39,3 +39,8 @@ TikTok TechJam 2026 Information Document.zip
 # Private evaluation samples and local reference extraction
 newer image model data(do not use for training)/
 tmp/
+
+# Model binaries and web model directory
+*.onnx
+web/model/
+
