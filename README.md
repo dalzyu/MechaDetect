@@ -76,15 +76,60 @@ For frequency-domain residual detection, an optional ConvNeXt-Tiny stream proces
 ## 3. Quickstart & Usage
 
 ### 3.1 Installation
-```bash
-git clone https://github.com/dalzyu/techjam26.git
-cd techjam26
-pip install -e .
+
+This repository uses [uv](https://docs.astral.sh/uv/) to create the project
+virtual environment and install the exact versions recorded in `uv.lock`.
+Install uv once, then run the matching setup sequence for your shell:
+
+**Windows PowerShell**
+
+```powershell
+irm https://astral.sh/uv/install.ps1 | iex
+uv venv --python 3.11
+uv sync --locked --dev
+Copy-Item .env.example .env
+notepad .env
 ```
 
-Requires PyTorch $\ge 2.0$, torchvision, and `transformers>=5.10.1`.
+**POSIX shell (Linux, including the training cluster)**
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv --python 3.11
+uv sync --locked --dev
+cp .env.example .env
+$EDITOR .env
+```
+
+`uv sync` creates (or updates) `.venv`; `--locked` refuses to change
+`uv.lock`, and `--dev` installs the test/lint tools from the `dev` dependency
+group. You do not need to activate the environment when using `uv run`, which
+always executes against this project environment. If you prefer activation:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```bash
+source .venv/bin/activate
+```
+
+The lockfile selects the CUDA 13.0 PyTorch wheels (`torch==2.13.0` and
+`torchvision==0.28.0`) from the explicit PyTorch index. An NVIDIA driver
+compatible with those wheels is therefore required; this project does not
+provide a CPU or macOS dependency fallback.
+
+Run Python tools reproducibly through uv:
+
+```bash
+uv run python -m aigc_detector.predict --help
+uv run pytest tests/ -q
+```
+
+On PowerShell, the same `uv run ...` commands apply.
 
 ### 3.2 Environment Setup
+
 Copy `.env.example` to `.env` and set machine-local storage paths:
 ```bash
 TECHJAM_DATA_ROOT=E:/techjam26-runtime/data
@@ -98,7 +143,7 @@ Build the leakage-controlled production manifests from the SID, WildFake, and
 DiffusionForensics metadata files:
 
 ```bash
-python scripts/data_prep/build_performance_manifests.py \
+uv run python scripts/data_prep/build_performance_manifests.py \
   /path/to/sid_metadata.csv \
   /path/to/wildfake_metadata.csv \
   /path/to/diffusionforensics_metadata.csv \
@@ -120,7 +165,7 @@ Stage 1 freezes DINOv3 and trains the task-specific layers on clean originals.
 Its effective batch is `8 records/GPU × 1 accumulation × 6 GPUs = 48`:
 
 ```bash
-torchrun --standalone --nproc-per-node=6 \
+uv run torchrun --standalone --nproc-per-node=6 \
   -m aigc_detector.train \
   --config configs/teacher_dinov3_stage1_clean_frozen.yaml
 ```
@@ -131,7 +176,7 @@ unfreezes DINOv3, enables the EMA teacher, and trains original/transformed
 pairs. Its effective batch is `1 record/GPU × 8 accumulation × 6 GPUs = 48`:
 
 ```bash
-torchrun --standalone --nproc-per-node=6 \
+uv run torchrun --standalone --nproc-per-node=6 \
   -m aigc_detector.train \
   --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
   --initial-checkpoint /absolute/path/to/checkpoint-step-N.pt
@@ -141,7 +186,7 @@ Resume an interrupted stage—including optimizer, scheduler, EMA, sampler
 position, and manifest identity—with:
 
 ```bash
-torchrun --standalone --nproc-per-node=6 \
+uv run torchrun --standalone --nproc-per-node=6 \
   -m aigc_detector.train \
   --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
   --resume /absolute/path/to/checkpoint-step-N.pt
@@ -162,14 +207,14 @@ Run clean evaluation and the complete single-transform robustness grid on a
 candidate production checkpoint:
 
 ```bash
-python scripts/evaluate_performance.py \
+uv run python scripts/evaluate_performance.py \
   --manifest splits/performance/test_unseen.csv \
   --checkpoint /path/to/checkpoint-step-N.pt \
   --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
   --output outputs/teacher-clean-unseen.json \
   --batch-size 1
 
-python scripts/evaluate_performance.py \
+uv run python scripts/evaluate_performance.py \
   --manifest splits/performance/test_unseen.csv \
   --checkpoint /path/to/checkpoint-step-N.pt \
   --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
@@ -181,7 +226,7 @@ python scripts/evaluate_performance.py \
 ### 3.6 Predicting on an Image Directory
 Generate Track 5 predictions (`pred = P(AI-generated or AI-edited)`) for submissions:
 ```bash
-python -m aigc_detector.predict \
+uv run python -m aigc_detector.predict \
   --input-dir /path/to/images \
   --output predictions.json \
   --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
@@ -190,7 +235,7 @@ python -m aigc_detector.predict \
 
 ### 3.7 Running Tests
 ```bash
-python -m pytest tests/ -q
+uv run python -m pytest tests/ -q
 ```
 
 ---

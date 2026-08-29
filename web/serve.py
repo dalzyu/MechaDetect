@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-"""Zero-Compute Static File Server for NanoGuard.
-All inference executes 100% client-side in the user's browser via WebGPU.
+"""Static file server for the NanoGuard client-side WebGPU demo.
+
+The server never performs inference. It only serves the frontend and ONNX
+model, with optional TLS for browsers that require a secure context for
+WebGPU (notably iPhone Safari).
 """
 
 from __future__ import annotations
 
+import argparse
 import http.server
 from pathlib import Path
 import socket
-import sys
+import ssl
 
 WEB_DIR = Path(__file__).resolve().parent
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
 
 
 class NanoGuardHandler(http.server.SimpleHTTPRequestHandler):
@@ -30,33 +33,112 @@ class NanoGuardHandler(http.server.SimpleHTTPRequestHandler):
 
 
 class DualStackThreadingServer(http.server.ThreadingHTTPServer):
-    """Dual-stack HTTP server supporting both IPv4 (127.0.0.1) and IPv6 (localhost)."""
+    """Dual-stack HTTP server supporting both IPv4 and IPv6 when available."""
+
     address_family = socket.AF_INET6
+    daemon_threads = True
 
     def server_bind(self):
         self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
         super().server_bind()
 
 
-def main():
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Serve the NanoGuard WebGPU demo to local or remote devices."
+    )
+    parser.add_argument(
+        "legacy_port",
+        nargs="?",
+        type=int,
+        help="legacy positional port (prefer --port)",
+    )
+    parser.add_argument(
+        "--host",
+        default="0.0.0.0",
+        help="interface to bind (default: 0.0.0.0, all IPv4 interfaces)",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=None,
+        help="TCP port (default: 8000)",
+    )
+    parser.add_argument(
+        "--certfile",
+        type=Path,
+        help="PEM certificate chain; enables HTTPS when paired with --keyfile",
+    )
+    parser.add_argument(
+        "--keyfile",
+        type=Path,
+        help="PEM private key paired with --certfile",
+    )
+    args = parser.parse_args()
+    if args.certfile is not None and args.keyfile is None:
+        parser.error("--certfile requires --keyfile")
+    if args.keyfile is not None and args.certfile is None:
+        parser.error("--keyfile requires --certfile")
+    if args.port is not None and args.legacy_port is not None:
+        parser.error("provide either the positional port or --port, not both")
+    args.port = args.port if args.port is not None else (args.legacy_port or 8000)
+    if not 1 <= args.port <= 65535:
+        parser.error("--port must be between 1 and 65535")
+    return args
+
+
+def create_server(host: str, port: int) -> http.server.ThreadingHTTPServer:
+    """Create the best available server for the requested bind address."""
+
     try:
-        httpd = DualStackThreadingServer(("", PORT), NanoGuardHandler)
-    except Exception as exc:
+        if ":" in host or host in ("", "localhost"):
+            return DualStackThreadingServer((host, port), NanoGuardHandler)
+    except OSError as exc:
         print(f"[Server] Dual-stack fallback to IPv4: {exc}")
-        httpd = http.server.ThreadingHTTPServer(("0.0.0.0", PORT), NanoGuardHandler)
+    return http.server.ThreadingHTTPServer(
+        (host or "0.0.0.0", port),
+        NanoGuardHandler,
+    )
+
+
+def enable_tls(
+    httpd: http.server.ThreadingHTTPServer,
+    certfile: Path,
+    keyfile: Path,
+) -> None:
+    """Wrap an already-bound server socket in a TLS context."""
+
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(certfile=str(certfile), keyfile=str(keyfile))
+    httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+
+
+def main() -> None:
+    args = parse_args()
+    httpd = create_server(args.host, args.port)
+    scheme = "http"
+    if args.certfile is not None and args.keyfile is not None:
+        enable_tls(httpd, args.certfile, args.keyfile)
+        scheme = "https"
 
     httpd.allow_reuse_address = True
-    print(f"\n========================================================")
-    print(f"  NanoGuard Static Server (Pure Client-Side WebGPU)")
-    print(f"  URL: http://localhost:{PORT}")
-    print(f"  Server ML Compute: 0% (Zero server inference)")
-    print(f"  Execution Target: Client-Side WebGPU")
-    print(f"========================================================\n")
+    display_host = args.host if args.host not in ("", "0.0.0.0", "::") else "<this-PC-LAN-IP>"
+    print("\n========================================================")
+    print("  NanoGuard Static Server (Pure Client-Side WebGPU)")
+    print(f"  Local URL: http://127.0.0.1:{args.port}")
+    print(f"  Device URL: {scheme}://{display_host}:{args.port}")
+    print("  Server ML Compute: 0% (Zero server inference)")
+    print("  Execution Target: Client-Side WebGPU")
+    if scheme == "http":
+        print("  Note: iPhone Safari requires HTTPS for WebGPU outside localhost.")
+    print("========================================================\n")
 
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         print("\nShutting down server.")
+    finally:
+        httpd.server_close()
 
 
 if __name__ == "__main__":
