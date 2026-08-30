@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NanoGuard</title>
+    <title>MechaDetect</title>
     <link rel="icon" href="data:,">
     <!-- ONNX Runtime Web for WebGPU execution -->
     <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.all.min.js"></script>
@@ -125,10 +125,10 @@
         gap: 12px;
       }
 
-      .title-wrap .clock-icon {
-        font-size: 1.6rem;
-        line-height: 1;
-        color: #1b1b1d;
+      .title-wrap .recent-icon {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
         transform: translateY(2px);
       }
 
@@ -523,13 +523,9 @@
     <!-- Top Full-Width Navbar -->
     <header class="topbar">
       <a href="#" class="brand">
-        <!-- SVG NanoGuard Hexagon Shield Logo matching original screenshot -->
-        <svg class="brand-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M22 3.5L37.5 11.8V32.2L22 40.5L6.5 32.2V11.8L22 3.5Z" stroke="#18181b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-          <path d="M16 29.5V14.5L28 29.5V14.5" stroke="#18181b" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="16" cy="20.5" r="2.8" fill="#10b981"/>
-        </svg>
-        <span class="brand-title">NanoGuard</span>
+        <!-- Mecha duck logo -->
+        <img class="brand-icon" src="mechaduck_transparent.png" alt="" />
+        <span class="brand-title">MechaDetect</span>
       </a>
 
       <button class="upload-btn" id="uploadBtn" type="button">Upload</button>
@@ -540,7 +536,7 @@
       <!-- Title & WebGPU Badge Row -->
       <section class="content-head">
         <div class="title-wrap">
-          <span class="clock-icon">🕒</span>
+          <img class="recent-icon" src="Icon.png" alt="" />
           <div>
             <h1>Recent uploads</h1>
             <p class="subtitle">Sorted by newest first</p>
