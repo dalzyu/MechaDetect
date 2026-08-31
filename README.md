@@ -119,9 +119,44 @@ MechaDetect produces both full-precision and statically quantized ONNX artifacts
 
 ---
 
-## 3. Quickstart & Usage
+## 3. Training Data & Transparency
 
-### 3.1 Installation
+The training manifests, split distributions, and source audit reports are publicly hosted and versioned on Hugging Face:
+
+👉 [**`zye2/tj-data` Dataset Repository**](https://huggingface.co/datasets/zye2/tj-data)
+
+### Dataset Structure & Split Allocation
+
+The declared dataset package contains **122,344 total records** across 29 active forensic and natural cohorts. Preflight verification quarantined 30,455 unmaterializable or conflicting records into `exclusions.parquet`, leaving **87,793 verified, decodable, and clean eligible records**.
+
+| Manifest / Split | Row Count | Percentage | Dataset Scope & Usage |
+| :--- | :---: | :---: | :--- |
+| **`train.parquet`** | **51,107** | 58.2% | Canonical training split used by Normal models (`Atom`, `Quark`, Normal Teacher) |
+| **`train_super_all.parquet`** | **87,793** | 100.0% | Full eligible training split used by Super models (`Atom Super`, `Quark Super`, Super Teacher) |
+| `validation.parquet` | 14,617 | 16.6% | Validation split for threshold calibration and model promotion gates |
+| `test.parquet` | 11,129 | 12.7% | In-distribution generalization test benchmark |
+| `test_unseen.parquet` | 10,940 | 12.5% | Out-of-distribution benchmark evaluating unseen generator families |
+| `calibration.parquet` | 4,096 | 4.7% | Strictly isolated split used exclusively for static INT8 PTQ calibration |
+| `exclusions.parquet` | 30,455 | — | Quarantined records (missing remote bytes, unaligned masks, cross-label conflicts) |
+
+### Source Cohorts
+
+The training distribution balances diverse generative models against verified authentic negatives:
+* **Primary Forensics Distributions:** Synthetic Image Detection (SID, 18.8k), WildFake (14.2k), DiffusionForensics (11.3k).
+* **Authentic Negative Anchors:** Art Museums Public Domain (7.6k), Artic Fine Art (6.3k), CelebA-HQ (1.5k), Classical Figure Art (1.0k), Manga109 illustrations (1.0k).
+* **Generative Positive Cohorts:** GPT-Image-Edit (5.0k), FLUX.1 [dev] (4.8k), Ideogram v2 (2.9k), Krea 2 (2.4k), Midjourney v6/v5 (2.9k), Google Nano Banana edited/pro (1.9k), SD 3 Medium, SDXL, Danbooru 2026 AIGC, and synthetic gaming renders.
+
+### Benchmark Isolation & Hygiene
+
+* **Organizer Demo Exclusion:** The official TechJam demonstration evaluation dataset ($13,841$ images: $4,998$ COCO val2017 authentic + $8,843$ WildFake DALL-E Advanced) is strictly quarantined and completely excluded from all training splits.
+* **Forbidden Cohort Rejection:** The forbidden directory `newer image model data(do not use for training)` is completely blocked by fail-closed preflight guards.
+* **Leakage Prevention:** Group disjointness is strictly enforced across splits using perceptual difference hashing (dHash) and SHA-256 duplicate grouping.
+
+---
+
+## 4. Quickstart & Usage
+
+### 4.1 Installation
 
 This repository uses [uv](https://docs.astral.sh/uv/) to create the project
 virtual environment and install the exact versions recorded in `uv.lock`.
@@ -174,7 +209,7 @@ uv run pytest tests/ -q
 
 On PowerShell, the same `uv run ...` commands apply.
 
-### 3.2 Environment Setup
+### 4.2 Environment Setup
 
 Copy `.env.example` to `.env` and set machine-local storage paths:
 ```bash
@@ -183,7 +218,7 @@ TECHJAM_HF_HOME=E:/techjam26-runtime/huggingface
 TECHJAM_OUTPUT_ROOT=E:/techjam26-runtime/outputs
 ```
 
-### 3.3 Preparing the Production Eligible Manifests
+### 4.3 Preparing the Production Eligible Manifests
 
 Data prefetch and manifest generation are performed prior to DDP:
 
@@ -206,7 +241,7 @@ The builder creates `train.parquet`, `validation.parquet`, `test.parquet`, `test
 `calibration.parquet`, `exclusions.parquet`, and `audit_report.json`. Production loaders
 fail closed and forbid missing-image fallback substitution.
 
-### 3.4 Training
+### 4.4 Training
 
 The maintained path starts on one CUDA GPU and keeps an effective record batch
 of 48 through gradient accumulation:
@@ -262,7 +297,7 @@ The operational contracts are documented in
 [`docs/production_training_and_delivery_plan.md`](docs/production_training_and_delivery_plan.md)
 and [`docs/teacher_training_plan.md`](docs/teacher_training_plan.md).
 
-### 3.5 Evaluating a Checkpoint
+### 4.5 Evaluating a Checkpoint
 
 
 Run clean evaluation and the complete single-transform robustness grid on a
@@ -285,7 +320,7 @@ uv run python scripts/evaluate_performance.py \
   --batch-size 1
 ```
 
-### 3.6 Predicting on an Image Directory
+### 4.6 Predicting on an Image Directory
 Generate Track 5 predictions (`pred = P(AI-generated or AI-edited)`) for submissions:
 ```bash
 uv run python -m aigc_detector.predict \
@@ -295,7 +330,7 @@ uv run python -m aigc_detector.predict \
   --checkpoint /path/to/checkpoint-step-N.pt
 ```
 
-### 3.7 Model Export and Quantization
+### 4.7 Model Export and Quantization
 
 Export a trained student checkpoint to opset 17 Float32 ONNX:
 
@@ -315,12 +350,12 @@ uv run python scripts/calibrate_quantize_int8.py \
   --output-model web/model/mechadetect-atom-super-post-att-int8.onnx
 ```
 
-### 3.8 Repository checks
+### 4.8 Repository checks
 Project checks are available under `tests/`; training does not invoke them.
 
 ---
 
-## 4. Repository Layout
+## 5. Repository Layout
 
 ```text
 techjam26/
@@ -369,7 +404,7 @@ techjam26/
 
 ---
 
-## 5. Track 5 Submission Interface
+## 6. Track 5 Submission Interface
 
 ### Solution and stack
 
@@ -412,7 +447,7 @@ numerical consistency across browsers.
 
 ---
 
-## 6. Known Limitations
+## 7. Known Limitations
 
 - This is a probabilistic detector, not a cryptographic provenance proof,
   watermark verifier, copyright decision, or authorship certificate.
@@ -425,7 +460,7 @@ numerical consistency across browsers.
 
 ---
 
-## 7. Team Contributions
+## 8. Team Contributions
 
 Contributor identities and role allocation were not provided in this
 repository context. The submitting team must add each member's name and exact
