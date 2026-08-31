@@ -1,7 +1,6 @@
 /**
- * NanoGuard - 100% In-Browser Client Inference Controller
- * Powered by WebGPU and ONNX Runtime Web.
- * Zero server-side inference: All detection executes on the user's client hardware.
+ * MechaDetect browser inference controller.
+ * Runs the selected ONNX model through WebGPU or WebAssembly.
  */
 
 const state = {
@@ -41,6 +40,10 @@ const elements = {
   modalTarget: document.getElementById('modalTarget'),
   modalDot: document.getElementById('modalDot'),
 };
+const requestedProvider = new URLSearchParams(window.location.search).get('provider');
+if (requestedProvider === 'wasm') {
+  elements.forceWasmCheckbox.checked = true;
+}
 
 /**
  * Initialize ONNX Runtime Web session in the browser with WebGPU
@@ -59,7 +62,7 @@ async function initClientModel() {
     // Clean console logging from ONNX Runtime internals
     if (typeof ort !== 'undefined') {
       ort.env.logLevel = 'error';
-      ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
+      ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.29.0/dist/';
       ort.env.wasm.numThreads = Math.min(4, navigator.hardwareConcurrency || 2);
     }
 

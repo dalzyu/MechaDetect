@@ -1,11 +1,11 @@
-# MechaDetect Production Training and Delivery Plan (4x RTX 4090)
+# MechaDetect Production Training and Delivery Record
 
-**Deadline:** September 1, 2026
-**Status:** Active
-**Hardware Target:** 4× NVIDIA GeForce RTX 4090 (24 GB VRAM each) on Vast.ai
-**Working Branch:** `training/production-4x4090`
-**Authoritative Plan Reference:** [`docs/production_4x4090_implementation_plan.md`](production_4x4090_implementation_plan.md)
-**Historical Run Reference:** [`docs/training_run_consolidated.md`](training_run_consolidated.md)
+**Delivery date:** August 31, 2026
+**Status:** Training and artifact delivery complete; TechJam/SoTA evaluation pending
+**Default hardware:** one CUDA GPU with BF16 support
+**Default branch:** `main`
+**Historical four-GPU design:** [`docs/production_4x4090_implementation_plan.md`](production_4x4090_implementation_plan.md)
+**Historical teacher run:** [`docs/training_run_consolidated.md`](training_run_consolidated.md)
 
 ---
 
@@ -13,23 +13,24 @@
 
 MechaDetect is a robust binary AI-provenance detector (Track 5) distinguishing authentic human imagery (`ai_positive = 0`) from both fully generated and AI-edited imagery (`ai_positive = 1`).
 
-The production pipeline deploys an 872.6M-parameter foundation teacher (DINOv3 ViT-H+/16 backbone + multi-scale evidence/localization heads) and distills it concurrently into two independent edge students:
-1. **Edge Primary (Tier 2):** Complete 25.1M-parameter ViT-S detector (`facebook/dinov3-vits16-pretrain-lvd1689m`) optimized for WebGPU and browser deployment.
-2. **Accuracy Primary (Tier 1):** Complete ViT-B detector (`facebook/dinov3-vitb16-pretrain-lvd1689m`, ~86M backbone) for high-capacity desktop / edge deployment.
+The training path uses an 872.6M-parameter DINOv3 ViT-H+/16 teacher and two
+independent students. Atom is the 25.1M-parameter ViT-S browser model. Quark is
+the higher-capacity ViT-B model. On one GPU, their distillation and ATT stages
+run sequentially; explicit disjoint device pools allow parallel execution.
 
 ### Exact Model Identities & Parameter Counts
 
 | Model Role | Base Backbone | Complete Detector Params | Target Runtime |
 |---|---|---:|---|
 | **Teacher** | DINOv3 ViT-H+/16 (840.6M) | **872.6M** (872,606,207 values) | Training / Distillation Only |
-| **Student (Edge Primary)** | DINOv3 ViT-S/16 (~21M) | **25.1M** (25,089,666 values) | WebGPU & WASM (Static INT8) |
-| **Student (Accuracy Primary)** | DINOv3 ViT-B/16 (~86M) | Measured (~92M complete) | High-throughput Edge |
+| **Atom / ViT-S** | DINOv3 ViT-S/16 (~21M) | **25.1M** (25,089,666 values) | Browser WebGPU/WASM |
+| **Quark / ViT-B** | DINOv3 ViT-B/16 (~86M) | ~89M complete | Desktop / higher-capacity edge |
 
 ---
 
 ## 2. Immutable Dataset Specification (`splits/production_eligible/`)
 
-Data is managed through a prefetch-before-DDP architecture. Production loaders are strictly local and fail-closed:
+Data is prefetched before optimization. Training loaders are local and fail closed:
 - **No missing-row substitution:** The legacy `_fallback_by_key` replacement is deleted. Missing or corrupt samples raise errors immediately.
 - **No training-time network fetching:** All assets must be downloaded and verified in preflight.
 - **Calibration Split Disjointness:** Exactly 4,096 calibration rows (`calibration.parquet`) are preserved exclusively for static INT8 PTQ and never seen during gradient training or validation.
@@ -46,10 +47,11 @@ Data is managed through a prefetch-before-DDP architecture. Production loaders a
 
 ---
 
-## 3. 4x RTX 4090 Gated Training Pipeline
+## 3. Maintained Training and Delivery Flow
 
-Execution is managed by `orchestrate_4x4090.sh` through a 21-stage resumable state machine with budget guards and artifact uploads after every passed gate:
-
+`scripts/launch_production.sh` is the maintained resumable training entry point.
+It defaults to GPU 0. The older `orchestrate_4x4090.sh` state machine remains an
+explicit Vast/RTX-4090 workflow and is not the default.
 ```text
 [Preflight & Verification]
          │
@@ -70,7 +72,7 @@ Execution is managed by `orchestrate_4x4090.sh` through a 21-stage resumable sta
          │ (clean AUROC > 0.96, both recalls >= 0.82)
          ├──────────────────────────────────────────┐
          ▼                                          ▼
-[ViT-S Distillation (GPUs 0,1)]            [ViT-B Distillation (GPUs 2,3)]
+[Atom Distillation]                            [Quark Distillation]
          │                                          │
          ├──────────────────────────────────────────┘
          ▼
@@ -78,7 +80,7 @@ Execution is managed by `orchestrate_4x4090.sh` through a 21-stage resumable sta
          │ (recalls >= 0.82, AUROC within 2pp clean / 3pp robust of teacher)
          ├──────────────────────────────────────────┐
          ▼                                          ▼
-[ViT-S ATT Hardening (GPUs 0,1)]           [ViT-B ATT Hardening (GPUs 2,3)]
+[Atom ATT Hardening]                           [Quark ATT Hardening]
          │                                          │
          ├──────────────────────────────────────────┘
          ▼
@@ -100,24 +102,31 @@ Execution is managed by `orchestrate_4x4090.sh` through a 21-stage resumable sta
 [Consolidated Upload & Pipeline Completion Receipt]
 ```
 
-### Note on Checkpoint 2 Demotion
-Checkpoint 2 has been demoted from the forward canonical pipeline. A second 200-update run over the same manifest is not a distinct phase. The canonical pipeline moves directly from promoted Stage 2 into concurrent student distillation.
+### Checkpoint 2
+
+Checkpoint 2 is a historical ablation, not a production phase. The maintained
+flow moves directly from the final Stage 2 teacher into student distillation.
 
 ---
 
-## 4. Multi-GPU Topology and Batch Geometry
+## 4. Default Batch Geometry
 
-All stages preserve the canonical effective record batch of **48**:
+The checked-in configs target one GPU and preserve an effective record batch of
+48. An explicit multi-GPU device list reduces accumulation by the same factor.
 
-| Pipeline Stage | GPU Allocation | Physical Batch / GPU | Gradient Accumulation | Effective Batch |
+| Pipeline stage | Default devices | Physical batch | Accumulation | Effective batch |
 |---|---|---:|---:|---:|
-| **Teacher Stage 1** | GPUs 0, 1, 2, 3 (4-GPU DDP) | 6 | 2 | 48 (6 × 4 × 2) |
-| **Teacher Stage 2 (Primary)** | GPUs 0, 1, 2, 3 (4-GPU DDP) | 2 | 6 | 48 (2 × 4 × 6) |
-| **Teacher Stage 2 (OOM Fallback)** | GPUs 0, 1, 2, 3 (4-GPU DDP) | 1 | 12 | 48 (1 × 4 × 12) |
-| **ViT-S Distillation** | GPUs 0, 1 (2-GPU DDP, Port 29501) | 6 | 4 | 48 (6 × 2 × 4) |
-| **ViT-B Distillation** | GPUs 2, 3 (2-GPU DDP, Port 29502) | 3 | 8 | 48 (3 × 2 × 8) |
-| **ViT-S ATT Hardening** | GPUs 0, 1 (2-GPU DDP, Port 29503) | 4 | 6 | 48 (4 × 2 × 6) |
-| **ViT-B ATT Hardening** | GPUs 2, 3 (2-GPU DDP, Port 29504) | 2 | 12 | 48 (2 × 2 × 12) |
+| **Teacher Stage 1** | GPU 0 | 6 | 8 | 48 |
+| **Teacher Stage 2** | GPU 0 | 2 | 24 | 48 |
+| **Teacher Stage 2 OOM fallback** | GPU 0 | 1 | 48 | 48 |
+| **Atom distillation** | GPU 0 | 12 | 4 | 48 |
+| **Quark distillation** | GPU 0 | 3 | 16 | 48 |
+| **Atom ATT** | GPU 0 | 4 | 12 | 48 |
+| **Quark ATT** | GPU 0 | 2 | 24 | 48 |
+
+Student and ATT launchers run both tracks sequentially by default.
+`--parallel-tracks` requires disjoint device pools. Resume requires the same
+world size and batch geometry as the checkpoint.
 
 ---
 
@@ -142,31 +151,39 @@ All stages preserve the canonical effective record batch of **48**:
 ## 6. Static INT8 PTQ & Graph Verification Contract
 
 - **Opset:** ONNX opset 17.
-- **Quantization Mode:** Calibrated static INT8 (QDQ / QLinear) using the 4,096 calibration rows.
-- **Strict Anti-INT4 Gate:** Models containing INT4 `MatMulNBits` or dynamic-only quantizations are strictly rejected by `scripts/quantize_webgpu_nbits.py --inspect-model`.
-- **Runtime Verification:** Verified across desktop Chrome/Edge WebGPU and forced-WASM CPU fallback.
+- **Quantization mode:** calibrated static INT8 QDQ using all 4,096 calibration rows.
+- **Graph result:** all four INT8 exports passed the static-quantization structure checks.
+- **Runtime result:** Atom Super float32 agreed between WebGPU and forced WASM and is the browser default. The INT8 candidate executed on both providers but produced materially different probabilities, so INT8 remains experimental.
 
 ---
 
-## 7. Vast.ai Budget Guard & Cost Projection
+## 7. Historical Vast Run Controls
 
-- **Reserve Requirement:** The pipeline enforces a mandatory **$5.00** balance reserve at all times.
-- **Cost Projection:** Prior to launching full stages, measured throughput from 2-update smoke tests is used to project stage costs.
-- **Fail Closed:** If balance cannot be determined via Vast CLI or API (and `--explicit-balance` is not passed), the pipeline fails closed.
-- **Exfiltration on Stop:** If a stage is projected to breach the $5 reserve, execution stops gracefully and uploads all currently promoted artifacts before shutdown.
+The four-RTX-4090 orchestrator retains its balance reserve, cost projection,
+stage receipts, and upload logic for reproducibility. Those controls are not
+required by the local one-GPU launcher. The completed Vast instance was
+terminated after artifact exfiltration.
 
 ---
 
-## 8. CLI Command Reference
+## 8. Commands and Evaluation Status
 
 ```bash
-# 1. Fresh Instance Setup
+# Prepare dependencies, storage, images, and frozen manifests
 bash cluster_setup.sh
 
-# 2. Complete Gated Production Run
-bash orchestrate_4x4090.sh
+# Default: one GPU, sequential student and ATT tracks
+bash scripts/launch_production.sh
 
-# 3. Targeted Stage Execution / Resume
-bash orchestrate_4x4090.sh --stage teacher-stage1
-bash orchestrate_4x4090.sh --stage students-distill --explicit-balance 35.00
+# Explicit two-GPU DDP
+GPU_DEVICES=0,1 bash scripts/launch_production.sh
+
+# Historical four-RTX-4090 state machine
+bash orchestrate_4x4090.sh
 ```
+
+The completed checkpoints and ONNX exports have not yet been benchmarked against
+external state-of-the-art detectors on the TechJam evaluation set. Training
+completion, ONNX parity, graph inspection, and browser-provider checks are not a
+substitute for that comparison. Publish a SoTA claim only after all detectors
+run on the same TechJam rows, transformations, and metric implementation.

@@ -286,7 +286,7 @@ def test_stage_membership_guard_rejects_non_train_splits() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_att_track_isolation_and_configs() -> None:
+def test_att_configs_default_to_sequential_single_gpu_tracks() -> None:
     small_cfg_path = CONFIG_DIR / "att_student_small.yaml"
     base_cfg_path = CONFIG_DIR / "att_student_base.yaml"
 
@@ -299,22 +299,18 @@ def test_att_track_isolation_and_configs() -> None:
     # Track small checks
     assert small_cfg["model"]["encoder_id"] == "facebook/dinov3-vits16-pretrain-lvd1689m"
     assert small_cfg["model"]["encoder_dim"] == 384
-    assert small_cfg["training"]["cuda_visible_devices"] == "0,1"
-    assert small_cfg["training"]["master_port"] == 29502
+    assert small_cfg["training"]["cuda_visible_devices"] == "0"
+    assert small_cfg["training"]["master_port"] == 29503
     assert "small" in small_cfg["paths"]["output_root"]
 
     # Track base checks
     assert base_cfg["model"]["encoder_id"] == "facebook/dinov3-vitb16-pretrain-lvd1689m"
     assert base_cfg["model"]["encoder_dim"] == 768
-    assert base_cfg["training"]["cuda_visible_devices"] == "2,3"
-    assert base_cfg["training"]["master_port"] == 29503
+    assert base_cfg["training"]["cuda_visible_devices"] == "0"
+    assert base_cfg["training"]["master_port"] == 29504
     assert "base" in base_cfg["paths"]["output_root"]
 
-    # Strict isolation: no shared GPU IDs, no shared ports, no shared output dirs
-    small_gpus = set(small_cfg["training"]["cuda_visible_devices"].split(","))
-    base_gpus = set(base_cfg["training"]["cuda_visible_devices"].split(","))
-    assert not (small_gpus & base_gpus), "GPU allocation collision between small and base!"
-
+    # Sequential defaults may share GPU 0; ports and output directories remain distinct.
     assert small_cfg["training"]["master_port"] != base_cfg["training"]["master_port"]
     assert small_cfg["paths"]["output_root"] != base_cfg["paths"]["output_root"]
 
@@ -324,11 +320,11 @@ def test_att_track_isolation_and_configs() -> None:
         assert cfg["paths"]["val_manifest"] == "splits/production_eligible/validation.parquet"
         assert cfg["paths"]["require_materialized"] is True
 
-    # Track geometry: Small 4x6x2 = 48, Base 2x12x2 = 48
+    # One-GPU geometry: small 4x12x1 = 48; base 2x24x1 = 48.
     assert small_cfg["training"]["physical_batch_size"] == 4
-    assert small_cfg["training"]["gradient_accumulation"] == 6
+    assert small_cfg["training"]["gradient_accumulation"] == 12
     assert base_cfg["training"]["physical_batch_size"] == 2
-    assert base_cfg["training"]["gradient_accumulation"] == 12
+    assert base_cfg["training"]["gradient_accumulation"] == 24
 
     for cfg in (small_cfg, base_cfg):
         batch = cfg["training"]["physical_batch_size"]
@@ -493,9 +489,8 @@ def test_launch_track_command_builder() -> None:
         dry_run=True,
     )
     cmd_str = " ".join(cmd)
-    assert "torch.distributed.run" in cmd_str
-    assert "--nproc_per_node=2" in cmd_str
-    assert "--master_port=29502" in cmd_str
+    assert "torch.distributed.run" not in cmd_str
+    assert "--world-size 1" in cmd_str
     assert "--variant small" in cmd_str
     assert "--student-checkpoint checkpoint.pt" in cmd_str
     assert "--manifest train.parquet" in cmd_str

@@ -30,6 +30,7 @@ can still use edit masks as an auxiliary task; it does not classify the two
 positive subtypes against each other.
 """
 
+import os
 from collections.abc import Sequence
 from contextlib import nullcontext
 from dataclasses import dataclass
@@ -364,10 +365,17 @@ class DINOv3VisionBackbone(nn.Module):
         except ImportError as exc:
             raise RuntimeError("DINOv3 requires transformers>=5.10.1") from exc
 
+        token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
+        cache_dir = os.environ.get("HF_HOME") or os.environ.get("TECHJAM_HF_HOME")
+        load_kwargs: dict[str, Any] = {}
+        if token:
+            load_kwargs["token"] = token
+        if cache_dir:
+            load_kwargs["cache_dir"] = cache_dir
         self.processor = AutoImageProcessor.from_pretrained(
-            encoder_id, revision=revision, size={"height": image_size, "width": image_size}
+            encoder_id, revision=revision, size={"height": image_size, "width": image_size}, **load_kwargs
         )
-        self.encoder = DINOv3ViTModel.from_pretrained(encoder_id, revision=revision, dtype=dtype)
+        self.encoder = DINOv3ViTModel.from_pretrained(encoder_id, revision=revision, dtype=dtype, **load_kwargs)
         self.set_frozen(freeze)
 
     @property
@@ -501,8 +509,15 @@ class Gemma4VisionBackbone(nn.Module):
             raise RuntimeError("Gemma 4 requires transformers==5.10.1") from exc
 
         self.visual_tokens = visual_tokens
-        self.processor = Gemma4ImageProcessor.from_pretrained(encoder_id, revision=revision)
-        self.encoder = Gemma4VisionModel.from_pretrained(encoder_id, revision=revision, dtype=dtype)
+        token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
+        cache_dir = os.environ.get("HF_HOME") or os.environ.get("TECHJAM_HF_HOME")
+        load_kwargs: dict[str, Any] = {}
+        if token:
+            load_kwargs["token"] = token
+        if cache_dir:
+            load_kwargs["cache_dir"] = cache_dir
+        self.processor = Gemma4ImageProcessor.from_pretrained(encoder_id, revision=revision, **load_kwargs)
+        self.encoder = Gemma4VisionModel.from_pretrained(encoder_id, revision=revision, dtype=dtype, **load_kwargs)
         self.set_frozen(freeze)
 
     @property
@@ -557,10 +572,17 @@ class HFViTVisionBackbone(nn.Module):
             from transformers import AutoImageProcessor, AutoModel
         except ImportError as exc:
             raise RuntimeError("The generic ViT backbone requires transformers") from exc
+        token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
+        cache_dir = os.environ.get("HF_HOME") or os.environ.get("TECHJAM_HF_HOME")
+        load_kwargs: dict[str, Any] = {}
+        if token:
+            load_kwargs["token"] = token
+        if cache_dir:
+            load_kwargs["cache_dir"] = cache_dir
         self.processor = AutoImageProcessor.from_pretrained(
-            encoder_id, revision=revision, size={"height": image_size, "width": image_size}
+            encoder_id, revision=revision, size={"height": image_size, "width": image_size}, **load_kwargs
         )
-        self.encoder = AutoModel.from_pretrained(encoder_id, revision=revision, dtype=dtype)
+        self.encoder = AutoModel.from_pretrained(encoder_id, revision=revision, dtype=dtype, **load_kwargs)
         self.set_frozen(freeze)
 
     @property

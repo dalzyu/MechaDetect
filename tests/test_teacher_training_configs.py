@@ -36,7 +36,7 @@ def test_teacher_stage2_unfreezes_all_dinov3_and_uses_single_transform_pairs() -
     assert config["loss"]["feature_consistency"] > 0.0
 
 
-def test_teacher_configs_preserve_effective_batch_across_four_gpus() -> None:
+def test_teacher_configs_preserve_effective_batch_on_one_gpu() -> None:
     stage1 = _load("teacher_dinov3_stage1_clean_frozen.yaml")
     stage2 = _load("teacher_dinov3_stage2_paired_unfrozen.yaml")
 
@@ -45,7 +45,7 @@ def test_teacher_configs_preserve_effective_batch_across_four_gpus() -> None:
         assert config["paths"]["train_manifest"] == "splits/production_eligible/train.parquet"
         assert config["paths"]["val_manifest"] == "splits/production_eligible/validation.parquet"
         assert config["paths"]["require_materialized"] is True
-        assert config["training"]["required_world_size"] == 4
+        assert config["training"]["required_world_size"] == 1
         assert config["training"]["sampler"] == "coverage"
 
     assert stage1["training"]["max_updates"] is None
@@ -57,16 +57,20 @@ def test_teacher_configs_preserve_effective_batch_across_four_gpus() -> None:
     assert stage2["loss"]["ema_consistency"] > 0.0
 
     assert (
-        stage1["training"]["physical_batch_size"] * stage1["training"]["gradient_accumulation"] * 4
+        stage1["training"]["physical_batch_size"]
+        * stage1["training"]["gradient_accumulation"]
+        * stage1["training"]["required_world_size"]
         == 48
     )
     assert (
-        stage2["training"]["physical_batch_size"] * stage2["training"]["gradient_accumulation"] * 4
+        stage2["training"]["physical_batch_size"]
+        * stage2["training"]["gradient_accumulation"]
+        * stage2["training"]["required_world_size"]
         == 48
     )
 
 
-def test_checkpoint2_uses_full_pool_and_decayed_adaptation_budget() -> None:
+def test_checkpoint2_uses_single_gpu_and_decayed_adaptation_budget() -> None:
     config = _load("teacher_dinov3_checkpoint2_full_data.yaml")
 
     assert config["paths"]["train_manifest"] == "splits/combined_hf_dataset/train.parquet"

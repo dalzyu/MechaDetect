@@ -52,23 +52,24 @@ from aigc_detector.train import (
 )
 from aigc_detector.transforms import TransformSpec, apply_transform
 
-# Canonical student presets: 2-GPU topology, two complete passes, effective batch 48
+# Canonical single-GPU presets. Each track keeps the effective record batch at 48;
+# launch_students_distill.py scales accumulation when an explicit multi-GPU pool is used.
 STUDENT_PRESETS: dict[str, dict[str, Any]] = {
     "small": {
         "encoder_id": "facebook/dinov3-vits16-pretrain-lvd1689m",
         "encoder_dim": 384,
         "epochs": 2,
-        "required_world_size": 2,
+        "required_world_size": 1,
         "physical_batch_size": 12,
-        "gradient_accumulation": 2,
+        "gradient_accumulation": 4,
     },
     "base": {
         "encoder_id": "facebook/dinov3-vitb16-pretrain-lvd1689m",
         "encoder_dim": 768,
         "epochs": 2,
-        "required_world_size": 2,
-        "physical_batch_size": 12,
-        "gradient_accumulation": 2,
+        "required_world_size": 1,
+        "physical_batch_size": 3,
+        "gradient_accumulation": 16,
     },
 }
 
@@ -268,7 +269,7 @@ def verify_teacher_promotion(
 
 
 def student_config(teacher_config: dict, variant: str) -> dict:
-    """Build a complete student configuration dictionary matching the canonical 2-GPU contract."""
+    """Build the canonical single-GPU student configuration."""
     if variant not in STUDENT_PRESETS:
         raise ValueError(f"Unknown variant {variant!r}; choices: {list(STUDENT_PRESETS.keys())}")
     values = STUDENT_PRESETS[variant]
@@ -291,10 +292,10 @@ def student_config(teacher_config: dict, variant: str) -> dict:
     config["training"].update(
         {
             "stage": f"student_dinov3_{variant}",
-            "epochs": 2,
-            "physical_batch_size": 12,
-            "gradient_accumulation": 2,
-            "required_world_size": 2,
+            "epochs": values["epochs"],
+            "physical_batch_size": values["physical_batch_size"],
+            "gradient_accumulation": values["gradient_accumulation"],
+            "required_world_size": values["required_world_size"],
             "optimizer": "adamw",
             "encoder_lr": 2.0e-5,
             "heads_lr": 2.0e-4,
@@ -547,8 +548,9 @@ def train_student(
     seed_override: int | None = None,
     resume_checkpoint: Path | None = None,
     dry_run: bool = False,
+    skip_teacher_gate: bool = False,
 ) -> Path:
-    """Execute two deterministic complete passes of student distillation from the promoted teacher."""
+    """Execute student distillation from a final teacher checkpoint."""
     verify_checkpoint_eligibility(teacher_checkpoint)
     if resume_checkpoint is not None:
         verify_checkpoint_eligibility(resume_checkpoint)
@@ -594,10 +596,10 @@ def train_student(
             raise ValueError("num_workers_override must be non-negative")
         config["training"]["num_workers"] = num_workers_override
 
-    # Verify effective batch = 48
+    # Preserve the canonical effective record batch across launch topologies.
     phys = int(config["training"].get("physical_batch_size", 12))
-    accum = int(config["training"].get("gradient_accumulation", 2))
-    ws = int(config["training"].get("required_world_size", 2))
+    accum = int(config["training"].get("gradient_accumulation", 4))
+    ws = int(config["training"].get("required_world_size", 1))
 
     manifest_p = Path(manifest_path)
     if not manifest_p.is_file():
@@ -615,11 +617,21 @@ def train_student(
         allow_missing=not require_mat,
     )
 
-    # Always strictly enforce teacher promotion report and hash verification
-    teacher_verification = verify_teacher_promotion(
-        teacher_checkpoint,
-        teacher_promotion_report,
-        manifest_path,
+    teacher_verification = (
+        {
+            "skipped": True,
+            "reason": "evaluation gates disabled by user",
+            "teacher_checkpoint_sha256": compute_file_sha256(teacher_checkpoint),
+            "teacher_clean_auroc": 0.0,
+            "teacher_worst_transformed_auroc": 0.0,
+            "manifest_digest": compute_manifest_digest(manifest_path),
+        }
+        if skip_teacher_gate
+        else verify_teacher_promotion(
+            teacher_checkpoint,
+            teacher_promotion_report,
+            manifest_path,
+        )
     )
 
     rank, world_size, local_rank = setup_distributed()
@@ -627,8 +639,8 @@ def train_student(
 
     if not dry_run and torch.cuda.is_available() and world_size != ws:
         raise RuntimeError(
-            f"Student distillation requires world_size={ws} on 2-GPU pool, got {world_size}. "
-            "Plain-Python pseudo-DDP launches are prohibited; launch via torch.distributed.run or torchrun."
+            f"Student distillation requires world_size={ws}, got {world_size}. "
+            "Use launch_students_distill.py or launch with matching torchrun processes."
         )
     if torch.cuda.is_available():
         torch.set_float32_matmul_precision("high")
@@ -933,6 +945,10 @@ def train_student(
         cleanup_distributed()
         return output_dir / "checkpoint-final.pt"
 
+    if skip_teacher_gate:
+        cleanup_distributed()
+        return output_dir / "checkpoint-final.pt"
+
     if is_primary:
         # External validation evaluation and promotion gate check across candidate checkpoints
         val_eval_manifest = val_manifest or config["paths"].get("val_manifest")
@@ -1099,7 +1115,7 @@ def main() -> None:
         "--student-config", type=Path, default=None, help="Path to specific student YAML config"
     )
     parser.add_argument(
-        "--world-size", type=int, default=None, help="DDP world size (e.g. 2 for 2-GPU pool)"
+        "--world-size", type=int, default=None, help="Expected DDP world size (default: 1)"
     )
     parser.add_argument(
         "--physical-batch-size", type=int, default=None, help="Physical batch size per GPU"
@@ -1116,10 +1132,15 @@ def main() -> None:
         "--port",
         type=int,
         default=None,
-        help="Distributed rendezvous port (default: 29501 for small, 29502 for base)",
+        help="Distributed rendezvous port",
     )
     parser.add_argument(
-        "--devices", type=str, default=None, help="CUDA devices (e.g. '0,1' or '2,3')"
+        "--devices", type=str, default=None, help="CUDA devices (default: current device/GPU 0)"
+    )
+    parser.add_argument(
+        "--skip-teacher-gate",
+        action="store_true",
+        help="Use the supplied final teacher checkpoint without evaluation/promotion verification.",
     )
     parser.add_argument(
         "--resume", type=Path, default=None, help="Resume student training from coverage checkpoint"
@@ -1152,6 +1173,7 @@ def main() -> None:
         seed_override=args.seed,
         resume_checkpoint=args.resume,
         dry_run=args.dry_run,
+        skip_teacher_gate=args.skip_teacher_gate,
     )
     if is_main_process():
         print(f"Student distillation process complete: {checkpoint}")

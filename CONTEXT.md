@@ -43,3 +43,16 @@ Gemma 4 vision tower. Train the production teacher in two stages:
    pairs. Use one post-processing transformation per pair for the primary run.
 
 See `docs/teacher_training_plan.md` for the authoritative procedure.
+
+## Training topology
+
+The maintained pipeline starts on one CUDA GPU and preserves an effective
+record batch of 48 with gradient accumulation. Multi-GPU DDP is an explicit
+override through `GPU_DEVICES`; student and ATT tracks remain sequential unless
+the caller supplies disjoint device pools and requests parallel execution.
+
+## Evidence status
+
+Completed training, ONNX parity, quantization-graph checks, and browser runtime
+checks do not establish accuracy on the TechJam evaluation set. MechaDetect has
+not yet been ranked against external state-of-the-art detectors on that set.

@@ -30,8 +30,8 @@ training:
   epochs: 1
   max_updates: null
   physical_batch_size: 2
-  gradient_accumulation: 6
-  required_world_size: 4
+  gradient_accumulation: 24
+  required_world_size: 1
   num_workers: 4
   optimizer: adamw
   precision: bf16

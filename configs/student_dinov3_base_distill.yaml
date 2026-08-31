@@ -27,9 +27,9 @@ model:
 training:
   stage: student_dinov3_base
   epochs: 2
-  physical_batch_size: 12
-  gradient_accumulation: 2
-  required_world_size: 2
+  physical_batch_size: 3
+  gradient_accumulation: 16
+  required_world_size: 1
   num_workers: 4
   optimizer: adamw
   precision: bf16
@@ -40,7 +40,7 @@ training:
   gradient_clip_norm: 1.0
   warmup_fraction: 0.05
   master_port: 29502
-  cuda_visible_devices: "2,3"
+  cuda_visible_devices: "0"
   deterministic_coverage_sampler: true
   checkpoint_coverage_milestones: [0.25, 0.50, 0.75, 1.00]
 loss:

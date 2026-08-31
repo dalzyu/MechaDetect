@@ -262,60 +262,46 @@ def test_smoke_throughput_state(tmp_path: Path) -> None:
     assert mgr2.get_smoke_throughput("teacher-stage1") == 1.825
 
 
-def test_cluster_script_files_exist() -> None:
-    """Verify all cluster and orchestration scripts exist and have executable permissions."""
+def test_training_script_files_exist() -> None:
     expected_scripts = [
         "cluster_setup.sh",
-        "cluster_train_stage2.sh",
         "cluster_train_checkpoint2.sh",
+        "scripts/launch_production.sh",
+        "scripts/launch_students_distill.py",
+        "scripts/launch_att_tracks.py",
         "orchestrate_4x4090.sh",
         "scripts/orchestrate_4x4090.py",
         "scripts/upload_promoted_artifacts.py",
-        "scripts/launch_student_tracks.sh",
         ".env.cluster",
     ]
     for rel_path in expected_scripts:
-        p = REPO_ROOT / rel_path
-        assert p.is_file(), f"Missing required file: {rel_path}"
-        assert p.stat().st_size > 0, f"File is empty: {rel_path}"
+        path = REPO_ROOT / rel_path
+        assert path.is_file(), f"Missing required file: {rel_path}"
+        assert path.stat().st_size > 0, f"File is empty: {rel_path}"
 
 
 def test_checkpoint2_demotion_contract() -> None:
-    """Verify cluster_train_checkpoint2.sh announces demotion and stops without --legacy-run."""
     script_path = REPO_ROOT / "cluster_train_checkpoint2.sh"
     content = script_path.read_text(encoding="utf-8")
 
-    assert "DEMOTED from the forward 4x4090 production pipeline" in content
-    assert "orchestrate_4x4090.sh" in content
+    assert "historical ablation" in content
+    assert "scripts/launch_production.sh" in content
     assert "--legacy-run" in content
-    assert "--nproc-per-node=4" in content
-    assert "--nproc-per-node=6" not in content
+    assert "uv run python -m aigc_detector.train" in content
+    assert "--nproc-per-node" not in content
 
 
-def test_cluster_train_stage2_strictly_requires_promoted_checkpoint() -> None:
-    """Verify cluster_train_stage2.sh requires verified checkpoint-promoted.pt and removes checkpoint-best fallback."""
-    script_path = REPO_ROOT / "cluster_train_stage2.sh"
-    content = script_path.read_text(encoding="utf-8")
+def test_production_launcher_defaults_to_one_gpu() -> None:
+    content = (REPO_ROOT / "scripts" / "launch_production.sh").read_text(encoding="utf-8")
 
-    assert "checkpoint-promoted.pt" in content
-    assert "promotion_report.json" in content
-    assert "checkpoint-best.pt" not in content
-    assert "teacher_stage2_paired_unfrozen" in content
-
-
-def test_launch_student_tracks_canonical_contract() -> None:
-    """Verify launch_student_tracks.sh defaults to canonical stage 2 promoted paths and has no unsupported flags."""
-    script_path = REPO_ROOT / "scripts" / "launch_student_tracks.sh"
-    content = script_path.read_text(encoding="utf-8")
-
-    assert "teacher_stage2_paired_unfrozen/checkpoint-promoted.pt" in content
-    assert "teacher_stage2_paired_unfrozen/promotion_report.json" in content
-    assert "outputs/teacher_stage2/checkpoint-promoted.pt" not in content
-    assert "--strict-teacher-gate" not in content
+    assert 'GPU_DEVICES="${GPU_DEVICES:-0}"' in content
+    assert 'EFFECTIVE_BATCH_SIZE="${EFFECTIVE_BATCH_SIZE:-48}"' in content
+    assert "scripts/launch_students_distill.py" in content
+    assert "scripts/launch_att_tracks.py" in content
+    assert "--nproc-per-node=$GPU_COUNT" in content
 
 
 def test_env_cluster_keys() -> None:
-    """Verify .env.cluster defines all required 4x4090 variables including VAST_HOURLY_RATE."""
     content = (REPO_ROOT / ".env.cluster").read_text(encoding="utf-8")
     required_keys = [
         "TECHJAM_RUNTIME_ROOT",
@@ -323,12 +309,12 @@ def test_env_cluster_keys() -> None:
         "TECHJAM_OUTPUT_ROOT",
         "TECHJAM_DATA_REPO=zye2/tj-data",
         "TECHJAM_MODEL_REPO=zye2/mechadetect-models",
-        "TECHJAM_GIT_BRANCH=training/production-4x4090",
+        "TECHJAM_GIT_BRANCH=main",
         "VAST_MIN_BALANCE_RESERVE=5.00",
         "VAST_HOURLY_RATE=",
-        "TEACHER_WORLD_SIZE=4",
-        "STUDENT_SMALL_GPUS=0,1",
-        "STUDENT_BASE_GPUS=2,3",
+        "GPU_DEVICES=0",
+        "EFFECTIVE_BATCH_SIZE=48",
+        "NUM_WORKERS=4",
         "TECHJAM_CALIBRATION_SIZE=4096",
     ]
     for key in required_keys:

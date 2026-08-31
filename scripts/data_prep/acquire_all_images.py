@@ -40,6 +40,7 @@ import logging
 import os
 import re
 import sys
+import time
 import uuid
 import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -68,16 +69,27 @@ if HF_HOME:
     os.environ.setdefault("HF_HOME", HF_HOME)
 
 # Check for Hugging Face tokens in environment or local hub cache
-try:
-    from huggingface_hub import get_token
+def get_explicit_hf_token() -> str | None:
+    """Resolve non-empty Hugging Face token from environment or local hub cache."""
+    for key in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"):
+        tok = os.environ.get(key, "").strip()
+        if tok:
+            return tok
+    try:
+        from huggingface_hub import get_token
 
-    _token = get_token()
-    if _token and "HF_TOKEN" not in os.environ:
-        os.environ["HF_TOKEN"] = _token
-    if _token and "HUGGING_FACE_HUB_TOKEN" not in os.environ:
-        os.environ["HUGGING_FACE_HUB_TOKEN"] = _token
-except Exception:
-    pass
+        hub_tok = (get_token() or "").strip()
+        if hub_tok:
+            return hub_tok
+    except Exception:
+        pass
+    return None
+
+
+_EXPLICIT_HF_TOKEN: str | None = get_explicit_hf_token()
+if _EXPLICIT_HF_TOKEN:
+    os.environ["HF_TOKEN"] = _EXPLICIT_HF_TOKEN
+    os.environ["HUGGING_FACE_HUB_TOKEN"] = _EXPLICIT_HF_TOKEN
 
 MAX_ACQUISITION_WORKERS = 32
 DEFAULT_ACQUISITION_WORKERS = min(24, MAX_ACQUISITION_WORKERS)
@@ -151,6 +163,9 @@ IMAGE_FIELD_CANDIDATES: list[str] = [
     "image_bytes",
     "bytes",
     "file",
+    "jpg",
+    "jpeg",
+    "png",
 ]
 LOCKED_HF_REVISIONS: dict[str, str] = {
     "links-ads/artic-dataset": "ce7f84910595ff72891473719f739a98ef5b0905",
@@ -471,6 +486,49 @@ SOURCE_REGISTRY: dict[str, SourceConfig] = {
         default_cap=92,
         notes="Authoritative 92-image GPT Image 2 screenshot cohort",
     ),
+    # --- Reference-Only / External Benchmark / Local Cohorts ---
+    "wildfake": SourceConfig(
+        name="wildfake",
+        source_type="reference_only",
+        default_cap=15_000,
+        notes="ModelScope benchmark cohort (hy2628982280/WildFake); reference-only on local disk",
+    ),
+    "gmorinan_memes": SourceConfig(
+        name="gmorinan_memes",
+        source_type="reference_only",
+        default_cap=1_500,
+        notes="Local/Kaggle pre-2019 authentic meme cohort",
+    ),
+    "imgflip_memes": SourceConfig(
+        name="imgflip_memes",
+        source_type="reference_only",
+        default_cap=1_500,
+        notes="Local/ImgFlip authentic meme template cohort",
+    ),
+    "multioff_memes": SourceConfig(
+        name="multioff_memes",
+        source_type="reference_only",
+        default_cap=300,
+        notes="Local/SIZZLE authentic multimodal meme cohort",
+    ),
+    "dank_learning_templates": SourceConfig(
+        name="dank_learning_templates",
+        source_type="reference_only",
+        default_cap=500,
+        notes="Local dank learning meme template cohort",
+    ),
+    "danbooru_pre2020_human": SourceConfig(
+        name="danbooru_pre2020_human",
+        source_type="reference_only",
+        default_cap=500,
+        notes="Pre-2020 human illustration cohort",
+    ),
+    "pepper_and_carrot": SourceConfig(
+        name="pepper_and_carrot",
+        source_type="reference_only",
+        default_cap=500,
+        notes="Pepper&Carrot human comic cohort",
+    ),
 }
 
 # ==============================================================================
@@ -502,8 +560,12 @@ def atomic_save_image(
     try:
         fmt = image_format.upper()
         if fmt in ("JPEG", "JPG"):
-            image.convert("RGB").save(temp_path, format="JPEG", quality=quality)
+            if image.mode != "RGB":
+                image = image.convert("RGB")
+            image.save(temp_path, format="JPEG", quality=quality)
         else:
+            if image.mode == "CMYK":
+                image = image.convert("RGB")
             image.save(temp_path, format=fmt)
         os.replace(temp_path, dest_path)
     finally:
@@ -729,9 +791,41 @@ def load_declared_manifests(
 # ==============================================================================
 
 
-def _extract_image_from_item(item: dict[str, Any], config: SourceConfig) -> Any | None:
+def _fetch_image_from_url(
+    url: str,
+    token: str | None = None,
+    timeout: int = 25,
+) -> Any | None:
+    """Fetch an image from an HTTP/HTTPS URL with explicit authentication when on Hugging Face."""
+    import urllib.request
+    from PIL import Image
+
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MechaDetect/1.0"}
+    effective_tok = token or _EXPLICIT_HF_TOKEN
+    if effective_tok and ("huggingface.co" in url or "hf.co" in url):
+        headers["Authorization"] = f"Bearer {effective_tok}"
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = resp.read()
+        img = Image.open(io.BytesIO(data))
+        if img.mode == "CMYK":
+            img = img.convert("RGB")
+        return img
+    except Exception as exc:
+        logger.debug("Failed to fetch image from %s: %s", url, exc)
+        return None
+
+
+def _extract_image_from_item(
+    item: dict[str, Any],
+    config: SourceConfig,
+    token: str | None = None,
+) -> Any | None:
     """Extract a PIL Image from a dataset item using exact mapped fields."""
     from PIL import Image
+
+    effective_token = token or _EXPLICIT_HF_TOKEN
 
     # 1. Path field for metadata-only datasets (e.g. GPT Image 2 prompts datasets)
     if config.path_field:
@@ -745,26 +839,21 @@ def _extract_image_from_item(item: dict[str, Any], config: SourceConfig) -> Any 
                     repo_type="dataset",
                     filename=source_path,
                     revision=config.get_locked_revision(),
-                    token=os.environ.get("HF_TOKEN"),
+                    token=effective_token,
                 )
-                return Image.open(local_path)
+                img = Image.open(local_path)
+                if img.mode == "CMYK":
+                    img = img.convert("RGB")
+                return img
             except Exception:
                 pass
 
     # 2. Direct URL field
     url = item.get("url")
     if url and isinstance(url, str) and url.startswith("http"):
-        import urllib.request
-
-        try:
-            req = urllib.request.Request(
-                url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-            )
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = resp.read()
-            return Image.open(io.BytesIO(data))
-        except Exception:
-            return None
+        img = _fetch_image_from_url(url, token=effective_token)
+        if img is not None:
+            return img
 
     # 3. Paired field (for tampered / edited images)
     fields_to_try: list[str] = []
@@ -777,24 +866,300 @@ def _extract_image_from_item(item: dict[str, Any], config: SourceConfig) -> Any 
         if raw is None:
             continue
         if isinstance(raw, Image.Image):
+            if raw.mode == "CMYK":
+                return raw.convert("RGB")
             return raw
         if isinstance(raw, bytes):
             try:
-                return Image.open(io.BytesIO(raw))
+                img = Image.open(io.BytesIO(raw))
+                if img.mode == "CMYK":
+                    img = img.convert("RGB")
+                return img
             except Exception:
                 continue
-        if isinstance(raw, dict) and "bytes" in raw and raw["bytes"]:
-            try:
-                return Image.open(io.BytesIO(raw["bytes"]))
-            except Exception:
-                continue
-        if isinstance(raw, dict) and "path" in raw and raw["path"]:
-            try:
-                return Image.open(raw["path"])
-            except Exception:
-                continue
+        if isinstance(raw, dict):
+            # Datasets-server cached-assets src URL
+            if "src" in raw and raw["src"] and isinstance(raw["src"], str) and raw["src"].startswith("http"):
+                img = _fetch_image_from_url(raw["src"], token=effective_token)
+                if img is not None:
+                    return img
+            if "bytes" in raw and raw["bytes"]:
+                try:
+                    img = Image.open(io.BytesIO(raw["bytes"]))
+                    if img.mode == "CMYK":
+                        img = img.convert("RGB")
+                    return img
+                except Exception:
+                    continue
+            if "path" in raw and raw["path"]:
+                try:
+                    img = Image.open(raw["path"])
+                    if img.mode == "CMYK":
+                        img = img.convert("RGB")
+                    return img
+                except Exception:
+                    continue
 
     return None
+
+
+def acquire_hf_ideogram_archive(
+    records: list[DeclaredRecord],
+    config: SourceConfig,
+    data_root: Path,
+    dry_run: bool = False,
+    resume: bool = True,
+    verify_bytes: bool = False,
+    workers: int = 4,
+) -> tuple[int, int, int]:
+    """Acquire ideogram_27k images directly from HF ideogram-27k.zip via HTTP range requests."""
+    from PIL import Image
+
+    skipped = 0
+    needed_records: list[DeclaredRecord] = []
+
+    for rec in records:
+        dest_full = data_root / rec.image_path
+        if dest_full.is_file() and dest_full.stat().st_size > 0:
+            if verify_bytes:
+                try:
+                    with Image.open(dest_full) as im:
+                        im.verify()
+                    skipped += 1
+                    continue
+                except Exception:
+                    pass
+            elif resume:
+                skipped += 1
+                continue
+        needed_records.append(rec)
+
+    if not needed_records:
+        return 0, skipped, 0
+
+    if dry_run:
+        return 0, skipped + len(needed_records), 0
+
+    rev = config.get_locked_revision()
+    token = _EXPLICIT_HF_TOKEN
+    headers = {"User-Agent": "MechaDetect/1.0"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    url = f"https://huggingface.co/datasets/{config.repo}/resolve/{rev}/ideogram-27k.zip"
+
+    remote = None
+    zf = None
+    try:
+        import fsspec
+
+        remote = fsspec.open(url, "rb", headers=headers, block_size=1024 * 1024, cache_type="readahead").open()
+        zf = zipfile.ZipFile(remote)
+    except Exception as exc:
+        logger.warning(
+            "fsspec remote zip open failed for %s (%s); trying hf_hub_download fallback: %s",
+            config.repo,
+            rev,
+            exc,
+        )
+        try:
+            from huggingface_hub import hf_hub_download
+
+            local_zip = hf_hub_download(
+                repo_id=config.repo,
+                repo_type="dataset",
+                filename="ideogram-27k.zip",
+                revision=rev,
+                token=token,
+            )
+            zf = zipfile.ZipFile(local_zip, "r")
+            remote = None
+        except Exception as exc2:
+            logger.error("Could not access ideogram archive in %s: %s", config.repo, exc2)
+            return 0, skipped, len(needed_records)
+
+    try:
+        image_files = [f for f in zf.namelist() if f.startswith("images/") and not f.endswith("/")]
+        saved = 0
+        errors = 0
+
+        for rec in needed_records:
+            dest_full = data_root / rec.image_path
+            idx = rec.source_index
+            if idx is None or idx < 0 or idx >= len(image_files):
+                errors += 1
+                continue
+
+            entry_name = image_files[idx]
+            try:
+                data = zf.read(entry_name)
+                actual_sha = hashlib.sha256(data).hexdigest()
+                if actual_sha in KNOWN_PLACEHOLDER_SHA256:
+                    errors += 1
+                    continue
+
+                img = Image.open(io.BytesIO(data))
+                if img.mode == "CMYK":
+                    img = img.convert("RGB")
+
+                ext = dest_full.suffix.lower()
+                target_format = "PNG" if ext == ".png" else "JPEG"
+                atomic_save_image(img, dest_full, image_format=target_format)
+                saved += 1
+            except Exception as exc:
+                logger.warning("Failed to extract %s for %s: %s", entry_name, rec.image_path, exc)
+                errors += 1
+
+        return saved, skipped, errors
+    finally:
+        if zf is not None:
+            try:
+                zf.close()
+            except Exception:
+                pass
+        if remote is not None:
+            try:
+                remote.close()
+            except Exception:
+                pass
+
+
+def acquire_hf_rows_api(
+    dataset_name: str,
+    needed_by_index: dict[int, list[DeclaredRecord]],
+    config: SourceConfig,
+    data_root: Path,
+    verify_bytes: bool = False,
+    token: str | None = None,
+    workers: int = 4,
+) -> tuple[int, set[str]]:
+    """Acquire records from Hugging Face datasets-server Rows API in 100-row pages.
+
+    Returns: (saved_count, resolved_paths)
+    """
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+    from PIL import Image
+
+    effective_token = token or _EXPLICIT_HF_TOKEN
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MechaDetect/1.0"}
+    if effective_token:
+        headers["Authorization"] = f"Bearer {effective_token}"
+
+    saved = 0
+    resolved_paths: set[str] = set()
+
+    needed_indices = sorted(needed_by_index.keys())
+    if not needed_indices:
+        return 0, resolved_paths
+
+    pages = sorted(set(idx // 100 for idx in needed_indices))
+    logger.info(
+        "Fetching %d rows for %s across %d pages via datasets-server Rows API",
+        len(needed_indices),
+        config.repo,
+        len(pages),
+    )
+
+    encoded_repo = urllib.parse.quote(config.repo, safe="")
+
+    for page in pages:
+        offset = page * 100
+        length = 100
+        url = (
+            f"https://datasets-server.huggingface.co/rows"
+            f"?dataset={encoded_repo}&config=default&split={config.split}"
+            f"&offset={offset}&length={length}"
+        )
+        raw_json: dict[str, Any] | None = None
+        for attempt in range(6):
+            req = urllib.request.Request(url, headers=headers)
+            try:
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    raw_json = json.loads(resp.read().decode("utf-8"))
+                break
+            except urllib.error.HTTPError as http_err:
+                logger.warning(
+                    "datasets-server returned HTTP %d for %s (offset %d): %s",
+                    http_err.code,
+                    config.repo,
+                    offset,
+                    http_err.reason,
+                )
+                if http_err.code in (401, 403, 404):
+                    return saved, resolved_paths
+                if http_err.code == 429 and attempt < 5:
+                    retry_after = http_err.headers.get("Retry-After", "").strip()
+                    delay = int(retry_after) if retry_after.isdigit() else min(120, 5 * (2**attempt))
+                    time.sleep(delay)
+                    continue
+                break
+            except Exception as exc:
+                logger.warning(
+                    "datasets-server request failed for %s (offset %d): %s",
+                    config.repo,
+                    offset,
+                    exc,
+                )
+                if attempt < 2:
+                    time.sleep(5 * (attempt + 1))
+                    continue
+                break
+        if raw_json is None:
+            continue
+
+        rows_data = raw_json.get("rows", [])
+
+        def acquire_row(row_entry: dict[str, Any]) -> tuple[int, set[str]]:
+            row_idx = row_entry.get("row_idx")
+            if row_idx not in needed_by_index:
+                return 0, set()
+
+            target_recs = needed_by_index[row_idx]
+            target_paths = {record.image_path for record in target_recs}
+            item = row_entry.get("row", {})
+            img = _extract_image_from_item(item, config, token=effective_token)
+            if img is None:
+                return 0, set()
+
+            if img.mode == "CMYK":
+                img = img.convert("RGB")
+
+            try:
+                buf = io.BytesIO()
+                img.save(buf, format="JPEG")
+                if hashlib.sha256(buf.getvalue()).hexdigest() in KNOWN_PLACEHOLDER_SHA256:
+                    return 0, set()
+            except Exception:
+                pass
+
+            row_saved = 0
+            saved_paths: set[str] = set()
+            for target_rec in target_recs:
+                dest_full = data_root / target_rec.image_path
+                try:
+                    ext = dest_full.suffix.lower()
+                    target_format = "PNG" if ext == ".png" else "JPEG"
+                    atomic_save_image(img, dest_full, image_format=target_format)
+                    row_saved += 1
+                    saved_paths.add(target_rec.image_path)
+                except Exception as exc:
+                    logger.warning("Failed to save image %s: %s", dest_full, exc)
+            return row_saved, saved_paths
+
+        page_workers = min(validate_worker_count(workers), max(1, len(rows_data)))
+        with ThreadPoolExecutor(
+            max_workers=page_workers,
+            thread_name_prefix=f"rows-{dataset_name}",
+        ) as pool:
+            futures = [pool.submit(acquire_row, row_entry) for row_entry in rows_data]
+            for future in as_completed(futures):
+                row_saved, row_resolved = future.result()
+                saved += row_saved
+                resolved_paths.update(row_resolved)
+
+    return saved, resolved_paths
 
 
 def acquire_hf_source(
@@ -811,6 +1176,17 @@ def acquire_hf_source(
     Returns: (saved_count, skipped_count, error_count)
     """
     from PIL import Image
+
+    # Special case: bitmind/ideogram-27k zip archive fallback
+    if config.repo == "bitmind/ideogram-27k" or dataset_name == "ideogram_27k":
+        return acquire_hf_ideogram_archive(
+            records,
+            config,
+            data_root,
+            dry_run=dry_run,
+            resume=resume,
+            verify_bytes=verify_bytes,
+        )
 
     needed_by_index: dict[int, list[DeclaredRecord]] = defaultdict(list)
     unresolvable_records: list[DeclaredRecord] = []
@@ -852,8 +1228,37 @@ def acquire_hf_source(
     rev = config.get_locked_revision()
     if not rev or rev == "main" or len(rev) != 40:
         raise ValueError(f"Expected 40-hex commit SHA for {config.repo}, got: {rev}")
+    rows_api_preferred = {
+        "links-ads/artic-dataset",
+        "Mitsua/art-museums-pd-440k",
+        "FlameF0X/nano-banana-pro-gen-zh-en",
+        "Tungtom2004/Google_Nano_Banana_Edited_Images",
+        "bitmind/open-images-v7",
+    }
+    if config.repo in rows_api_preferred:
+        rows_saved, rows_resolved = acquire_hf_rows_api(
+            dataset_name,
+            needed_by_index,
+            config,
+            data_root,
+            verify_bytes=verify_bytes,
+            token=_EXPLICIT_HF_TOKEN,
+            workers=24,
+        )
+        unresolved_errors = len(unresolvable_records) + sum(
+            1
+            for target_recs in needed_by_index.values()
+            for record in target_recs
+            if record.image_path not in rows_resolved
+        )
+        return rows_saved, skipped, unresolved_errors
+
+    saved = 0
+    errors = len(unresolvable_records)
+    resolved_paths: set[str] = set()
 
     # Try streaming from Hugging Face using locked commit SHA
+    ds = None
     try:
         from datasets import load_dataset
 
@@ -862,94 +1267,126 @@ def acquire_hf_source(
             split=config.split,
             revision=rev,
             streaming=True,
-            token=os.environ.get("HF_TOKEN"),
+            token=_EXPLICIT_HF_TOKEN,
         )
-    except Exception:
+    except Exception as exc1:
         # Fallback without split if dataset is a single partition
         try:
             from datasets import load_dataset
 
-            ds = load_dataset(
+            ds_dict = load_dataset(
                 config.repo,
                 revision=rev,
                 streaming=True,
-                token=os.environ.get("HF_TOKEN"),
+                token=_EXPLICIT_HF_TOKEN,
             )
-            if hasattr(ds, "keys"):
-                first_split = list(ds.keys())[0]
-                ds = ds[first_split]
+            if hasattr(ds_dict, "keys"):
+                first_split = list(ds_dict.keys())[0]
+                ds = ds_dict[first_split]
         except Exception as exc2:
-            logger.error(
-                "Could not load Hugging Face dataset %s (rev %s): %s", config.repo, rev, exc2
+            logger.info(
+                "Streaming unavailable for %s (rev %s): %s; will use direct rows API fallback",
+                config.repo,
+                rev,
+                exc2,
             )
-            return 0, skipped, total_needed_count
+            ds = None
 
-    max_idx = max(needed_by_index.keys()) if needed_by_index else -1
-    saved = 0
-    errors = len(unresolvable_records)
-    resolved_paths: set[str] = set()
-
-    for i, item in enumerate(ds):
-        if max_idx >= 0 and i > max_idx:
-            break
-        if i not in needed_by_index:
-            continue
-
-        target_recs = needed_by_index[i]
-        img = _extract_image_from_item(item, config)
-        if img is None:
-            errors += len(target_recs)
-            for tr in target_recs:
-                resolved_paths.add(tr.image_path)
-            continue
-
-        # Convert image to bytes in memory once to check known placeholder SHA
-        buf_format = (
-            "PNG" if any(tr.image_path.lower().endswith(".png") for tr in target_recs) else "JPEG"
-        )
+    if ds is not None:
         try:
-            buf = io.BytesIO()
-            if img.mode not in ("RGB", "L") and buf_format == "JPEG":
-                img = img.convert("RGB")
-            img.save(buf, format=buf_format)
-            img_bytes = buf.getvalue()
-            actual_sha = hashlib.sha256(img_bytes).hexdigest()
-            if actual_sha in KNOWN_PLACEHOLDER_SHA256:
-                logger.warning(
-                    "Item %d in %s has known placeholder SHA %s; rejecting",
-                    i,
-                    config.repo,
-                    actual_sha,
+            max_idx = max(needed_by_index.keys()) if needed_by_index else -1
+            for i, item in enumerate(ds):
+                if max_idx >= 0 and i > max_idx:
+                    break
+                if i not in needed_by_index:
+                    continue
+
+                target_recs = needed_by_index[i]
+                img = _extract_image_from_item(item, config, token=_EXPLICIT_HF_TOKEN)
+                if img is None:
+                    errors += len(target_recs)
+                    for tr in target_recs:
+                        resolved_paths.add(tr.image_path)
+                    continue
+
+                if img.mode == "CMYK":
+                    img = img.convert("RGB")
+
+                # Convert image to bytes in memory once to check known placeholder SHA
+                buf_format = (
+                    "PNG" if any(tr.image_path.lower().endswith(".png") for tr in target_recs) else "JPEG"
                 )
-                errors += len(target_recs)
-                for tr in target_recs:
-                    resolved_paths.add(tr.image_path)
-                continue
-        except Exception as exc:
-            logger.warning("Failed to encode image at index %d in %s: %s", i, config.repo, exc)
-            errors += len(target_recs)
-            for tr in target_recs:
-                resolved_paths.add(tr.image_path)
-            continue
+                try:
+                    buf = io.BytesIO()
+                    if buf_format == "JPEG" and img.mode not in ("RGB", "L"):
+                        img = img.convert("RGB")
+                    elif buf_format == "PNG" and img.mode not in ("1", "L", "LA", "P", "RGB", "RGBA", "I"):
+                        img = img.convert("RGB")
+                    img.save(buf, format=buf_format)
+                    img_bytes = buf.getvalue()
+                    actual_sha = hashlib.sha256(img_bytes).hexdigest()
+                    if actual_sha in KNOWN_PLACEHOLDER_SHA256:
+                        logger.warning(
+                            "Item %d in %s has known placeholder SHA %s; rejecting",
+                            i,
+                            config.repo,
+                            actual_sha,
+                        )
+                        errors += len(target_recs)
+                        for tr in target_recs:
+                            resolved_paths.add(tr.image_path)
+                        continue
+                except Exception as exc:
+                    logger.warning("Failed to encode image at index %d in %s: %s", i, config.repo, exc)
+                    errors += len(target_recs)
+                    for tr in target_recs:
+                        resolved_paths.add(tr.image_path)
+                    continue
 
-        # Atomically materialize every distinct destination from the decoded item
-        for target_rec in target_recs:
-            dest_full = data_root / target_rec.image_path
-            try:
-                ext = dest_full.suffix.lower()
-                target_format = "PNG" if ext == ".png" else "JPEG"
-                if target_format == buf_format:
-                    atomic_write_bytes(dest_full, img_bytes)
-                else:
-                    atomic_save_image(img, dest_full, image_format=target_format)
-                saved += 1
-                resolved_paths.add(target_rec.image_path)
-            except Exception as exc:
-                logger.warning("Failed to save image %s: %s", dest_full, exc)
-                errors += 1
-                resolved_paths.add(target_rec.image_path)
+                # Atomically materialize every distinct destination from the decoded item
+                for target_rec in target_recs:
+                    dest_full = data_root / target_rec.image_path
+                    try:
+                        ext = dest_full.suffix.lower()
+                        target_format = "PNG" if ext == ".png" else "JPEG"
+                        if target_format == buf_format:
+                            atomic_write_bytes(dest_full, img_bytes)
+                        else:
+                            atomic_save_image(img, dest_full, image_format=target_format)
+                        saved += 1
+                        resolved_paths.add(target_rec.image_path)
+                    except Exception as exc:
+                        logger.warning("Failed to save image %s: %s", dest_full, exc)
+                        errors += 1
+                        resolved_paths.add(target_rec.image_path)
+        except Exception as stream_err:
+            logger.warning(
+                "Streaming iteration failed for %s: %s; falling back to rows API",
+                config.repo,
+                stream_err,
+            )
 
-    # After dataset iteration, count every still-unresolved requested destination as error
+    # Check for any records that streaming did not resolve
+    unresolved_by_index = {
+        idx: [r for r in recs if r.image_path not in resolved_paths]
+        for idx, recs in needed_by_index.items()
+        if any(r.image_path not in resolved_paths for r in recs)
+    }
+
+    if unresolved_by_index:
+        rows_saved, rows_resolved = acquire_hf_rows_api(
+            dataset_name,
+            unresolved_by_index,
+            config,
+            data_root,
+            verify_bytes=verify_bytes,
+            token=_EXPLICIT_HF_TOKEN,
+            workers=8,
+        )
+        saved += rows_saved
+        resolved_paths.update(rows_resolved)
+
+    # After both methods, count every still-unresolved requested destination as error
     for target_recs in needed_by_index.values():
         for tr in target_recs:
             if tr.image_path not in resolved_paths:
@@ -1312,8 +1749,10 @@ def generate_source_revisions_report(
         repo = cfg.repo if cfg else ""
         if cfg and cfg.source_type == "huggingface":
             rev = resolve_hf_source_revision(repo, cfg.get_locked_revision())
+            is_local_only = False
         else:
             rev = "local_or_non_hf"
+            is_local_only = True
         stats = stats_by_dataset.get(ds_name, {})
         # Compute digest of expected sha256 values
         sha_list = sorted(rec.expected_sha256 or "" for rec in recs)
@@ -1321,6 +1760,7 @@ def generate_source_revisions_report(
 
         report_sources[ds_name] = {
             "source_type": cfg.source_type if cfg else "reference_only",
+            "is_local_only": is_local_only,
             "repo": repo,
             "revision": rev,
             "split": cfg.split if cfg else "train",
@@ -1334,9 +1774,15 @@ def generate_source_revisions_report(
     report = {
         "generated_at": datetime.now(UTC).isoformat(),
         "total_declared_rows": sum(len(r) for r in records_by_dataset.values()),
+        "summary": {
+            "total_acquired_rows": sum(s.get("acquired_rows", 0) for s in report_sources.values()),
+            "total_skipped_existing": sum(s.get("skipped_existing", 0) for s in report_sources.values()),
+            "total_errors": sum(s.get("errors", 0) for s in report_sources.values()),
+            "hf_source_count": sum(1 for s in report_sources.values() if not s["is_local_only"]),
+            "local_only_source_count": sum(1 for s in report_sources.values() if s["is_local_only"]),
+        },
         "sources": report_sources,
     }
-
     atomic_write_bytes(output_path, json.dumps(report, indent=2).encode("utf-8"))
     return report
 

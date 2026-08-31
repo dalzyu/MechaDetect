@@ -47,7 +47,7 @@ from aigc_detector.runtime import (
     setup_distributed,
 )
 from aigc_detector.sampling import DeterministicDistributedCoverageSampler
-from aigc_detector.train import build_model, build_optimizer, build_scheduler
+from aigc_detector.train import build_model, build_optimizer, build_scheduler, save_checkpoint
 from aigc_detector.transforms import TransformSpec, apply_transform
 
 logger = logging.getLogger("train_att")
@@ -259,96 +259,78 @@ def collate_att_batch(batch: list[dict[str, Any]]) -> dict[str, Any]:
 
 def compute_sample_loss(
     ai_positive_logit: torch.Tensor,
-    probabilities: torch.Tensor | None,
     ai_positive_target: torch.Tensor,
-    provenance_target: torch.Tensor,
 ) -> torch.Tensor:
-    """Compute per-sample supervised loss for hardness scoring."""
-    bce = F.binary_cross_entropy_with_logits(
+    """Compute per-sample binary AI-provenance loss."""
+    return F.binary_cross_entropy_with_logits(
         ai_positive_logit.view(-1), ai_positive_target.float().view(-1), reduction="none"
     )
-    if probabilities is not None and probabilities.dim() == 2 and probabilities.size(-1) >= 2:
-        # Cross entropy with log probabilities
-        log_probs = torch.log(probabilities.clamp(min=1e-7))
-        ce = F.nll_loss(log_probs, provenance_target, reduction="none")
-        return bce + ce
-    return bce
 
 
 def score_and_select_hardest(
     student: nn.Module,
     candidates_batch: list[list[tuple[Image.Image, TransformSpec]]],
-    provenance: torch.Tensor,
     ai_positive: torch.Tensor,
-    device: torch.device,
 ) -> tuple[list[Image.Image], list[TransformSpec], list[int]]:
-    """Score candidate transformations WITHOUT gradient storage, selecting the hardest.
+    """Score every candidate in one no-grad forward, then select per-row maxima."""
+    counts = [len(item_candidates) for item_candidates in candidates_batch]
+    if not counts or any(count == 0 for count in counts):
+        raise ValueError("Every ATT record must provide at least one transformation candidate")
 
-    Returns:
-      (hardest_images, hardest_specs, hardest_indices)
-    """
-    batch_size = len(candidates_batch)
+    flat_images = [
+        image for item_candidates in candidates_batch for image, _spec in item_candidates
+    ]
+    flat_specs = [spec for item_candidates in candidates_batch for _image, spec in item_candidates]
+    repeated_targets = torch.repeat_interleave(
+        ai_positive,
+        torch.tensor(counts, device=ai_positive.device),
+    )
+
+    with torch.no_grad():
+        output: ProvenanceOutput = student(flat_images)
+        flat_losses = compute_sample_loss(output.ai_positive_logit, repeated_targets)
 
     hardest_images: list[Image.Image] = []
     hardest_specs: list[TransformSpec] = []
     hardest_indices: list[int] = []
-
-    # Flatten candidate images to score them through the student model
-    # Entire scoring phase is strictly wrapped in torch.no_grad()
-    with torch.no_grad():
-        for i in range(batch_size):
-            item_candidates = candidates_batch[i]
-            cand_images = [img for img, _ in item_candidates]
-            cand_specs = [spec for _, spec in item_candidates]
-
-            # Forward student without gradients
-            output: ProvenanceOutput = student(cand_images)
-
-            # Calculate individual sample losses
-            item_provenance = provenance[i].repeat(len(cand_images)).to(device)
-            item_ai_positive = ai_positive[i].repeat(len(cand_images)).to(device)
-
-            cand_losses = compute_sample_loss(
-                output.ai_positive_logit,
-                output.probabilities,
-                item_ai_positive,
-                item_provenance,
-            )
-
-            # Hardest candidate is the one with highest loss
-            hardest_idx = int(torch.argmax(cand_losses).item())
-            hardest_images.append(cand_images[hardest_idx])
-            hardest_specs.append(cand_specs[hardest_idx])
-            hardest_indices.append(hardest_idx)
+    offset = 0
+    for count in counts:
+        item_losses = flat_losses[offset : offset + count]
+        hardest_idx = int(torch.argmax(item_losses).item())
+        hardest_images.append(flat_images[offset + hardest_idx])
+        hardest_specs.append(flat_specs[offset + hardest_idx])
+        hardest_indices.append(hardest_idx)
+        offset += count
 
     return hardest_images, hardest_specs, hardest_indices
 
 
 def student_att_config(base_config: dict, variant: str) -> dict:
-    """Build canonical ATT configuration for student variant (small or base)."""
+    """Build the canonical single-GPU ATT configuration."""
     config = copy.deepcopy(base_config)
     presets = {
         "small": {
             "encoder_id": "facebook/dinov3-vits16-pretrain-lvd1689m",
             "encoder_dim": 384,
-            "master_port": 29502,
-            "cuda_visible_devices": "0,1",
+            "master_port": 29503,
+            "cuda_visible_devices": "0",
             "output_root": "outputs/att_student_small",
+            "physical_batch_size": 4,
+            "gradient_accumulation": 12,
         },
         "base": {
             "encoder_id": "facebook/dinov3-vitb16-pretrain-lvd1689m",
             "encoder_dim": 768,
-            "master_port": 29503,
-            "cuda_visible_devices": "2,3",
+            "master_port": 29504,
+            "cuda_visible_devices": "0",
             "output_root": "outputs/att_student_base",
             "physical_batch_size": 2,
-            "gradient_accumulation": 12,
+            "gradient_accumulation": 24,
         },
     }
     spec = presets[variant]
-    batch_sz = spec.get("physical_batch_size", 4)
-    accum_sz = spec.get("gradient_accumulation", 6)
-    spec = presets[variant]
+    batch_sz = spec["physical_batch_size"]
+    accum_sz = spec["gradient_accumulation"]
     config.setdefault("model", {}).update(
         {
             "backbone_type": "dinov3",
@@ -369,7 +351,7 @@ def student_att_config(base_config: dict, variant: str) -> dict:
             "stage": f"att_student_{variant}",
             "physical_batch_size": batch_sz,
             "gradient_accumulation": accum_sz,
-            "required_world_size": 2,
+            "required_world_size": 1,
             "num_workers": 4,
             "optimizer": "adamw",
             "precision": "bf16",
@@ -412,6 +394,7 @@ def train_att(
     epochs: int = 1,
     batch_size: int | None = None,
     gradient_accumulation: int | None = None,
+    world_size_override: int | None = None,
     learning_rate: float | None = None,
     seed: int = 42,
     dry_run: bool = False,
@@ -440,6 +423,10 @@ def train_att(
         cfg["training"]["physical_batch_size"] = batch_size
     if gradient_accumulation is not None:
         cfg["training"]["gradient_accumulation"] = gradient_accumulation
+    if world_size_override is not None:
+        if world_size_override <= 0:
+            raise ValueError("world_size_override must be positive")
+        cfg["training"]["required_world_size"] = world_size_override
     if learning_rate is not None:
         cfg["training"]["heads_lr"] = learning_rate
         cfg["training"]["encoder_lr"] = learning_rate * 0.2
@@ -477,11 +464,11 @@ def train_att(
     # Setup distributed if launched via torchrun or multi-GPU
     rank, world_size, local_rank = setup_distributed()
     is_primary = is_main_process()
-    required_ws = int(cfg["training"].get("required_world_size", 2))
+    required_ws = int(cfg["training"].get("required_world_size", 1))
     if not dry_run and torch.cuda.is_available() and world_size != required_ws:
         raise RuntimeError(
-            f"ATT track requires world_size={required_ws} across disjoint 2-GPU pool, got {world_size}. "
-            "Plain-Python pseudo-DDP launches are prohibited; launch via torch.distributed.run or torchrun."
+            f"ATT requires world_size={required_ws}, got {world_size}. "
+            "Use launch_att_tracks.py or launch with matching torchrun processes."
         )
     device = torch.device(f"cuda:{local_rank}" if torch.cuda.is_available() else "cpu")
     # Build student model
@@ -536,7 +523,7 @@ def train_att(
     accum_steps = int(cfg["training"]["gradient_accumulation"])
     updates_per_epoch = math.ceil(len(loader) / accum_steps)
     total_steps = updates_per_epoch * epochs
-    scheduler = build_scheduler(optimizer, max_updates=max(1, total_steps), warmup_fraction=0.05)
+    scheduler = build_scheduler(optimizer, total_updates=max(1, total_steps), warmup_fraction=0.05)
 
     w_orig = float(cfg.get("loss", {}).get("provenance_original", 1.0))
     w_hard = float(cfg.get("loss", {}).get("provenance_transformed", 1.0))
@@ -563,32 +550,26 @@ def train_att(
         for step, batch in enumerate(loader):
             orig_images = batch["original_images"]
             cand_batch = batch["candidates"]
-            prov = batch["provenance"].to(device)
             ai_pos = batch["ai_positive"].to(device)
 
             # 1. Score candidates without gradients and select hardest
             hardest_images, hardest_specs, _ = score_and_select_hardest(
-                student, cand_batch, prov, ai_pos, device
+                student, cand_batch, ai_pos
             )
 
             for spec in hardest_specs:
                 hardest_family_counts[spec.family.name.lower()] += 1
 
-            # 2. Backpropagation on original + selected hardest
-            # Evaluate original (guaranteed supervised term)
-            orig_out: ProvenanceOutput = student_module(orig_images)
-            loss_orig = compute_sample_loss(
-                orig_out.ai_positive_logit, orig_out.probabilities, ai_pos, prov
-            ).mean()
-
-            # Evaluate selected hardest
-            hard_out: ProvenanceOutput = student_module(hardest_images)
-            loss_hard = compute_sample_loss(
-                hard_out.ai_positive_logit, hard_out.probabilities, ai_pos, prov
-            ).mean()
+            # One gradient-tracked forward amortizes preprocessing and DDP synchronization.
+            split = len(orig_images)
+            combined_out: ProvenanceOutput = student_module([*orig_images, *hardest_images])
+            orig_logits = combined_out.ai_positive_logit[:split]
+            hard_logits = combined_out.ai_positive_logit[split:]
+            loss_orig = compute_sample_loss(orig_logits, ai_pos).mean()
+            loss_hard = compute_sample_loss(hard_logits, ai_pos).mean()
 
             # Optional prediction consistency
-            loss_cons = F.mse_loss(orig_out.ai_positive_logit, hard_out.ai_positive_logit)
+            loss_cons = F.mse_loss(orig_logits, hard_logits)
 
             loss = (w_orig * loss_orig + w_hard * loss_hard + w_cons * loss_cons) / accum_steps
             loss.backward()
@@ -601,6 +582,12 @@ def train_att(
                 scheduler.step()
                 optimizer.zero_grad()
                 global_update += 1
+                if is_primary and global_update % 25 == 0:
+                    print(
+                        f"ATT {variant} update={global_update}/{total_steps} "
+                        f"loss={running_loss / (step + 1):.5f}",
+                        flush=True,
+                    )
 
             if dry_run and global_update >= 2:
                 if is_primary:
@@ -609,19 +596,22 @@ def train_att(
 
         if dry_run and global_update >= 2:
             break
-    # Save final ATT checkpoint
-    # Save final ATT checkpoint (unpromoted; only check_att_gate can promote)
+    # Save in the canonical checkpoint format consumed by evaluation and export.
     final_checkpoint_path = out_dir / "checkpoint-final.pt"
     if is_primary:
-        save_dict = {
-            "variant": variant,
-            "epoch": epochs,
-            "global_update": global_update,
-            "model_state": student.state_dict(),
-            "config": cfg,
-            "hardest_family_counts": hardest_family_counts,
-        }
-        torch.save(save_dict, final_checkpoint_path)
+        final_checkpoint_path = save_checkpoint(
+            student,
+            cfg,
+            out_dir,
+            global_update,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            manifest_path=train_manifest,
+            epoch=max(0, epochs - 1),
+            micro_step=len(loader),
+            filename="checkpoint-final.pt",
+            coverage_metadata=sampler.get_coverage_report(),
+        )
         print(f"Saved post-ATT checkpoint to: {final_checkpoint_path}")
 
         # Write training summary
@@ -671,6 +661,7 @@ def main() -> None:
     parser.add_argument(
         "--gradient-accumulation", type=int, default=None, help="Gradient accumulation steps"
     )
+    parser.add_argument("--world-size", type=int, default=None, help="Expected DDP world size")
     parser.add_argument("--lr", type=float, default=None, help="Learning rate override")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument(
@@ -688,6 +679,7 @@ def main() -> None:
         epochs=args.epochs,
         batch_size=args.batch_size,
         gradient_accumulation=args.gradient_accumulation,
+        world_size_override=args.world_size,
         learning_rate=args.lr,
         seed=args.seed,
         dry_run=args.dry_run,

@@ -89,7 +89,7 @@ def test_student_presets_and_loss_config_match_distillation_contract() -> None:
         assert config["training"]["encoder_lr"] == 2.0e-5
         assert config["training"]["layerwise_lr_decay"] == 0.85
         assert config["training"]["weight_decay"] == 0.01
-        assert config["training"]["required_world_size"] == 2
+        assert config["training"]["required_world_size"] == 1
         assert config["training"]["epochs"] == 2
         assert (
             config["training"]["physical_batch_size"]

@@ -384,8 +384,17 @@ def select_calibration_from_eligible_rows(
     src_counts = eligible_df.loc[has_src, "source_image_group"].value_counts()
     singleton_srcs = set(src_counts[src_counts == 1].index)
 
-    candidate_mask = eligible_df["duplicate_group"].isin(singleton_dups) & (
-        ~has_src | eligible_df["source_image_group"].isin(singleton_srcs)
+    # 3. Require singleton verified bytes as well. Existing manifest duplicate
+    # groups can be stale or inconsistent with the on-disk bytes; calibration
+    # must remain disjoint even in that case.
+    sha_values = eligible_df["sha256"].astype(str).str.strip()
+    sha_counts = sha_values.value_counts()
+    singleton_shas = set(sha_counts[sha_counts == 1].index)
+
+    candidate_mask = (
+        eligible_df["duplicate_group"].isin(singleton_dups)
+        & sha_values.isin(singleton_shas)
+        & (~has_src | eligible_df["source_image_group"].isin(singleton_srcs))
     )
     candidates = eligible_df[candidate_mask].copy()
 

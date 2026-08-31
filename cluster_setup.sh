@@ -1,22 +1,19 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# cluster_setup.sh — Run once on a fresh 4x RTX 4090 instance before training.
+# cluster_setup.sh — Prepare a CUDA training workstation.
 # ==============================================================================
 # Usage:
 #   bash cluster_setup.sh
 #
-# Assumes:
-#   - Repository cloned: git clone ... && cd "techjam 26"
-#   - Branch checked out: git checkout training/production-4x4090
-#   - uv is installed (curl -LsSf https://astral.sh/uv/install.sh | sh)
-#   - .env is configured (copied from .env.cluster with HF_TOKEN filled in)
+# Requires a cloned repository, uv, npm, a CUDA GPU with BF16 support, and an
+# .env file containing the gated-model Hugging Face token.
 # ==============================================================================
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_ROOT"
 
-echo "=== MechaDetect 4x RTX 4090 Cluster Setup ==="
+echo "=== MechaDetect Training Workstation Setup ==="
 echo "Working directory: $REPO_ROOT"
 
 # 1. Environment Loading
@@ -39,7 +36,7 @@ set +a
 
 # 2. Runtime Directories
 echo "=== Creating runtime directories ==="
-export TECHJAM_RUNTIME_ROOT="${TECHJAM_RUNTIME_ROOT:-/workspace/techjam26-runtime}"
+export TECHJAM_RUNTIME_ROOT="${TECHJAM_RUNTIME_ROOT:-$REPO_ROOT/.runtime}"
 export TECHJAM_DATA_ROOT="${TECHJAM_DATA_ROOT:-$TECHJAM_RUNTIME_ROOT/data}"
 export TECHJAM_HF_HOME="${TECHJAM_HF_HOME:-$TECHJAM_RUNTIME_ROOT/huggingface}"
 export TECHJAM_OUTPUT_ROOT="${TECHJAM_OUTPUT_ROOT:-$TECHJAM_RUNTIME_ROOT/outputs}"
@@ -57,27 +54,21 @@ echo "=== Installing browser benchmark dependencies ==="
 npm ci
 
 # 4. Hardware & Environment Preflight
-echo "=== Verifying 4x RTX 4090 and BF16 ==="
+echo "=== Verifying CUDA and BF16 ==="
 uv run python -c "
 import sys
 import torch
 n = torch.cuda.device_count()
 print(f'CUDA GPUs visible: {n}')
-if n != 4:
-    print(f'ERROR: Expected exactly 4 GPUs, found {n}.', file=sys.stderr)
+if n < 1:
+    print('ERROR: At least one CUDA GPU is required.', file=sys.stderr)
     sys.exit(1)
-
 for i in range(n):
-    name = torch.cuda.get_device_name(i)
-    print(f'  cuda:{i} — {name}')
-    if '4090' not in name:
-        print(f'ERROR: cuda:{i} is not an RTX 4090 ({name})', file=sys.stderr)
-        sys.exit(1)
-
+    print(f'  cuda:{i} — {torch.cuda.get_device_name(i)}')
 bf16 = torch.cuda.is_bf16_supported()
 print(f'BF16 supported: {bf16}')
 if not bf16:
-    print('ERROR: BF16 required for 4x4090 production pipeline.', file=sys.stderr)
+    print('ERROR: The default training precision requires BF16 support.', file=sys.stderr)
     sys.exit(1)
 "
 
@@ -91,14 +82,11 @@ if (( AVAIL_GB < 200 )); then
 fi
 
 # 6. Git Verification
-echo "=== Verifying Git branch and commit ==="
+echo "=== Recording Git revision ==="
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 CURRENT_SHA=$(git rev-parse HEAD)
 echo "Current branch: $CURRENT_BRANCH"
 echo "Current commit: $CURRENT_SHA"
-if [[ "$CURRENT_BRANCH" != "training/production-4x4090" ]]; then
-  echo "WARNING: Not on branch training/production-4x4090 (currently on $CURRENT_BRANCH)."
-fi
 
 # 7. Hugging Face Hub Access Verification
 echo "=== Verifying Hugging Face repository access ==="
@@ -169,6 +157,6 @@ uv run python scripts/data_prep/freeze_production_eligible.py \
   --strict \
   --verify-bytes
 
-echo "=== Setup complete! Instance is ready for 4x4090 execution. ==="
-echo "To launch the complete gated production pipeline, run:"
-echo "    bash orchestrate_4x4090.sh"
+echo "=== Setup complete. The workstation is ready. ==="
+echo "Start or resume the default single-GPU pipeline with:"
+echo "    bash scripts/launch_production.sh"

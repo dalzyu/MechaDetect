@@ -43,6 +43,7 @@ from aigc_detector.static_int8 import (
     get_nodes_to_exclude_from_quantization,
     inspect_and_verify_static_int8,
     load_manifest_records,
+    normalize_qdq_parameter_ranks_for_webgpu,
     verify_calibration_disjointness,
 )
 
@@ -203,6 +204,11 @@ def calibrate_and_quantize_int8(
         weight_type=QuantType.QInt8,
         op_types_to_quantize=["MatMul", "Gemm", "Conv"],
         nodes_to_exclude=nodes_to_exclude,
+    )
+    webgpu_rank_fixes = normalize_qdq_parameter_ranks_for_webgpu(output_model_path)
+    logger.info(
+        "Normalized %d QDQ parameter-rank mismatch(es) for ONNX Runtime WebGPU.",
+        len(webgpu_rank_fixes),
     )
 
     # 8. Inspect graph to prove static INT8 and reject INT4 / dynamic-only claims

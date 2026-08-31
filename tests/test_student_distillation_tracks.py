@@ -75,20 +75,20 @@ def test_student_base_exact_complete_detector_parameter_count() -> None:
     assert meta["image_size"] == 224
 
 
-def test_student_presets_canonical_contract() -> None:
-    """STUDENT_PRESETS reflects the canonical 2-GPU, 2-epoch schedule with effective batch 48."""
+def test_student_presets_default_to_one_gpu_with_effective_batch_48() -> None:
     for variant in ("small", "base"):
         assert variant in STUDENT_PRESETS
         spec = STUDENT_PRESETS[variant]
         assert spec["epochs"] == 2
-        assert spec["required_world_size"] == 2
-        assert spec["physical_batch_size"] == 12
+        assert spec["required_world_size"] == 1
         assert (
             spec["physical_batch_size"]
             * spec["gradient_accumulation"]
             * spec["required_world_size"]
             == 48
         )
+    assert STUDENT_PRESETS["small"]["physical_batch_size"] == 12
+    assert STUDENT_PRESETS["base"]["physical_batch_size"] == 3
 
 
 # ---------------------------------------------------------------------------
@@ -116,8 +116,8 @@ def test_verify_checkpoint_eligibility_rejects_incomplete_update250_artifact() -
 # ---------------------------------------------------------------------------
 
 
-def test_student_distillation_configs_preserve_effective_batch_48() -> None:
-    """Both student configs must enforce effective batch 48 across 2 GPUs (12 x 2 x 2 = 48)."""
+def test_student_distillation_configs_preserve_single_gpu_effective_batch_48() -> None:
+    """Both checked-in configs use one GPU and an effective batch of 48."""
     small = _load_yaml("student_dinov3_small_distill.yaml")
     base = _load_yaml("student_dinov3_base_distill.yaml")
 
@@ -125,7 +125,7 @@ def test_student_distillation_configs_preserve_effective_batch_48() -> None:
         assert cfg["paths"]["train_manifest"] == "splits/production_eligible/train.parquet"
         assert cfg["paths"]["val_manifest"] == "splits/production_eligible/validation.parquet"
         assert cfg["training"]["epochs"] == 2, "Must specify two deterministic complete passes"
-        assert cfg["training"]["required_world_size"] == 2, "Must run on a 2-GPU pool"
+        assert cfg["training"]["required_world_size"] == 1
         assert cfg["training"]["deterministic_coverage_sampler"] is True
         assert cfg["training"]["precision"] == "bf16"
         assert cfg["training"]["optimizer"] == "adamw"
@@ -146,26 +146,21 @@ def test_student_distillation_configs_preserve_effective_batch_48() -> None:
         assert cfg["loss"]["teacher_feature_consistency"] == 0.5  # Teacher feature alignment
 
 
-def test_student_distillation_hardware_and_port_isolation() -> None:
-    """Small and Base tracks must use disjoint GPU sets, ports, and output directories."""
+def test_student_distillation_defaults_share_gpu_but_isolate_ports_and_outputs() -> None:
     small = _load_yaml("student_dinov3_small_distill.yaml")
     base = _load_yaml("student_dinov3_base_distill.yaml")
 
-    assert small["training"]["cuda_visible_devices"] == "0,1"
-    assert base["training"]["cuda_visible_devices"] == "2,3"
+    assert small["training"]["cuda_visible_devices"] == "0"
+    assert base["training"]["cuda_visible_devices"] == "0"
     assert small["training"]["master_port"] == 29501
     assert base["training"]["master_port"] == 29502
     assert small["paths"]["output_root"] != base["paths"]["output_root"]
-
-    # Launcher specs match
-    assert TRACK_SPECS["small"]["devices"] == "0,1"
-    assert TRACK_SPECS["base"]["devices"] == "2,3"
     assert TRACK_SPECS["small"]["port"] == 29501
     assert TRACK_SPECS["base"]["port"] == 29502
 
 
-def test_student_config_builder_sets_canonical_attributes() -> None:
-    """student_config helper sets canonical 2-GPU, 2-epoch attributes with no max-update cap."""
+def test_student_config_builder_sets_single_gpu_attributes() -> None:
+    """student_config sets the maintained one-GPU, two-pass defaults."""
     teacher_cfg = {
         "model": {"backbone_type": "dinov3"},
         "training": {"max_updates": 1000},
@@ -175,7 +170,7 @@ def test_student_config_builder_sets_canonical_attributes() -> None:
     assert cfg_small["model"]["encoder_id"] == "facebook/dinov3-vits16-pretrain-lvd1689m"
     assert cfg_small["model"]["encoder_dim"] == 384
     assert cfg_small["training"]["stage"] == "student_dinov3_small"
-    assert cfg_small["training"]["required_world_size"] == 2
+    assert cfg_small["training"]["required_world_size"] == 1
     assert cfg_small["training"]["epochs"] == 2
     assert "max_updates" not in cfg_small["training"]
 
@@ -183,7 +178,7 @@ def test_student_config_builder_sets_canonical_attributes() -> None:
     assert cfg_base["model"]["encoder_id"] == "facebook/dinov3-vitb16-pretrain-lvd1689m"
     assert cfg_base["model"]["encoder_dim"] == 768
     assert cfg_base["training"]["stage"] == "student_dinov3_base"
-    assert cfg_base["training"]["required_world_size"] == 2
+    assert cfg_base["training"]["required_world_size"] == 1
     assert cfg_base["training"]["epochs"] == 2
     assert "max_updates" not in cfg_base["training"]
 
@@ -193,8 +188,8 @@ def test_student_config_builder_sets_canonical_attributes() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_build_track_command_uses_torch_distributed_run_in_production() -> None:
-    """build_track_command generates torch.distributed.run command with nproc_per_node=2."""
+def test_build_track_command_supports_explicit_two_gpu_ddp() -> None:
+    """An explicit world size of two builds a torch distributed command."""
     cmd = build_track_command(
         "small",
         teacher_config="configs/teacher.yaml",
@@ -224,8 +219,7 @@ def test_build_track_command_uses_torch_distributed_run_in_production() -> None:
     assert "--gradient-accumulation 2" in cmd_str
 
 
-def test_build_track_command_dry_run_uses_real_two_process_ddp() -> None:
-    """Dry-run preserves the production two-GPU topology while stopping after two updates."""
+def test_build_track_command_defaults_to_direct_single_process() -> None:
     cmd = build_track_command(
         "base",
         teacher_config="configs/teacher.yaml",
@@ -235,8 +229,10 @@ def test_build_track_command_dry_run_uses_real_two_process_ddp() -> None:
         dry_run=True,
     )
     cmd_str = " ".join(cmd)
-    assert "torch.distributed.run" in cmd_str
-    assert "--nproc_per_node=2" in cmd_str
+    assert "torch.distributed.run" not in cmd_str
+    assert "--world-size 1" in cmd_str
+    assert "--physical-batch-size 3" in cmd_str
+    assert "--gradient-accumulation 16" in cmd_str
     assert "--student base" in cmd_str
     assert "--dry-run" in cmd_str
 

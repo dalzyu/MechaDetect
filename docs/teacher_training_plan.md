@@ -1,8 +1,8 @@
-# DINOv3 Teacher Training Plan (4x RTX 4090)
+# DINOv3 Teacher Training Plan
 
-**Target Topology:** 4× NVIDIA GeForce RTX 4090 (24 GB VRAM each), NCCL DDP
-**Authoritative Plan Reference:** [`docs/production_4x4090_implementation_plan.md`](production_4x4090_implementation_plan.md)
-**Historical Run Reference:** [`docs/training_run_consolidated.md`](training_run_consolidated.md)
+**Default topology:** one CUDA GPU with BF16 support
+**Optional topology:** explicit DDP through `GPU_DEVICES`
+**Historical run reference:** [`docs/training_run_consolidated.md`](training_run_consolidated.md)
 
 ---
 
@@ -20,7 +20,7 @@
 Both Stage 1 and Stage 2 consume the identical immutable eligible training split:
 - **Manifest:** `splits/production_eligible/train.parquet`
 - **Validation Population:** `splits/production_eligible/validation.parquet`
-- **Data Integrity:** Prefetched prior to DDP; zero remote network fetching during training; fail-closed loaders; no missing-row substitution.
+- **Data Integrity:** Prefetched before training; no network fetches in the loader; fail-closed decoding; no missing-row substitution.
 - **Calibration Isolation:** 4,096 calibration rows (`splits/production_eligible/calibration.parquet`) are preserved exclusively for static INT8 PTQ and never seen by the teacher.
 
 ---
@@ -34,12 +34,12 @@ Stage 1 trains only task-specific layers (token adapter, attention heads, and cl
 - **Backbone:** Complete DINOv3 backbone frozen.
 - **Data View:** Downloaded-original view only (no synthetic post-processing perturbations).
 - **Schedule:** One complete deterministic pass across all eligible training rows.
-- **Batch Geometry:** Physical batch 6 × 4 GPUs × 2 gradient accumulation steps = **effective batch 48**.
+- **Default batch geometry:** physical batch 6 × 1 GPU × 8 accumulation = **effective batch 48**.
 
-### Stage 1 Execution
+### Stage 1 execution
+
 ```bash
-uv run torchrun --standalone --nproc-per-node=4 \
-  -m aigc_detector.train \
+uv run python -m aigc_detector.train \
   --config configs/teacher_dinov3_stage1_clean_frozen.yaml
 ```
 
@@ -68,14 +68,13 @@ Stage 2 warm-starts from the promoted Stage 1 checkpoint with a fresh optimizer 
 - **Data View:** Downloaded-original paired with exactly one allowed single post-processing transformation per sample (JPEG, blur, resize, noise, color, crop).
 - **Objectives:** Supervised classification on both views, prediction consistency loss, feature consistency loss, and confidence-gated EMA distillation. Mask losses disabled.
 - **Schedule:** One complete deterministic pass across all eligible training rows.
-- **Batch Geometry:**
-  - *Primary:* Physical batch 2 × 4 GPUs × 6 gradient accumulation steps = **effective batch 48**.
-  - *OOM Fallback:* Physical batch 1 × 4 GPUs × 12 gradient accumulation steps = **effective batch 48**.
+- **Default batch geometry:** physical batch 2 × 1 GPU × 24 accumulation = **effective batch 48**.
+- **One-GPU OOM fallback:** physical batch 1 × 1 GPU × 48 accumulation = **effective batch 48**.
 
-### Stage 2 Execution
+### Stage 2 execution
+
 ```bash
-uv run torchrun --standalone --nproc-per-node=4 \
-  -m aigc_detector.train \
+uv run python -m aigc_detector.train \
   --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
   --initial-checkpoint outputs/teacher_stage1_clean_frozen/checkpoint-promoted.pt
 ```
@@ -99,9 +98,18 @@ Checkpoint 2 has been demoted from the forward canonical pipeline. Downstream st
 
 ---
 
-## 6. Full Orchestration
+## 6. Maintained orchestration
 
-To run the complete teacher pipeline with automated hardware checks, smoke runs, promotion gates, and Hub uploads:
+The production launcher runs both teacher stages, their external evaluation and
+promotion steps, student distillation, and ATT. It defaults to GPU 0:
+
 ```bash
-bash orchestrate_4x4090.sh --stage teacher-stage1
+bash scripts/launch_production.sh
 ```
+
+Set `GPU_DEVICES=0,1` (or another explicit list) for DDP. Do not resume a
+checkpoint under a different world size or batch geometry.
+
+The completed August 2026 delivery skipped teacher evaluation and promotion at
+operator request. Those checkpoints are final training outputs, not
+promotion-gated or state-of-the-art-evaluated models.

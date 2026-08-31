@@ -280,7 +280,7 @@ def build_shared_report(tracks_results: dict[str, dict[str, Any]]) -> dict[str, 
     return {
         "report_type": "att_promotion_gate_shared",
         "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
-        "overall_passed": all_passed,
+        "passed": all_passed,
         "overall_status": "ALL_PROMOTED" if all_passed else "REJECTED",
         "tracks": tracks_results,
     }
@@ -480,7 +480,7 @@ def main() -> None:
                 json.dumps(metadata_sidecar, indent=2),
                 encoding="utf-8",
             )
-    sys.exit(0 if shared_report["overall_passed"] else 1)
+    sys.exit(0 if shared_report["passed"] else 1)
 
 
 if __name__ == "__main__":

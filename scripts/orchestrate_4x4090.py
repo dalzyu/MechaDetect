@@ -249,7 +249,7 @@ class PipelineStateManager:
 
             elif stage == "export-float":
                 exported_dir = output_root / "exported"
-                onnx_files = list(exported_dir.glob("student_*_float.onnx"))
+                onnx_files = list(exported_dir.glob("student_*_float32.onnx"))
                 if not onnx_files:
                     return False, f"No exported float ONNX model found in {exported_dir}"
 
@@ -833,6 +833,12 @@ class PipelineOrchestrator:
             "aigc_detector.train",
             "--config",
             cfg,
+            "--world-size",
+            "4",
+            "--physical-batch-size",
+            "6",
+            "--gradient-accumulation",
+            "2",
             "--max-steps",
             "2",
             "--stage",
@@ -874,6 +880,12 @@ class PipelineOrchestrator:
             "aigc_detector.train",
             "--config",
             cfg,
+            "--world-size",
+            "4",
+            "--physical-batch-size",
+            "6",
+            "--gradient-accumulation",
+            "2",
         ]
         rc = self.run_cmd(cmd, "T-STAGE1")
         if rc != 0:
@@ -976,6 +988,12 @@ class PipelineOrchestrator:
             "aigc_detector.train",
             "--config",
             cfg,
+            "--world-size",
+            "4",
+            "--physical-batch-size",
+            "2",
+            "--gradient-accumulation",
+            "6",
             "--initial-checkpoint",
             str(stage1_ckpt),
             "--max-steps",
@@ -1020,6 +1038,12 @@ class PipelineOrchestrator:
             "aigc_detector.train",
             "--config",
             cfg,
+            "--world-size",
+            "4",
+            "--physical-batch-size",
+            "2",
+            "--gradient-accumulation",
+            "6",
             "--initial-checkpoint",
             str(stage1_ckpt),
         ]
@@ -1146,6 +1170,8 @@ class PipelineOrchestrator:
                 f"configs/student_dinov3_{track}_distill.yaml",
                 f"--{track}-output-dir",
                 str(self.output_root / f"smoke_student_{track}"),
+                f"--{track}-devices",
+                "0,1" if track == "small" else "2,3",
                 "--dry-run",
             ]
             started = time.time()
@@ -1212,6 +1238,11 @@ class PipelineOrchestrator:
             str(self.output_root / "student_dinov3_small"),
             "--base-output-dir",
             str(self.output_root / "student_dinov3_base"),
+            "--small-devices",
+            "0,1",
+            "--base-devices",
+            "2,3",
+            "--parallel-tracks",
             "--epochs",
             "2",
         ]
@@ -1293,6 +1324,8 @@ class PipelineOrchestrator:
                 f"configs/att_student_{track}.yaml",
                 f"--{track}-output",
                 str(self.output_root / f"smoke_att_{track}"),
+                f"--{track}-devices",
+                "0,1" if track == "small" else "2,3",
                 "--dry-run",
             ]
             started = time.time()
@@ -1342,6 +1375,11 @@ class PipelineOrchestrator:
             str(self.output_root / "att_student_small"),
             "--base-output",
             str(self.output_root / "att_student_base"),
+            "--small-devices",
+            "0,1",
+            "--base-devices",
+            "2,3",
+            "--parallel-tracks",
             "--epochs",
             "1",
         ]

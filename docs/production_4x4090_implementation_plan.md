@@ -1,6 +1,14 @@
-# MechaDetect 4× RTX 4090 Production Implementation Plan
+# Historical Four-RTX-4090 Implementation Plan
 
 Created: 2026-08-30
+Status: retained as the design record for `orchestrate_4x4090.sh`
+
+The maintained training entry point is now `scripts/launch_production.sh`, which
+defaults to one GPU and scales accumulation for explicit DDP device lists. The
+August 2026 delivery completed training and artifact upload, but skipped model
+evaluation/promotion at operator request. Static INT8 artifacts remain
+experimental; Atom Super float32 is the browser default. Read
+`production_training_and_delivery_plan.md` for current commands and status.
 
 ## Objective
 

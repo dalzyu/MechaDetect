@@ -277,22 +277,21 @@ def test_save_and_restore_checkpoint_metadata_and_digest_mismatch(tmp_path: Path
         )
 
 
-def test_four_gpu_geometry_and_derived_updates() -> None:
+def test_single_gpu_geometry_and_derived_updates() -> None:
     stage1 = _load_yaml("teacher_dinov3_stage1_clean_frozen.yaml")
     stage2 = _load_yaml("teacher_dinov3_stage2_paired_unfrozen.yaml")
 
-    # Geometry: Stage 1 = 6 x 4 x 2 = 48; Stage 2 = 2 x 4 x 6 = 48
     s1_phys = stage1["training"]["physical_batch_size"]
     s1_world = stage1["training"]["required_world_size"]
     s1_accum = stage1["training"]["gradient_accumulation"]
     assert s1_phys * s1_world * s1_accum == 48
-    assert (s1_phys, s1_world, s1_accum) == (6, 4, 2)
+    assert (s1_phys, s1_world, s1_accum) == (6, 1, 8)
 
     s2_phys = stage2["training"]["physical_batch_size"]
     s2_world = stage2["training"]["required_world_size"]
     s2_accum = stage2["training"]["gradient_accumulation"]
     assert s2_phys * s2_world * s2_accum == 48
-    assert (s2_phys, s2_world, s2_accum) == (2, 4, 6)
+    assert (s2_phys, s2_world, s2_accum) == (2, 1, 24)
 
     # Derived updates: one pass over 73,751 rows
     dataset_rows = 73751

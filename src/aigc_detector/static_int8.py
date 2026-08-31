@@ -213,6 +213,51 @@ def verify_calibration_disjointness(
     )
 
 
+def normalize_qdq_parameter_ranks_for_webgpu(onnx_path: str | Path) -> list[str]:
+    """Align one-element QDQ zero-point ranks with their scales for ORT WebGPU.
+
+    ONNX Runtime's static quantizer can emit a one-element scale with shape
+    ``[1]`` and a scalar zero point for bias DequantizeLinear nodes. Both
+    tensors contain one value and are valid broadcast inputs on CPU, but the
+    WebGPU execution provider requires them to have the same rank.
+    """
+    model_path = Path(onnx_path)
+    if not model_path.is_file():
+        raise FileNotFoundError(f"ONNX model not found: {model_path}")
+
+    model = onnx.load(str(model_path))
+    initializers = {initializer.name: initializer for initializer in model.graph.initializer}
+    adjusted_nodes: list[str] = []
+
+    for node in model.graph.node:
+        if node.op_type not in {"QuantizeLinear", "DequantizeLinear"} or len(node.input) < 3:
+            continue
+        scale = initializers.get(node.input[1])
+        zero_point = initializers.get(node.input[2])
+        if scale is None or zero_point is None or len(scale.dims) == len(zero_point.dims):
+            continue
+
+        scale_elements = 1
+        for dim in scale.dims:
+            scale_elements *= int(dim)
+        zero_point_elements = 1
+        for dim in zero_point.dims:
+            zero_point_elements *= int(dim)
+        if scale_elements != zero_point_elements:
+            raise ValueError(
+                f"Cannot align QDQ parameter ranks for node '{node.name}': "
+                f"scale shape={tuple(scale.dims)}, zero-point shape={tuple(zero_point.dims)}"
+            )
+
+        del zero_point.dims[:]
+        zero_point.dims.extend(scale.dims)
+        adjusted_nodes.append(node.name or node.output[0])
+
+    if adjusted_nodes:
+        onnx.save(model, str(model_path))
+    return adjusted_nodes
+
+
 def inspect_and_verify_static_int8(
     onnx_path_or_model: str | Path | onnx.ModelProto,
 ) -> GraphVerificationResult:

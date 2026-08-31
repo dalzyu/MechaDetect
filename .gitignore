@@ -1,4 +1,5 @@
 .venv/
+/.venv
 .env
 __pycache__/
 *.py[cod]
@@ -14,6 +15,7 @@ splits/*.csv
 splits/**/*.csv
 checkpoints/
 artifacts/
+/artifacts
 
 # Training-run source archives and generated split payloads stay outside Git.
 100+ AI_Images from ewan.zip
@@ -36,6 +38,8 @@ TikTok TechJam 2026 Information Document.zip
 
 # Model and dataset caches must live outside the repository
 .cache/
+/.hf_cache/
+/node_modules/
 
 # Private evaluation samples and local reference extraction
 newer image model data(do not use for training)/
@@ -48,3 +52,5 @@ outputs/**/*.pt
 outputs/**/*.pth
 outputs/**/*.ckpt
 web/model/student_*.onnx
+/outputs/*
+/splits/final_teacher_dataset/

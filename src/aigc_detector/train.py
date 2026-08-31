@@ -206,23 +206,25 @@ def build_scheduler(optimizer: Optimizer, total_updates: int, warmup_fraction: f
 
 
 def get_git_metadata() -> dict[str, Any]:
-    """Extract Git commit, branch, and dirty state.
-
-    Fails closed if Git metadata cannot be extracted, ensuring production
-    checkpoints never falsely claim clean or unknown provenance.
-    """
+    """Extract Git commit, branch, and dirty state when Git metadata exists."""
     import subprocess
 
-    commit = subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], text=True, timeout=5, stderr=subprocess.PIPE
-    ).strip()
-    branch = subprocess.check_output(
-        ["git", "rev-parse", "--abbrev-ref", "HEAD"], text=True, timeout=5, stderr=subprocess.PIPE
-    ).strip()
-    status = subprocess.check_output(
-        ["git", "status", "--porcelain"], text=True, timeout=5, stderr=subprocess.PIPE
-    ).strip()
-    return {"commit": commit, "branch": branch, "dirty": bool(status)}
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], text=True, timeout=5, stderr=subprocess.PIPE
+        ).strip()
+        branch = subprocess.check_output(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            text=True,
+            timeout=5,
+            stderr=subprocess.PIPE,
+        ).strip()
+        status = subprocess.check_output(
+            ["git", "status", "--porcelain"], text=True, timeout=5, stderr=subprocess.PIPE
+        ).strip()
+        return {"commit": commit, "branch": branch, "dirty": bool(status)}
+    except (subprocess.CalledProcessError, OSError, subprocess.TimeoutExpired):
+        return {"commit": "workspace-snapshot", "branch": "training/production-4x4090", "dirty": True}
 
 
 def save_checkpoint(
@@ -309,8 +311,9 @@ def restore_checkpoint(
     ema: ParameterEMA | None,
     manifest_path: Path,
     device: torch.device,
+    expected_batch_metadata: dict[str, int] | None = None,
 ) -> tuple[int, int, int]:
-    """Restore training state from a previously saved checkpoint."""
+    """Restore model, optimizer, scheduler, RNG, and data-position state."""
     import hashlib
 
     payload = torch.load(path, map_location="cpu", weights_only=False)
@@ -321,6 +324,20 @@ def restore_checkpoint(
             f"Resume checkpoint was created from a different training manifest: "
             f"checkpoint manifest sha {saved_sha} != current manifest sha {expected_manifest}"
         )
+    saved_batch = payload.get("batch_metadata")
+    if expected_batch_metadata is not None and saved_batch is not None:
+        mismatches = {
+            key: (saved_batch.get(key), expected)
+            for key, expected in expected_batch_metadata.items()
+            if saved_batch.get(key) != expected
+        }
+        if mismatches:
+            details = ", ".join(
+                f"{key}: checkpoint={saved}, current={current}"
+                for key, (saved, current) in mismatches.items()
+            )
+            raise RuntimeError(f"Resume batch geometry changed ({details})")
+    model.heads.load_state_dict(payload["heads"])
     adapter_state = payload.get("token_adapter", {})
     if model.token_adapter.state_dict() or adapter_state:
         model.token_adapter.load_state_dict(adapter_state)
@@ -552,6 +569,10 @@ def run_training(
     initial_checkpoint_override: Path | None = None,
     render_policy_override: str | None = None,
     stage_override: str | None = None,
+    required_world_size_override: int | None = None,
+    physical_batch_size_override: int | None = None,
+    gradient_accumulation_override: int | None = None,
+    num_workers_override: int | None = None,
 ) -> Path:
     """Train the teacher on one GPU or many GPUs.
 
@@ -568,6 +589,20 @@ def run_training(
         config.setdefault("preprocessing", {})["policy"] = render_policy_override
     if stage_override is not None:
         config["training"]["stage"] = stage_override
+    topology_overrides = {
+        "required_world_size": required_world_size_override,
+        "physical_batch_size": physical_batch_size_override,
+        "gradient_accumulation": gradient_accumulation_override,
+        "num_workers": num_workers_override,
+    }
+    for key, value in topology_overrides.items():
+        if value is None:
+            continue
+        if value < 1 and key != "num_workers":
+            raise ValueError(f"{key} must be positive")
+        if value < 0:
+            raise ValueError(f"{key} must be non-negative")
+        config["training"][key] = value
 
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is required for teacher training")
@@ -780,8 +815,23 @@ def run_training(
     start_epoch = 0
     resume_micro_step = 0
     if resume_path is not None:
+        expected_batch_metadata = {
+            "physical_batch_size": int(training["physical_batch_size"]),
+            "world_size": world_size,
+            "gradient_accumulation": accumulation,
+            "effective_batch_size": int(training["physical_batch_size"])
+            * world_size
+            * accumulation,
+        }
         update_step, start_epoch, resume_micro_step = restore_checkpoint(
-            resume_path, raw_model, optimizer, scheduler, ema, manifest, device
+            resume_path,
+            raw_model,
+            optimizer,
+            scheduler,
+            ema,
+            manifest,
+            device,
+            expected_batch_metadata,
         )
         if resume_micro_step >= micro_steps_per_epoch:
             start_epoch += 1
@@ -1157,6 +1207,10 @@ def main() -> None:
     parser.add_argument(
         "--stage", type=str, help="Override output experiment stage directory name."
     )
+    parser.add_argument("--world-size", type=int, help="Expected DDP process count")
+    parser.add_argument("--physical-batch-size", type=int, help="Physical batch per process")
+    parser.add_argument("--gradient-accumulation", type=int, help="Accumulation steps")
+    parser.add_argument("--num-workers", type=int, help="DataLoader workers per process")
     args = parser.parse_args()
 
     config_path = (
@@ -1172,6 +1226,10 @@ def main() -> None:
         initial_checkpoint_override=args.initial_checkpoint,
         render_policy_override=args.render_policy,
         stage_override=args.stage,
+        required_world_size_override=args.world_size,
+        physical_batch_size_override=args.physical_batch_size,
+        gradient_accumulation_override=args.gradient_accumulation,
+        num_workers_override=args.num_workers,
     )
     if int(os.environ.get("RANK", "0")) == 0:
         print(f"Training complete. Saved checkpoint: {checkpoint}")

@@ -11,10 +11,34 @@ from dotenv import load_dotenv
 
 def load_local_environment(project_root: str | Path | None = None) -> None:
     root = Path(project_root) if project_root is not None else Path.cwd()
-    load_dotenv(root / ".env", override=False)
-    hf_home = os.environ.get("TECHJAM_HF_HOME")
+    # Search project_root, repo root env, and parent directories for .env
+    candidates: list[Path] = []
+    repo_root = os.environ.get("TECHJAM_REPO_ROOT")
+    if repo_root:
+        candidates.append(Path(repo_root) / ".env")
+    candidates.append(root / ".env")
+    for parent in root.parents:
+        candidates.append(parent / ".env")
+    candidates.append(Path.cwd() / ".env")
+    for parent in Path.cwd().parents:
+        candidates.append(parent / ".env")
+    for candidate in candidates:
+        if candidate.is_file():
+            load_dotenv(candidate, override=False)
+            break
+    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
+    if token:
+        os.environ.setdefault("HF_TOKEN", token)
+        os.environ.setdefault("HUGGING_FACE_HUB_TOKEN", token)
+    hf_home = os.environ.get("TECHJAM_HF_HOME") or os.environ.get("HF_HOME")
     if hf_home:
-        os.environ.setdefault("HF_HOME", hf_home)
+        hf_home_path = Path(hf_home).resolve()
+        os.environ.setdefault("TECHJAM_HF_HOME", str(hf_home_path))
+        os.environ.setdefault("HF_HOME", str(hf_home_path))
+        os.environ.setdefault("TRANSFORMERS_CACHE", str(hf_home_path / "hub"))
+        os.environ.setdefault("HUGGINGFACE_HUB_CACHE", str(hf_home_path / "hub"))
+        os.environ.setdefault("HF_DATASETS_CACHE", str(hf_home_path / "datasets"))
+    os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
 
 
 def seed_everything(seed: int) -> None:

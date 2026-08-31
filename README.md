@@ -1,18 +1,22 @@
-# TechJam 2026: Robust Image Provenance Detection
+# MechaDetect
 
-Research and training code for binary Track 5 AI-provenance detection:
-1. **`authentic`**: Human-created imagery; content-preserving transformations do not alter this class.
-2. **AI-positive**: Both AI-edited/tampered imagery and fully generated imagery.
+MechaDetect estimates whether an image is authentic or AI-positive. “AI-positive”
+covers both fully generated images and images whose semantic content was changed
+with a generative model. Ordinary JPEG recompression, resizing, blur, noise,
+colour adjustment, and cropping do not change the label.
 
-The internal dataset metadata preserves `tampered` and `fully_aigc` subtype
-labels for provenance reporting and optional edit-mask localization, but the
-image-level model objective treats both as the same positive class.
+The repository contains the data controls, training code, browser export path,
+and evaluation tools used for TechJam 2026 Track 5. A score is evidence for
+screening; it is not proof of authorship or ownership.
 
 ---
 
-## 1. Backbone Bake-Off Winner: DINOv3 ViT-H+/16
+## 1. Backbone decision
 
-Following a 4-hour controlled tournament across 4× NVIDIA RTX 4090s on 12,000 generator-balanced images, **DINOv3 ViT-H+/16** (`facebook/dinov3-vith16plus-pretrain-lvd1689m`) was selected as the winning vision backbone.
+A controlled four-GPU tournament on 12,000 generator-balanced images selected
+DINOv3 ViT-H+/16 (`facebook/dinov3-vith16plus-pretrain-lvd1689m`) as the teacher
+backbone. The table below records that historical comparison; it is not a claim
+that the delivered MechaDetect students beat the current state of the art.
 
 ### 3-Way Tournament Summary
 
@@ -160,54 +164,64 @@ The builder creates `train.parquet`, `validation.parquet`, `test.parquet`, `test
 `calibration.parquet`, `exclusions.parquet`, and `audit_report.json`. Production loaders
 fail closed and forbid missing-image fallback substitution.
 
-### 3.4 Training the DINOv3 Teacher on Four RTX 4090 GPUs
+### 3.4 Training
 
-Training uses 4-GPU PyTorch DistributedDataParallel (DDP).
+The maintained path starts on one CUDA GPU and keeps an effective record batch
+of 48 through gradient accumulation:
 
-Stage 1 freezes the 840.6M-parameter DINOv3 backbone and trains the task-specific layers
-on downloaded-original views. Its effective batch is `6 records/GPU × 2 accumulation × 4 GPUs = 48`:
+| Track | Physical batch | Accumulation | Effective batch |
+|---|---:|---:|---:|
+| Teacher Stage 1 | 6 | 8 | 48 |
+| Teacher Stage 2 | 2 | 24 | 48 |
+| Atom / ViT-S distillation | 12 | 4 | 48 |
+| Quark / ViT-B distillation | 3 | 16 | 48 |
+| Atom ATT | 4 | 12 | 48 |
+| Quark ATT | 2 | 24 | 48 |
+
+Prepare the workstation and run the resumable teacher → students → ATT flow:
 
 ```bash
-uv run torchrun --standalone --nproc-per-node=4 \
-  -m aigc_detector.train \
+bash cluster_setup.sh
+bash scripts/launch_production.sh
+```
+
+`GPU_DEVICES=0` is the default. An explicit list enables DDP while the launcher
+reduces accumulation to preserve the same effective batch:
+
+```bash
+GPU_DEVICES=0,1 bash scripts/launch_production.sh
+```
+
+Both student tracks and both ATT tracks run sequentially unless their launchers
+receive `--parallel-tracks` with disjoint device pools. This avoids loading two
+large models onto a one-GPU workstation.
+
+Run a teacher stage directly with plain Python:
+
+```bash
+uv run python -m aigc_detector.train \
   --config configs/teacher_dinov3_stage1_clean_frozen.yaml
 ```
 
-Stage 1 checkpoints are evaluated by `scripts/promote_teacher.py`. Stage 2 starts from
-the promoted Stage 1 weights, unfreezes the complete backbone, and trains original/transformed
-pairs. Its effective batch is `2 records/GPU × 6 accumulation × 4 GPUs = 48` (with `1 × 12 × 4` OOM fallback):
+Resume only with the same world size, physical batch, and accumulation used to
+create the checkpoint:
 
 ```bash
-uv run torchrun --standalone --nproc-per-node=4 \
-  -m aigc_detector.train \
-  --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
-  --initial-checkpoint outputs/teacher_stage1_clean_frozen/checkpoint-promoted.pt
-```
-
-Resume an interrupted stage with:
-
-```bash
-uv run torchrun --standalone --nproc-per-node=4 \
-  -m aigc_detector.train \
+uv run python -m aigc_detector.train \
   --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
   --resume /absolute/path/to/checkpoint-step-N.pt
 ```
 
-### 3.5 Automated 4x RTX 4090 Gated Orchestration
+The former `orchestrate_4x4090.sh` state machine remains available for the
+original four-RTX-4090 Vast workflow. It is an explicit specialist path, not the
+default training command.
 
-For a completely automated, resumable run covering preflight checks, data prefetch,
-teacher stages, concurrent student distillation, ATT hardening, ONNX export, static INT8 PTQ,
-and Hugging Face Hub uploads:
+The operational contracts are documented in
+[`docs/production_training_and_delivery_plan.md`](docs/production_training_and_delivery_plan.md)
+and [`docs/teacher_training_plan.md`](docs/teacher_training_plan.md).
 
-```bash
-bash cluster_setup.sh        # Run once on fresh cluster instance
-bash orchestrate_4x4090.sh   # Run full 21-stage state machine
-```
+### 3.5 Evaluating a Checkpoint
 
-The complete operational plan is in
-[`docs/production_training_and_delivery_plan.md`](docs/production_training_and_delivery_plan.md) and
-[`docs/teacher_training_plan.md`](docs/teacher_training_plan.md).
-### 3.6 Evaluating a Checkpoint
 
 Run clean evaluation and the complete single-transform robustness grid on a
 candidate production checkpoint:
@@ -229,7 +243,7 @@ uv run python scripts/evaluate_performance.py \
   --batch-size 1
 ```
 
-### 3.7 Predicting on an Image Directory
+### 3.6 Predicting on an Image Directory
 Generate Track 5 predictions (`pred = P(AI-generated or AI-edited)`) for submissions:
 ```bash
 uv run python -m aigc_detector.predict \
@@ -239,10 +253,9 @@ uv run python -m aigc_detector.predict \
   --checkpoint /path/to/checkpoint-step-N.pt
 ```
 
-### 3.8 Running Tests
-```bash
-uv run python -m pytest tests/ -q
-```
+### 3.7 Repository checks
+
+Project checks are available under `tests/`; training does not invoke them.
 
 ---
 
@@ -305,22 +318,23 @@ AI-generated or AI-edited:
 ]
 ```
 
-The internal model distinguishes fully generated images from locally
-AI-edited images for diagnostics and localization. Track 5 treats both as the
-same positive class, so the exported score is their probability sum.
+The manifests retain fully generated and tampered subtypes for diagnostics and
+optional localization supervision. The image-level model is binary, so the
+exported score covers both.
 
-### Artifacts still produced after training
+### Delivered artifacts and evaluation status
 
-The final selected checkpoint must be accompanied by:
+Teacher, Atom, Quark, Atom Super, and Quark Super checkpoints have been trained
+and delivered. Four float32 ONNX exports and four static-INT8 candidates were
+also produced. The browser defaults to the Atom Super float32 export because its
+WebGPU and WebAssembly outputs agreed; the INT8 candidates remain experimental
+after a provider-level numerical disagreement.
 
-1. clean, seen-generator, unseen-generator, and transformation-grid results;
-2. false-positive and false-negative analysis with threshold tradeoffs;
-3. the future float student and calibrated INT8 PTQ export comparison; and
-4. a demo video showing setup, directory inference, output JSON, robustness
-   results, and known limitations.
-
-These results are intentionally not prefilled: they must come from the selected
-full-scale checkpoint.
+The final MechaDetect models have **not** yet been compared with external
+state-of-the-art detectors on the TechJam evaluation set. Do not present the
+backbone bake-off, internal parity checks, or browser runtime checks as that
+comparison. TechJam-set and SoTA results must be published only after a
+controlled evaluation using the same rows, transforms, thresholds, and metrics.
 
 ---
 
@@ -332,11 +346,11 @@ full-scale checkpoint.
   mask quality. It is not a second image-level provenance classifier.
 - Heavy crop, resize, blur, or JPEG processing can remove evidence; unusual
   authentic post-processing can resemble generative artifacts.
-- The full DINOv3 teacher is intended for training and distillation, not
-  resource-constrained deployment. Deployment uses the separately validated
-  INT8 student.
-- The production teacher metrics, error analysis, and INT8 student comparison
-  remain pending until their corresponding runs are complete.
+- The DINOv3 teacher is for training and distillation, not constrained deployment.
+- The static-INT8 exports are experimental; the browser release uses float32.
+- Current reports cover training completion, ONNX parity, graph structure, and
+  browser-provider consistency. They do not establish TechJam-set accuracy or a
+  state-of-the-art ranking.
 
 ---
 

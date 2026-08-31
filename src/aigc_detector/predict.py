@@ -25,7 +25,49 @@ _IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
 
 
 def _load_checkpoint(model: torch.nn.Module, path: Path) -> None:
-    """Load model heads, adapter, and encoder weights from a saved training checkpoint."""
+    """Load model weights from a full resume checkpoint (.pt) or model-only weights (.safetensors)."""
+    path = Path(path)
+    if path.suffix == ".safetensors":
+        _load_safetensors(model, path)
+    else:
+        _load_pt(model, path)
+
+
+def _load_safetensors(model: torch.nn.Module, path: Path) -> None:
+    """Load model-only publication weights from a safetensors file.
+
+    Safetensors stores flat tensors keyed as '<group>.<subkey>'. Reconstruct
+    the nested state-dict groups and apply them the same way as a .pt checkpoint.
+    EMA and optimizer state are not present in publication weights.
+    """
+    from collections import defaultdict
+    from safetensors.torch import load_file
+
+    flat = load_file(path, device="cpu")
+    groups: dict[str, dict[str, torch.Tensor]] = defaultdict(dict)
+    for key, tensor in flat.items():
+        top, rest = key.split(".", 1)
+        groups[top][rest] = tensor
+
+    incompatible = model.heads.load_state_dict(groups["heads"], strict=False)
+    if incompatible.missing_keys:
+        raise RuntimeError(f"Checkpoint is missing provenance weights: {incompatible.missing_keys}")
+
+    adapter_state = groups.get("token_adapter", {})
+    if model.token_adapter.state_dict() or adapter_state:
+        model.token_adapter.load_state_dict(adapter_state)
+
+    if "encoder_trainable_state" in groups:
+        load_trainable_encoder_state(model.backbone.encoder, groups["encoder_trainable_state"])
+
+    if model.spectral is not None and "spectral" in groups:
+        model.spectral.load_state_dict(groups["spectral"])
+        model.aigc_gate.load_state_dict(groups["aigc_gate"])
+        model.tamper_gate.load_state_dict(groups["tamper_gate"])
+
+
+def _load_pt(model: torch.nn.Module, path: Path) -> None:
+    """Load from a full resume checkpoint (.pt) including optional EMA selection."""
     payload = torch.load(path, map_location="cpu", weights_only=False)
 
     incompatible = model.heads.load_state_dict(payload["heads"], strict=False)

@@ -1,10 +1,10 @@
 seed: 42
 paths:
   data_root: ${TECHJAM_DATA_ROOT}
-  train_manifest: splits/checkpoint2_materialized/all.parquet
-  val_manifest: splits/checkpoint2_materialized/all.parquet
+  train_manifest: splits/combined_hf_dataset/train.parquet
+  val_manifest: splits/combined_hf_dataset/validation.parquet
   output_root: ${TECHJAM_OUTPUT_ROOT}
-  require_materialized: true
+  require_materialized: false
   initial_checkpoint: ${TECHJAM_OUTPUT_ROOT}/teacher_stage2_paired_unfrozen/checkpoint-best.pt
 preprocessing:
   policy: square_jpeg95
@@ -28,11 +28,11 @@ model:
 training:
   stage: teacher_checkpoint2_production_full_data
   epochs: 1
-  max_updates: 250
+  max_updates: 200
   physical_batch_size: 4
-  gradient_accumulation: 2
-  required_world_size: 6
-  num_workers: 8
+  gradient_accumulation: 12
+  required_world_size: 1
+  num_workers: 4
   optimizer: adamw
   precision: bf16
   encoder_lr: 1.0e-6
@@ -58,8 +58,8 @@ loss:
   provenance_transformed: 1.0
   prediction_consistency: 0.5
   feature_consistency: 0.2
-  mask_focal: 0.5
-  mask_dice: 0.5
+  mask_focal: 0.0
+  mask_dice: 0.0
   ema_consistency: 0.5
 transforms:
   families: [jpeg, blur, resize, noise, color, crop]

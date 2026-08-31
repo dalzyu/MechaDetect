@@ -1,33 +1,40 @@
-# NanoGuard: Client-Side WebGPU AIGC Detector
+# MechaDetect Browser Demo
 
-NanoGuard is a lightweight, high-performance in-browser AI-generated image detection website built for **TechJam 2026**. It runs detection locally on the user's device via **WebGPU** (with automatic WebAssembly fallback) using an optimized student model.
+The demo runs the selected MechaDetect ONNX model inside the browser. WebGPU is
+preferred; ONNX Runtime Web falls back to WebAssembly when WebGPU is unavailable.
+Inference does not require an image-upload API, so the selected image remains in
+the browser process.
 
----
+What this means in practice:
 
-## Key Hackathon Highlights
+- no server-side model process for the demo;
+- the image is not sent to this repository's server;
+- WebAssembly keeps the interface usable on browsers without WebGPU;
+- latency depends on the selected model, browser, and local hardware.
 
-- **Zero Server Inference Cost for TikTok**: By shifting provenance detection from cloud GPU clusters to client hardware (via WebGPU), TikTok can eliminate server-side inference overhead for millions of daily image uploads.
-- **Privacy Preserving**: Images never leave the user's device or browser tab.
-- **Ultra Low Latency**: Native GPU shader pipelines deliver real-time inference.
-- **Graceful Fallback**: Automatically falls back to WebAssembly (WASM CPU) if WebGPU is not supported by the client hardware/browser.
+These properties describe deployment, not detector accuracy. TechJam-set and
+state-of-the-art comparisons remain pending.
 
 ---
 
 ## Quickstart: Running the Web App Locally
 
-1. Open your terminal in this repository:
+1. Install the Git LFS payloads and project dependencies.
+
    ```bash
-   cd "C:\repos\techjam 26"
+   git lfs install
+   git lfs pull
+   uv sync --locked
+   npm ci
    ```
 
-2. Start the server:
-   ```bash
-   python web/serve.py --host 0.0.0.0 --port 8000
-   ```
-   The positional form `python web/serve.py 8000` remains supported.
+2. Start the server.
 
-3. Open your browser:
-   Navigate to [http://localhost:8000](http://localhost:8000) (Google Chrome or Microsoft Edge recommended for native WebGPU support).
+   ```bash
+   uv run python web/serve.py --host 0.0.0.0 --port 8000
+   ```
+
+3. Open [http://localhost:8000](http://localhost:8000) in Chrome or Edge.
 
 ## Opening the Demo on an iPhone
 
@@ -40,9 +47,9 @@ then create a certificate containing the PC's LAN address:
 
 ```bash
 mkcert -install
-mkcert -key-file web/nanoguard-key.pem -cert-file web/nanoguard-cert.pem 192.168.1.50 localhost 127.0.0.1
-python web/serve.py --host 0.0.0.0 --port 8443 \
-  --certfile web/nanoguard-cert.pem --keyfile web/nanoguard-key.pem
+mkcert -key-file web/mechadetect-key.pem -cert-file web/mechadetect-cert.pem 192.168.1.50 localhost 127.0.0.1
+uv run python web/serve.py --host 0.0.0.0 --port 8443 \
+  --certfile web/mechadetect-cert.pem --keyfile web/mechadetect-key.pem
 ```
 
 Install mkcert's local CA on the iPhone before opening
@@ -51,26 +58,22 @@ trust will be rejected. For Internet port forwarding, use a public DNS name
 with a publicly trusted certificate (or a tunnel such as Cloudflare Tunnel)
 instead of forwarding plain HTTP.
 
-The ONNX model is tracked with Git LFS. After cloning, install Git LFS and
-pull the binary before starting the server:
+The ONNX model is tracked with Git LFS. A clone containing only the pointer file
+cannot run inference; `git lfs pull` must complete before the server starts.
 
-```bash
-git lfs install
-git lfs pull
-```
 ---
 
 ## Directory Structure
 
 ```text
 web/
-├── index.html                 # NanoGuard frontend UI matching design screenshot
-├── app.js                     # WebGPU & ONNX Runtime Web client-side engine
-├── serve.py                   # HTTP server with COOP/COEP isolation headers
+├── index.html                 # MechaDetect frontend
+├── app.js                     # ONNX Runtime Web inference controller
+├── serve.py                   # Static server with COOP/COEP headers
 ├── model/
-│   ├── metadata.json          # Model configuration (updated by orchestration)
-│   └── (student_*.onnx)       # ONNX exports populated by the orchestration pipeline
-└── samples/                   # Pre-bundled authentic & AIGC test images
+│   ├── metadata.json          # Portable, relative model manifest
+│   └── *.onnx                 # Selected Git LFS model artifacts
+└── samples/                   # Optional local demonstration images
     ├── sample_authentic_imagenet.jpg
     └── sample_aigc_krea.jpg
 ```
@@ -79,16 +82,20 @@ web/
 
 ## Orchestrated Model Export
 
-The student models and metadata shown in the UI are generated automatically.
-Do not manually edit `metadata.json` with fabricated paths.
+Model metadata is produced from export sidecars. Do not write machine-local
+checkpoint or artifact paths into `web/model/metadata.json`.
 
-The full orchestration pipeline (run via the root training orchestrator) will:
-1. Distill each float student and independently promote only passing checkpoints.
-2. Train and gate ATT checkpoints, retaining the promoted float checkpoint when ATT fails.
-3. Export the selected float/ATT checkpoint to ONNX, then create and evaluate static INT8 PTQ.
-4. Copy the verified artifacts into `web/model/` and populate `metadata.json` from their sidecars.
+The delivery path:
 
-Before orchestration runs, the web application fails closed and displays a pending state.
+1. selects a final student checkpoint;
+2. exports float32 ONNX and calibrated static INT8 candidates;
+3. checks graph structure and browser-provider behaviour;
+4. copies only the selected browser artifact into `web/model/`; and
+5. writes portable metadata using relative paths.
+
+The current release choice is Atom Super float32. The INT8 candidates are
+experimental because WebGPU and WebAssembly did not agree numerically on the
+runtime comparison input.
 
 The metadata JSON schema enforces strict properties for validation:
 - \`default_model\`: `<id>`

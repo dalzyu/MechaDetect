@@ -1,16 +1,17 @@
 {
-  "total_rows": 123252,
+  "total_rows": 122252,
   "split_counts": {
-    "train": 74450,
-    "validation": 20459,
-    "test": 16121,
+    "train": 73690,
+    "validation": 20309,
+    "test": 16031,
     "test_unseen": 12222
   },
   "purged_sources": [
     "animagine_xl_artist_comparison",
     "civitai_photoreal_diffusion",
     "novelai_artist_comparison",
-    "yesbut_satire_comics"
+    "yesbut_satire_comics",
+    "danbooru_pre2020_human"
   ],
   "counts_by_dataset": {
     "sid": 30000,
@@ -31,7 +32,6 @@
     "imgflip_memes": 1500,
     "ai_meme_macro_overlay": 1300,
     "authentic_classical_figure_art": 1000,
-    "danbooru_pre2020_human": 1000,
     "manga109_illustrations": 1000,
     "midjourney_v5_images": 1000,
     "sd3_medium_synths": 1000,
@@ -50,10 +50,10 @@
   },
   "ai_positive_counts": {
     "1": 63785,
-    "0": 59467
+    "0": 58467
   },
   "provenance_counts": {
-    "authentic": 55367,
+    "authentic": 54367,
     "fully_aigc": 44560,
     "tampered": 23325
   }

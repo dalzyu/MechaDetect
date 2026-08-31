@@ -26,8 +26,8 @@ training:
   stage: att_student_base
   epochs: 1
   physical_batch_size: 2
-  gradient_accumulation: 12
-  required_world_size: 2
+  gradient_accumulation: 24
+  required_world_size: 1
   num_workers: 4
   optimizer: adamw
   precision: bf16
@@ -37,8 +37,8 @@ training:
   weight_decay: 0.01
   gradient_clip_norm: 1.0
   warmup_fraction: 0.05
-  master_port: 29503
-  cuda_visible_devices: "2,3"
+  master_port: 29504
+  cuda_visible_devices: "0"
 loss:
   provenance_original: 1.0
   provenance_transformed: 1.0

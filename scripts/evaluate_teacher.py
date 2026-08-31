@@ -895,39 +895,22 @@ def evaluate_teacher_checkpoint(
         config.get("preprocessing", {}).get("policy", TEACHER_PREPROCESSING_VERSION)
     )
 
-    # Pre-render downloaded originals
-    rendered_images: list[Image.Image] = []
+    # Stream rendered validation batches instead of retaining every PIL image.
+    # The validation set is evaluated under 15 conditions; retaining all rendered
+    # images simultaneously exhausts host RAM and starves the CUDA process.
     y_true_list: list[int] = []
     metadata_rows: list[dict[str, Any]] = []
-
     records = val_frame.to_dict(orient="records")
     for idx, row in enumerate(records):
-        img_rel = str(row["image_path"]).replace("\\", "/")
-        img_path = data_root / img_rel if not Path(img_rel).is_absolute() else Path(img_rel)
-
-        if not img_path.is_file():
-            raise FileNotFoundError(
-                f"Missing validation image at {img_path}. "
-                "Prefetch must ensure all validation images exist prior to evaluation."
-            )
-
-        with Image.open(img_path) as source:
-            downloaded = source.convert("RGB").copy()
-
-        rendered = render_for_model(downloaded, policy, rng=Random(seed + idx))
-        rendered_images.append(rendered)
-
-        # Parse ground truth binary label
-        target = int(
-            parse_provenance(row.get("provenance") or row.get("label"), str(row.get("dataset", "")))
-        )
         raw_ai_pos = row.get("ai_positive")
         if raw_ai_pos is not None and str(raw_ai_pos).strip() != "":
             ai_pos = int(raw_ai_pos)
         else:
+            target = int(
+                parse_provenance(row.get("provenance") or row.get("label"), str(row.get("dataset", "")))
+            )
             ai_pos = int(target != int(Provenance.AUTHENTIC))
         y_true_list.append(ai_pos)
-
         metadata_rows.append(
             {
                 "row_id": str(row.get("row_id", idx)),
@@ -941,18 +924,40 @@ def evaluate_teacher_checkpoint(
 
     y_true = np.array(y_true_list, dtype=np.int64)
 
-    # Run inference across all 15 conditions in SINGLE_TRANSFORM_GRID
+    def load_rendered_chunk(start: int, end: int) -> list[Image.Image]:
+        chunk: list[Image.Image] = []
+        for idx in range(start, end):
+            row = records[idx]
+            img_rel = str(row["image_path"]).replace("\\", "/")
+            img_path = data_root / img_rel if not Path(img_rel).is_absolute() else Path(img_rel)
+            if not img_path.is_file():
+                raise FileNotFoundError(
+                    f"Missing validation image at {img_path}. "
+                    "Prefetch must ensure all validation images exist prior to evaluation."
+                )
+            with Image.open(img_path) as source:
+                downloaded = source.convert("RGB").copy()
+            chunk.append(render_for_model(downloaded, policy, rng=Random(seed + idx)))
+        return chunk
+
+    # Run each condition in bounded chunks to keep host memory stable.
     condition_scores: dict[str, np.ndarray] = {}
+    chunk_size = 256
     for cond in SINGLE_TRANSFORM_GRID:
-        scores = run_condition_inference(
-            model=model,
-            images=rendered_images,
-            condition=cond,
-            batch_size=batch_size,
-            device=device,
-            seed_offset=seed,
-        )
-        condition_scores[cond.name] = scores
+        score_parts: list[np.ndarray] = []
+        for start in range(0, len(records), chunk_size):
+            end = min(start + chunk_size, len(records))
+            score_parts.append(
+                run_condition_inference(
+                    model=model,
+                    images=load_rendered_chunk(start, end),
+                    condition=cond,
+                    batch_size=batch_size,
+                    device=device,
+                    seed_offset=seed,
+                )
+            )
+        condition_scores[cond.name] = np.concatenate(score_parts) if score_parts else np.array([])
 
     # Calibrate global validation threshold on clean condition
     clean_scores = condition_scores["clean"]
