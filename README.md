@@ -129,15 +129,15 @@ The training manifests, split distributions, and source audit reports are public
 
 The declared dataset package contains **122,344 total records** across 29 active forensic and natural cohorts. Preflight verification quarantined 30,455 unmaterializable or conflicting records into `exclusions.parquet`, leaving **87,793 verified, decodable, and clean eligible records**.
 
-| Manifest / Split | Row Count | Percentage | Dataset Scope & Usage |
-| :--- | :---: | :---: | :--- |
-| **`train.parquet`** | **51,107** | 58.2% | Canonical training split used by Normal models (`Atom`, `Quark`, Normal Teacher) |
-| **`train_super_all.parquet`** | **87,793** | 100.0% | Full eligible training split used by Super models (`Atom Super`, `Quark Super`, Super Teacher) |
-| `validation.parquet` | 14,617 | 16.6% | Validation split for threshold calibration and model promotion gates |
-| `test.parquet` | 11,129 | 12.7% | In-distribution generalization test benchmark |
-| `test_unseen.parquet` | 10,940 | 12.5% | Out-of-distribution benchmark evaluating unseen generator families |
-| `calibration.parquet` | 4,096 | 4.7% | Strictly isolated split used exclusively for static INT8 PTQ calibration |
-| `exclusions.parquet` | 30,455 | — | Quarantined records (missing remote bytes, unaligned masks, cross-label conflicts) |
+| Manifest / Split | Row Count | Percentage | Class Balance (AI-Pos / Auth) | Dataset Scope & Usage |
+| :--- | :---: | :---: | :---: | :--- |
+| **`train.parquet`** | **51,107** | 58.2% | 28,594 / 22,513 | Canonical training split used by Normal models (`Atom`, `Quark`, Normal Teacher) |
+| **`train_super_all.parquet`** | **87,793** | 100.0% | 49,120 / 38,673 | Full eligible training split used by Super models (`Atom Super`, `Quark Super`, Super Teacher) |
+| `validation.parquet` | 14,617 | 16.6% | 8,187 / 6,430 | Validation split for threshold calibration and model promotion gates |
+| `test.parquet` | 11,129 | 12.7% | 6,233 / 4,896 | In-distribution generalization test benchmark |
+| `test_unseen.parquet` | 10,940 | 12.5% | 10,932 / 8 | Out-of-distribution benchmark evaluating unseen generator families |
+| `calibration.parquet` | 4,096 | 4.7% | 2,294 / 1,802 | Strictly isolated split used exclusively for static INT8 PTQ calibration |
+| `exclusions.parquet` | 30,455 | — | — | Quarantined records (missing remote bytes, unaligned masks, cross-label conflicts) |
 
 ### Source Cohorts & Negative Diversity
 
@@ -146,13 +146,15 @@ The dataset contains **38,673 authentic negatives** carefully balanced across re
 * **Real-World Photography & Portraits (21.8k images, 56.3% of negatives):** Real camera photography from the Synthetic Image Detection challenge (SID, 9.4k), CelebA-HQ real human faces (4.8k), AFHQ real animal photography (3.3k), DiffusionForensics natural photo anchors (LSUN, FFHQ, ImageNet, 4.1k), and Google Open Images v7 (0.2k).
 * **Historical Art & Illustrations (15.9k images, 41.1% of negatives):** Pre-AI public domain museum scans (Art Museums PD 7.6k, Artic 6.3k, Classical Figure Art 1.0k) and hand-drawn Manga109 illustrations (1.0k), ensuring the model does not misclassify stylized or painted artwork as AI-generated.
 * **Authentic 3D CGI & Gaming (1.0k images, 2.6% of negatives):** Video game captures (GTA 5 0.5k, fantasy gaming 0.25k) and raytraced Blender 3D animation (Sintel 0.25k), preventing false positives on non-generative digital graphics.
-* **Generative Positive Cohorts (49.1k images):** Balanced representation across modern diffusion and autoregressive engines, including GPT-Image-Edit (5.0k), FLUX.1 [dev] (4.8k), Ideogram v2 (2.9k), Krea 2 (2.4k), Midjourney v6/v5 (2.9k), Google Nano Banana edited/pro (1.9k), SD 3 Medium, SDXL, Danbooru 2026 AIGC, and synthetic gaming renders.
+* **Generative Positive Cohorts (49.1k images):** Broad representation across 29 generative architectures, including Midjourney v5/v6/Niji (6.6k), FLUX.1 [dev] (5.3k), GPT-Image-Edit (5.0k), Stable Diffusion SD 1.x/2.x/3/XL (4.9k), standard diffusion baselines (DDPM, DDIM, ADM, LDM, 15.0k), Ideogram v2 (2.9k), Krea 2 (2.4k), Google Nano Banana edited/pro (1.9k), and specialized cohorts (DALL·E 2, VQDM, Danbooru 2026 AIGC, 5.2k).
 
-### Benchmark Isolation & Hygiene
+### Benchmark Isolation & Zero-Leakage Audit
 
-* **Organizer Demo Exclusion:** The official TechJam demonstration evaluation dataset ($13,841$ images: $4,998$ COCO val2017 authentic + $8,843$ WildFake DALL-E Advanced) is strictly quarantined and completely excluded from all training splits.
+* **Zero Sample Overlap:** 0 identical SHA-256 hashes across train, validation, test, and calibration splits.
+* **Zero Duplicate Group Leakage:** All 75,168 perceptual difference hash (dHash) and SHA-256 duplicate clusters are strictly isolated within individual splits.
+* **Strict Unseen Generator Separation:** 0 AI generator leakage into train. The 15 positive generator families in `test_unseen` (FLUX.1 [dev], DALL·E 2, SDXL 1.0, SD v1/v2, IF, LDM, IDDPM, PNDM, VQDM, etc.) are 100% absent from the training splits.
+* **Organizer Demo Exclusion:** 0 overlap (0 file paths, 0 SHA-256 hashes) with the official TechJam demonstration evaluation dataset ($13,841$ images: $4,998$ COCO val2017 authentic + $8,843$ WildFake DALL-E Advanced images).
 * **Forbidden Cohort Rejection:** The forbidden directory `newer image model data(do not use for training)` is completely blocked by fail-closed preflight guards.
-* **Leakage Prevention:** Group disjointness is strictly enforced across splits using perceptual difference hashing (dHash) and SHA-256 duplicate grouping.
 
 ---
 
