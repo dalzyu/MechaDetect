@@ -471,4 +471,4 @@ Native batch-1 timings exclude image decoding, resizing, browser upload, and UI 
 | Ewan | Data Acquisition and Creation, Compute procurement |
 | Rian | Research |
 | Sean | Webapp, branding design and refinement |
-| Zeyu | Model training, architectural design and deployment, data engineering and design |
+| Zeyu | Model architectural design, training and deployment, data design and engineering |
