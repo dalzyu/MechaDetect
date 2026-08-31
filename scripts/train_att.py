@@ -47,7 +47,13 @@ from aigc_detector.runtime import (
     setup_distributed,
 )
 from aigc_detector.sampling import DeterministicDistributedCoverageSampler
-from aigc_detector.train import build_model, build_optimizer, build_scheduler, save_checkpoint
+from aigc_detector.train import (
+    build_model,
+    build_optimizer,
+    build_scheduler,
+    restore_checkpoint,
+    save_checkpoint,
+)
 from aigc_detector.transforms import TransformSpec, apply_transform
 
 logger = logging.getLogger("train_att")
@@ -397,6 +403,7 @@ def train_att(
     world_size_override: int | None = None,
     learning_rate: float | None = None,
     seed: int = 42,
+    resume_checkpoint: Path | str | None = None,
     dry_run: bool = False,
 ) -> Path:
     """Execute one complete pass of Adversarial Transformation Training."""
@@ -437,12 +444,14 @@ def train_att(
         out_dir = Path(cfg.get("paths", {}).get("output_root", f"outputs/att_student_{variant}"))
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    if resume_checkpoint is not None and not Path(resume_checkpoint).is_file():
+        raise FileNotFoundError(f"Resume checkpoint not found: {resume_checkpoint}")
+
     # If student_checkpoint is specified but does not exist, fail immediately
     if student_checkpoint is not None and not Path(student_checkpoint).is_file():
         raise FileNotFoundError(
             f"Promoted float student checkpoint is required for ATT but was not found: {student_checkpoint}"
         )
-
     if manifest_path:
         train_manifest = Path(manifest_path)
     else:
@@ -454,8 +463,8 @@ def train_att(
             f"Manifest fallback across split sources is strictly prohibited."
         )
 
-    # Strictly require promoted student checkpoint (eliminate random-weight fallbacks)
-    if student_checkpoint is None or not Path(student_checkpoint).is_file():
+    # Strictly require promoted student checkpoint or resume checkpoint
+    if (student_checkpoint is None or not Path(student_checkpoint).is_file()) and resume_checkpoint is None:
         raise FileNotFoundError(
             f"Promoted float student checkpoint is required for ATT but was not found: {student_checkpoint}. "
             "Random-weight fallbacks are strictly prohibited."
@@ -533,6 +542,25 @@ def train_att(
     hardest_family_counts: dict[str, int] = {f.name.lower(): 0 for f in ATT_TRANSFORMATION_FAMILIES}
     running_loss = 0.0
     global_update = 0
+    start_epoch = 0
+    resume_micro_step = 0
+
+    if resume_checkpoint is not None:
+        global_update, start_epoch, resume_micro_step = restore_checkpoint(
+            Path(resume_checkpoint),
+            student,
+            optimizer,
+            scheduler,
+            None,
+            train_manifest,
+            device,
+        )
+        if is_primary:
+            print(
+                f"Resumed ATT from {resume_checkpoint}: update={global_update} "
+                f"epoch={start_epoch} micro_step={resume_micro_step}",
+                flush=True,
+            )
 
     student.train()
     optimizer.zero_grad()
@@ -542,12 +570,21 @@ def train_att(
             f"Starting ATT for {variant} student: {len(dataset)} records, {epochs} epoch(s), {num_candidates} candidates/record."
         )
 
-    for epoch in range(epochs):
+    coverage_milestones = {0.25, 0.50, 0.75}
+    saved_milestones: set[float] = set()
+
+    for epoch in range(start_epoch, epochs):
         if sampler is not None:
             sampler.set_epoch(epoch)
+            if epoch == start_epoch and resume_micro_step > 0:
+                sampler.set_start_offset(resume_micro_step)
+            else:
+                sampler.set_start_offset(0)
         dataset.set_epoch(epoch)
 
-        for step, batch in enumerate(loader):
+        for step, batch in enumerate(loader, start=1):
+            if epoch == start_epoch and step <= resume_micro_step:
+                continue
             orig_images = batch["original_images"]
             cand_batch = batch["candidates"]
             ai_pos = batch["ai_positive"].to(device)
@@ -576,7 +613,7 @@ def train_att(
 
             running_loss += loss.item() * accum_steps
 
-            if (step + 1) % accum_steps == 0 or (step + 1) == len(loader):
+            if step % accum_steps == 0 or step == len(loader):
                 torch.nn.utils.clip_grad_norm_(student.parameters(), max_norm=1.0)
                 optimizer.step()
                 scheduler.step()
@@ -585,10 +622,32 @@ def train_att(
                 if is_primary and global_update % 25 == 0:
                     print(
                         f"ATT {variant} update={global_update}/{total_steps} "
-                        f"loss={running_loss / (step + 1):.5f}",
+                        f"loss={running_loss / step:.5f}",
                         flush=True,
                     )
 
+            progress = (epoch * len(loader) + step) / max(1, epochs * len(loader))
+            for m in coverage_milestones:
+                if m not in saved_milestones and progress >= m:
+                    saved_milestones.add(m)
+                    if is_primary:
+                        ckpt_name = f"checkpoint-coverage-{int(m * 100)}pct.pt"
+                        cov_path = save_checkpoint(
+                            student,
+                            cfg,
+                            out_dir,
+                            global_update,
+                            optimizer=optimizer,
+                            scheduler=scheduler,
+                            manifest_path=train_manifest,
+                            epoch=epoch,
+                            micro_step=step,
+                            filename=ckpt_name,
+                            coverage_metadata=sampler.get_coverage_report(),
+                        )
+                        print(
+                            f"Saved ATT coverage milestone {int(m * 100)}%: {cov_path}", flush=True
+                        )
             if dry_run and global_update >= 2:
                 if is_primary:
                     print("Dry run completed exactly 2 updates; stopping.")
@@ -665,6 +724,9 @@ def main() -> None:
     parser.add_argument("--lr", type=float, default=None, help="Learning rate override")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument(
+        "--resume", type=Path, default=None, help="Resume ATT training from checkpoint"
+    )
+    parser.add_argument(
         "--dry-run", action="store_true", help="Run 2 smoke iterations without full pass"
     )
     args = parser.parse_args()
@@ -682,9 +744,9 @@ def main() -> None:
         world_size_override=args.world_size,
         learning_rate=args.lr,
         seed=args.seed,
+        resume_checkpoint=args.resume,
         dry_run=args.dry_run,
     )
-
 
 if __name__ == "__main__":
     main()

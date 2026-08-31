@@ -63,6 +63,24 @@ def _batch_geometry(variant: str, devices: str, effective_batch_size: int) -> tu
     return world_size, physical_batch_size, effective_batch_size // divisor
 
 
+def find_latest_checkpoint(output_dir: Path | str) -> Path | None:
+    """Find the latest valid coverage or step checkpoint to resume training."""
+    out = Path(output_dir)
+    if not out.is_dir():
+        return None
+    candidates = list(out.glob("checkpoint-coverage-*.pt"))
+    if not candidates:
+        candidates = [
+            p
+            for p in out.glob("checkpoint-*.pt")
+            if p.is_file()
+            and p.name not in ("checkpoint-promoted.pt", "checkpoint-final.pt", "checkpoint-best.pt")
+        ]
+    if candidates:
+        return max(candidates, key=lambda p: p.stat().st_mtime)
+    return None
+
+
 def build_track_command(
     variant: str,
     *,
@@ -79,6 +97,7 @@ def build_track_command(
     physical_batch_size: int | None = None,
     gradient_accumulation: int | None = None,
     num_workers: int = 4,
+    resume: Path | str | None = None,
     dry_run: bool = False,
     skip_teacher_gate: bool = False,
     python_exe: str = sys.executable,
@@ -136,6 +155,8 @@ def build_track_command(
         cmd.extend(["--teacher-promotion-report", str(teacher_promotion_report)])
     if student_config:
         cmd.extend(["--student-config", str(student_config)])
+    if resume:
+        cmd.extend(["--resume", str(resume)])
     return cmd
 
 
@@ -154,6 +175,7 @@ def launch_track(
     seed: int = 42,
     effective_batch_size: int = 48,
     num_workers: int = 4,
+    resume: Path | str | None = None,
     dry_run: bool = False,
     skip_teacher_gate: bool = False,
 ) -> subprocess.Popen:
@@ -177,6 +199,7 @@ def launch_track(
         physical_batch_size=physical_batch_size,
         gradient_accumulation=gradient_accumulation,
         num_workers=num_workers,
+        resume=resume,
         dry_run=dry_run,
         skip_teacher_gate=skip_teacher_gate,
     )
@@ -404,6 +427,24 @@ def main() -> None:
         help="Use a final teacher checkpoint without promotion-report verification",
     )
     parser.add_argument(
+        "--resume",
+        type=str,
+        default=None,
+        help="Path to resume checkpoint or 'auto' to resume from latest checkpoint",
+    )
+    parser.add_argument(
+        "--small-resume",
+        type=str,
+        default=None,
+        help="Path to resume checkpoint for small student or 'auto'",
+    )
+    parser.add_argument(
+        "--base-resume",
+        type=str,
+        default=None,
+        help="Path to resume checkpoint for base student or 'auto'",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Run the trainer's bounded diagnostic path",
@@ -434,6 +475,21 @@ def main() -> None:
     print("=" * 65)
 
     def start(track: str) -> subprocess.Popen:
+        resume_val = (
+            args.small_resume
+            if track == "small" and args.small_resume is not None
+            else args.base_resume
+            if track == "base" and args.base_resume is not None
+            else args.resume
+        )
+        resume_path = None
+        if resume_val == "auto":
+            resume_path = find_latest_checkpoint(outputs[track])
+            if resume_path:
+                print(f"[{track.upper()}] Auto-resuming from latest checkpoint: {resume_path}")
+        elif resume_val:
+            resume_path = Path(resume_val)
+
         return launch_track(
             track,
             teacher_config=args.teacher_config,
@@ -448,6 +504,7 @@ def main() -> None:
             seed=args.seed,
             effective_batch_size=args.effective_batch_size,
             num_workers=args.num_workers,
+            resume=resume_path,
             dry_run=args.dry_run,
             skip_teacher_gate=args.skip_teacher_gate,
         )

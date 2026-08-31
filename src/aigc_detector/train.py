@@ -207,6 +207,7 @@ def build_scheduler(optimizer: Optimizer, total_updates: int, warmup_fraction: f
 
 def get_git_metadata() -> dict[str, Any]:
     """Extract Git commit, branch, and dirty state when Git metadata exists."""
+    import os
     import subprocess
 
     try:
@@ -224,8 +225,11 @@ def get_git_metadata() -> dict[str, Any]:
         ).strip()
         return {"commit": commit, "branch": branch, "dirty": bool(status)}
     except (subprocess.CalledProcessError, OSError, subprocess.TimeoutExpired):
-        return {"commit": "workspace-snapshot", "branch": "training/production-4x4090", "dirty": True}
-
+        return {
+            "commit": "workspace-snapshot",
+            "branch": os.environ.get("TECHJAM_GIT_BRANCH", "main"),
+            "dirty": True,
+        }
 
 def save_checkpoint(
     model: ProvenanceModel,

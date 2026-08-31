@@ -42,6 +42,24 @@ def _batch_geometry(variant: str, devices: str, effective_batch_size: int) -> tu
     return world_size, physical_batch_size, effective_batch_size // divisor
 
 
+def find_latest_checkpoint(output_dir: Path | str) -> Path | None:
+    """Find the latest valid coverage or step checkpoint to resume training."""
+    out = Path(output_dir)
+    if not out.is_dir():
+        return None
+    candidates = list(out.glob("checkpoint-coverage-*.pt"))
+    if not candidates:
+        candidates = [
+            p
+            for p in out.glob("checkpoint-*.pt")
+            if p.is_file()
+            and p.name not in ("checkpoint-promoted.pt", "checkpoint-final.pt", "checkpoint-best.pt")
+        ]
+    if candidates:
+        return max(candidates, key=lambda p: p.stat().st_mtime)
+    return None
+
+
 def build_track_command(
     variant: str,
     *,
@@ -55,6 +73,7 @@ def build_track_command(
     nproc_per_node: int = 1,
     physical_batch_size: int | None = None,
     gradient_accumulation: int | None = None,
+    resume: Path | str | None = None,
     dry_run: bool = False,
     python_exe: str = sys.executable,
 ) -> list[str]:
@@ -94,6 +113,8 @@ def build_track_command(
         cmd.extend(["--batch-size", str(physical_batch_size)])
     if gradient_accumulation is not None:
         cmd.extend(["--gradient-accumulation", str(gradient_accumulation)])
+    if resume:
+        cmd.extend(["--resume", str(resume)])
     if dry_run:
         cmd.append("--dry-run")
     return cmd
@@ -111,6 +132,7 @@ def launch_track(
     num_candidates: int = 3,
     epochs: int = 1,
     effective_batch_size: int = 48,
+    resume: Path | str | None = None,
     dry_run: bool = False,
     extra_env: dict[str, str] | None = None,
 ) -> subprocess.Popen:
@@ -131,6 +153,7 @@ def launch_track(
         nproc_per_node=world_size,
         physical_batch_size=physical_batch_size,
         gradient_accumulation=gradient_accumulation,
+        resume=resume,
         dry_run=dry_run,
     )
 
@@ -231,6 +254,24 @@ def main() -> None:
         help="Effective record batch preserved across GPU topologies",
     )
     parser.add_argument(
+        "--resume",
+        type=str,
+        default=None,
+        help="Path to resume checkpoint or 'auto' to resume from latest checkpoint",
+    )
+    parser.add_argument(
+        "--small-resume",
+        type=str,
+        default=None,
+        help="Path to resume checkpoint for small ATT track or 'auto'",
+    )
+    parser.add_argument(
+        "--base-resume",
+        type=str,
+        default=None,
+        help="Path to resume checkpoint for base ATT track or 'auto'",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Run the trainer's bounded diagnostic path",
@@ -254,6 +295,21 @@ def main() -> None:
         raise ValueError("ATT tracks require distinct output directories")
 
     def start(track: str) -> subprocess.Popen:
+        resume_val = (
+            args.small_resume
+            if track == "small" and args.small_resume is not None
+            else args.base_resume
+            if track == "base" and args.base_resume is not None
+            else args.resume
+        )
+        resume_path = None
+        if resume_val == "auto":
+            resume_path = find_latest_checkpoint(outputs[track])
+            if resume_path:
+                print(f"[{track.upper()}] Auto-resuming ATT from latest checkpoint: {resume_path}")
+        elif resume_val:
+            resume_path = Path(resume_val)
+
         return launch_track(
             track,
             checkpoint=checkpoints[track],
@@ -265,6 +321,7 @@ def main() -> None:
             num_candidates=args.num_candidates,
             epochs=args.epochs,
             effective_batch_size=args.effective_batch_size,
+            resume=resume_path,
             dry_run=args.dry_run,
         )
 

@@ -102,6 +102,25 @@ accumulation_for() {
   fi
   echo $((EFFECTIVE_BATCH_SIZE / divisor))
 }
+find_resume_checkpoint() {
+  local stage_dir="$1"
+  "$UV_BIN" run python - "$stage_dir" <<'PY'
+import sys
+from pathlib import Path
+stage_dir = Path(sys.argv[1])
+if not stage_dir.is_dir():
+    sys.exit(0)
+candidates = list(stage_dir.glob("checkpoint-coverage-*.pt"))
+if not candidates:
+    candidates = [
+        p for p in stage_dir.glob("checkpoint-*.pt")
+        if p.is_file() and p.name not in ("checkpoint-promoted.pt", "checkpoint-final.pt", "checkpoint-best.pt", "checkpoint-100pct.pt")
+    ]
+if candidates:
+    latest = max(candidates, key=lambda p: p.stat().st_mtime)
+    print(str(latest.resolve()))
+PY
+}
 
 make_teacher_config() {
   local source="$1" target="$2" stage="$3" physical_batch="$4" initial_checkpoint="${5:-}"
@@ -196,8 +215,17 @@ make_teacher_config \
   configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
   "$STAGE2_CONFIG" teacher_stage2 2 "$STAGE1_DIR/checkpoint-promoted.pt"
 
-run_stage teacher-stage1 "${TEACHER_LAUNCH[@]}" --config "$STAGE1_CONFIG"
-run_stage teacher-stage1-eval \
+if [[ -f "$STAGE1_DIR/checkpoint-100pct.pt" ]]; then
+  echo "[TRAIN] $STAGE1_DIR/checkpoint-100pct.pt exists; teacher-stage1 already completed training"
+  touch "$STATE_DIR/teacher-stage1.done"
+fi
+STAGE1_RESUME="$(find_resume_checkpoint "$STAGE1_DIR")"
+STAGE1_ARGS=(--config "$STAGE1_CONFIG")
+if [[ -n "$STAGE1_RESUME" ]]; then
+  echo "[TRAIN] teacher-stage1 resuming from $STAGE1_RESUME"
+  STAGE1_ARGS+=(--resume "$STAGE1_RESUME")
+fi
+run_stage teacher-stage1 "${TEACHER_LAUNCH[@]}" "${STAGE1_ARGS[@]}"
   "$UV_BIN" run python scripts/evaluate_teacher.py \
   --checkpoint "$STAGE1_DIR/checkpoint-100pct.pt" \
   --manifest "$VAL_MANIFEST" --config "$STAGE1_CONFIG" --data-root "$DATA_ROOT" \
@@ -212,9 +240,19 @@ run_stage teacher-stage1-promote \
   --output-checkpoint "$STAGE1_DIR/checkpoint-promoted.pt" \
   --device cuda --batch-size 8
 
-run_stage teacher-stage2 \
-  "${TEACHER_LAUNCH[@]}" --config "$STAGE2_CONFIG" \
-  --initial-checkpoint "$STAGE1_DIR/checkpoint-promoted.pt"
+if [[ -f "$STAGE2_DIR/checkpoint-100pct.pt" ]]; then
+  echo "[TRAIN] $STAGE2_DIR/checkpoint-100pct.pt exists; teacher-stage2 already completed training"
+  touch "$STATE_DIR/teacher-stage2.done"
+fi
+STAGE2_RESUME="$(find_resume_checkpoint "$STAGE2_DIR")"
+STAGE2_ARGS=(--config "$STAGE2_CONFIG")
+if [[ -n "$STAGE2_RESUME" ]]; then
+  echo "[TRAIN] teacher-stage2 resuming from $STAGE2_RESUME"
+  STAGE2_ARGS+=(--resume "$STAGE2_RESUME")
+else
+  STAGE2_ARGS+=(--initial-checkpoint "$STAGE1_DIR/checkpoint-promoted.pt")
+fi
+run_stage teacher-stage2 "${TEACHER_LAUNCH[@]}" "${STAGE2_ARGS[@]}"
 run_stage teacher-stage2-eval \
   "$UV_BIN" run python scripts/evaluate_teacher.py \
   --checkpoint "$STAGE2_DIR/checkpoint-100pct.pt" \
@@ -233,6 +271,10 @@ run_stage teacher-stage2-promote \
 TEACHER="$STAGE2_DIR/checkpoint-promoted.pt"
 TEACHER_REPORT="$STAGE2_DIR/promotion_report.json"
 for track in small base; do
+  track_dir="$OUTPUT_ROOT/student_dinov3_${track}"
+  if [[ -f "$track_dir/checkpoint-promoted.pt" ]]; then
+    touch "$STATE_DIR/student-${track}.done"
+  fi
   run_stage "student-$track" \
     "$UV_BIN" run python scripts/launch_students_distill.py \
     --track "$track" \
@@ -241,18 +283,24 @@ for track in small base; do
     --teacher-promotion-report "$TEACHER_REPORT" \
     --manifest "$TRAIN_MANIFEST" \
     --val-manifest "$VAL_MANIFEST" \
+    --resume auto \
     "--${track}-devices" "$GPU_DEVICES" \
-    "--${track}-output-dir" "$OUTPUT_ROOT/student_dinov3_${track}"
+    "--${track}-output-dir" "$track_dir"
 done
 
 for track in small base; do
+  track_dir="$OUTPUT_ROOT/att_student_${track}"
+  if [[ -f "$track_dir/checkpoint-final.pt" ]]; then
+    touch "$STATE_DIR/att-${track}.done"
+  fi
   run_stage "att-$track" \
     "$UV_BIN" run python scripts/launch_att_tracks.py \
     --track "$track" \
     "--${track}-checkpoint" "$OUTPUT_ROOT/student_dinov3_${track}/checkpoint-promoted.pt" \
     --train-manifest "$TRAIN_MANIFEST" \
+    --resume auto \
     "--${track}-devices" "$GPU_DEVICES" \
-    "--${track}-output" "$OUTPUT_ROOT/att_student_${track}"
+    "--${track}-output" "$track_dir"
 done
 
 echo "[TRAIN] Complete teacher, student-distillation, and ATT stages"
