@@ -1,337 +1,141 @@
-# MechaDetect
+<p align="center">
+  <img src="web/mechaduck_transparent.png" width="190" alt="MechaDetect MechaDuck mascot">
+</p>
 
-MechaDetect estimates whether an image is authentic or AI-positive. “AI-positive”
-covers both fully generated images and images whose semantic content was changed
-with a generative model. Ordinary JPEG recompression, resizing, blur, noise,
-colour adjustment, and cropping do not change the label.
+<h1 align="center">MechaDetect</h1>
 
-The repository contains the data controls, training code, browser export path,
-and evaluation tools used for TechJam 2026 Track 5. A score is evidence for
-screening; it is not proof of authorship or ownership.
+<p align="center"><strong>An 872.6M-parameter forensic teacher distilled into 25.1M and 89.4M edge detectors with 0.9931 and 0.9967 mean transformed AUROC.</strong></p>
 
-## Headline
+<p align="center">AIGC detection runs locally through WebGPU or WebAssembly. Images stay in the browser; model weights are downloaded from Hugging Face, and the server performs no AIGC inference.</p>
 
-MechaDetect distills an 872.6M-parameter DINOv3 ViT-H+/16 forensic teacher
-into **Quark Super**, a 25.1M-parameter browser-deployable detector that
-retains **0.9931 mean AUROC** across real-world image transformations.
+<p align="center">
+  <a href="https://mechadetect-demo-deploy.vercel.app/"><img src="https://img.shields.io/badge/Live_Demo-Vercel-000000?logo=vercel" alt="Live demo"></a>
+  <img src="https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white" alt="Python 3.11">
+  <img src="https://img.shields.io/badge/Runtime-ONNX-005CED?logo=onnx&logoColor=white" alt="ONNX Runtime">
+  <img src="https://img.shields.io/badge/Browser-WebGPU%20%7C%20WASM-654FF0" alt="WebGPU and WebAssembly">
+</p>
 
-Results on the 13,841-image TechJam demonstration benchmark — held out from
-all training splits (4,998 authentic COCO val2017 + 8,843 WildFake DALL·E
-Advanced):
+<p align="center">
+  <strong><a href="https://mechadetect-demo-deploy.vercel.app/">Open the live browser demo</a></strong>
+  · <a href="#quickstart">Run the CLI</a>
+  · Demo video — link pending
+</p>
 
-| Model | Params | Size | Target | Clean AUROC | Mean transformed | Worst transformed | AIGC / authentic recall @ calibrated threshold |
-| :--- | ---: | ---: | :--- | ---: | ---: | ---: | ---: |
-| **Quark Super** | 25.1M | 96.1 MB | Browser (WebGPU / WASM) | **0.9947** | **0.9931** | **0.9870** | 99.39% / 83.77% |
-| Atom Super | 89.4M | 341.3 MB | Desktop / server edge | 0.9980 | 0.9967 | 0.9928 | 99.66% / 93.86% |
+| Model | Parameters | Float32 size | Clean AUROC | Mean transformed AUROC | Primary surface |
+|---|---:|---:|---:|---:|---|
+| **Quark Super** | 25.1M | 96.1 MB | 0.9947 | 0.9931 | Browser WebGPU/WASM |
+| **Atom Super** | 89.4M | 341.3 MB | 0.9980 | 0.9967 | Accuracy-first CLI/desktop |
 
-Quark Super is the production browser default; Atom Super is the accuracy-first
-option for desktop/server edge. Full per-condition robustness and the
-four-student comparison are in [§6](#6-track-5-expected-deliverables).
+**Warmed RTX 4080 WebGPU p50:** 21.3–21.9 ms after five warm-up runs, measured across two 30-inference runs. The browser defaults to Quark Super for download size; `predict.py` defaults to Atom Super for accuracy.
 
----
+<p align="center">
+  <img src="docs/assets/mechadetect-demo.gif" width="960" alt="MechaDetect browser demo classifying an authentic image and an AIGC image">
+</p>
 
-## 1. Backbone decision
-
-A controlled four-GPU tournament on 12,000 generator-balanced images selected
-DINOv3 ViT-H+/16 (`facebook/dinov3-vith16plus-pretrain-lvd1689m`) as the teacher backbone.
-
-### 3-Way Tournament Summary
-
-| Dimension | DINOv3 ViT-H+/16 (Winner) | PE-Spatial-G/14 (Runner-Up) | Gemma 4 Tower (Eliminated) |
-| :--- | :---: | :---: | :---: |
-| **Parameters (Ceiling < 2B)** | **840.6M** | 1,851.9M | **569.5M** |
-| **Tokens per Image** | **196** ($14 \times 14$ grid at 224px) | 1,024 ($32 \times 32$ grid at 448px) | 1,120 soft tokens |
-| **Strict-Unseen AUROC (480 img)** | **0.9794** [0.9689, 0.9899] | **0.9946** [0.9899, 0.9981] | 0.9548 [0.9331, 0.9721] |
-| **TechJam Proxy AUROC (COCO vs DALL·E 3)** | **0.9978** [0.9955, 0.9995] | 0.9538 [0.9344, 0.9692] | 0.9235 [0.8942, 0.9455] |
-| **DALL·E 3 Generator Recall** | **96.5%** (193/200 correct) | 48.5% (82 misclassified as tampered) | 65.5% (64 misclassified) |
-| **Aspect Ratio Shortcut Accuracy (Chance=33%)**| **54.66%** (Near-chance / invariant) | **86.61%** (Severe shortcut leak) | **80.53%** (Severe shortcut leak) |
-| **Adaptation Speed (Time per Update)** | **~1.8 seconds** | ~35.0 seconds (19.4× slower) | ~14.0 seconds |
-
-Full empirical findings, 16-condition robustness tables, and failure analyses:
-- Comprehensive findings: [`docs/backbone_bakeoff_findings.md`](docs/backbone_bakeoff_findings.md)
-- Executive decision & checkpoint handoff: [`docs/backbone_bakeoff_decision.md`](docs/backbone_bakeoff_decision.md)
-- Production teacher plan: [`docs/teacher_training_plan.md`](docs/teacher_training_plan.md)
-- Consolidated teacher training run record and published weights: [`docs/training_run_consolidated.md`](docs/training_run_consolidated.md)
+<p align="center">
+  <a href="#results">Results</a> ·
+  <a href="#quickstart">Quickstart</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#data-and-leakage-controls">Data</a> ·
+  <a href="#training">Training</a> ·
+  <a href="#limitations">Limitations</a>
+</p>
 
 ---
 
-## 2. Model Architecture
+## Why MechaDetect
 
-MechaDetect uses a unified architecture across both its teacher and student models.
-The prediction objective is binary: authentic images are negative ($y=0$), while
-fully synthetic images and localized generative edits share a single positive label
-($y=1$).
+Online platforms need AIGC screening capacity to grow with upload and moderation volume. Conventional detectors concentrate that workload in data centres. MechaDetect moves the inference workload to users' devices instead.
 
-### Architectural Topology
+The deployed demo downloads a Float32 ONNX model, then processes image tensors inside the browser through WebGPU with WebAssembly fallback. Image bytes are not uploaded for classification. Platforms can add screening without running an inference service for every image.
 
-```text
-[ Input RGB Image: 224 × 224 × 3 ]
-       │
-       ▼
-[ Vision Backbone: DINOv3 ViT (Patch Size 16) ]
-       │  1 CLS + 4 register prefix tokens stripped
-       │  Output: B × 196 patch tokens × encoder_dim
-       ▼
-[ Token Adapter: LayerNorm + Linear(encoder_dim → 512) ]
-       │  Output: B × 196 adapted tokens × 512
-       ├───────────────────────────────────────────────┐
-       ▼                                               ▼
-[ Global AI-Evidence Head ]                 [ Edit Localization Head ]
-• 4 learned query vectors                   • Token classifier (512 → 1 score)
-• Multi-head cross-attention (4 heads)      • Softmax attention pooling (512)
-• Mean (512) + Std (512) summary pooling    • Top-5% patch pooling (k=10 tokens, 512)
-• Concat 6 × 512 = 3072 dims                • 1 learned global query (512)
-• Projection: 3072 → 256 (GELU + Dropout)   • Concat 3 × 512 = 1536 dims
-       │                                    • Projection: 1536 → 256 (GELU + Dropout)
-       │                                               │
-       └───────────────────────┬───────────────────────┘
-                               ▼
-             [ Binary AI-Positive Classifier ]
-             • Concat global + local features (256 + 256 = 512 dims)
-             • Linear(512 → 1) → ai_positive_logit
-             • P(AI-positive) = sigmoid(logit)
-             • P(authentic) = 1 - P(AI-positive)
-```
-
-### Model Family & Training Lineage
-
-The architecture is parameterized across three scales:
-
-| Variant | Role | Backbone Identifier | Encoder Dim | Parameters | Training Data Scope |
-| :--- | :--- | :--- | :---: | :---: | :--- |
-| **Normal Teacher** | Primary Distillation Source | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | 872.6M | Canonical `train` split (51.1k rows) |
-| **Super Teacher** | Full-Data Adaptation | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | 872.6M | All eligible rows (87.8k rows) |
-| **Atom** | Post-ATT Base Student (Normal) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | Canonical `train` split (51.1k rows) |
-| **Atom Super** | Post-ATT Base Student (Super) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | All eligible rows (87.8k rows) |
-| **Quark** | Post-ATT Small Student (Normal) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | Canonical `train` split (51.1k rows) |
-| **Quark Super** | Post-ATT Small Student (Super) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | All eligible rows (87.8k rows) |
-
-* **Teacher Variants:**
-  * **Normal Teacher (Stage 2):** Trained on the canonical `train` split (51.1k rows), providing the primary source for student distillation.
-  * **Super Teacher (Full-Data):** Trained across all eligible rows (87.8k rows) for maximum data coverage.
-* **Student Variants:**
-  * **Normal Students (`Quark`, `Atom`):** Distilled and hardened with Adversarial Transformation Training (ATT) on the canonical `train` split.
-  * **Super Students (`Quark Super`, `Atom Super`):** Distilled and hardened with Adversarial Transformation Training (ATT) across all available rows (`train_super_all.parquet`).
-  * **Adversarial Transformation Training (ATT):** Both Normal and Super students undergo ATT. During training, the model evaluates 3 candidate perturbations (JPEG, blur, resize, noise, color, crop) per row under `torch.no_grad()` and optimizes against the most challenging candidate alongside the original image to maximize corruption robustness.
-* **Browser Runtime & WebGPU Export:** The browser catalog resolves six immutable Float32 ONNX artifacts from `zye2/mechadetect-models` on Hugging Face; model weights are not stored in this Git repository. ONNX Runtime Web executes them with WebGPU and WebAssembly fallback.
-* **Optional Dual-Stream Spectral Expert:** For training experiments on spatial residuals, an optional frequency-domain ConvNeXt-Tiny stream processes RGB plus fixed high-pass spatial residuals (`conv2d` with discrete derivative kernels) and a 32-bin radial 2D FFT energy projection, gated via learned sigmoid parameters. Production student ONNX exports omit this branch to minimize client memory and enable pure browser execution.
-
-### ONNX Precision and Deployment Formats
-
-The public browser release uses Float32 ONNX artifacts:
-
-| Model Variant | Precision | Opset | File Size | Primary Target / Runtime | Status |
-| :--- | :--- | :---: | :---: | :--- | :--- |
-| **Quark Super** | **Float32** | 17 | **96.1 MB** | **Browser (WebGPU / WASM)** | **Production Default** |
-| **Quark (Normal)** | Float32 | 17 | 96.1 MB | Browser baseline | Available |
-| **Atom Super** | Float32 | 17 | 341.3 MB | Desktop / Server edge | Available |
-| **Atom (Normal)** | Float32 | 17 | 341.3 MB | Desktop / Server edge | Available |
-
-Float32 exports use vectorized batched token extraction (`forward_batched_tokens`). Static INT8 artifacts are excluded from the release because the current post-training quantization policy does not satisfy the numerical-quality gate. See [Static INT8 Release Evaluation](docs/int8_release_evaluation.md) for complete results, the diagnosed activation-range failure, the PTQ-versus-QAT tradeoff, and the requirements for a future INT8 release.
+In this project, **AIGC** includes fully generated images and images whose semantic content was changed by a generative model. Authentic images are negative. JPEG compression, resizing, blur, noise, colour adjustment, and cropping do not change the ground-truth label.
 
 ---
 
-## 3. Training Data & Transparency
+## Results
 
-The training manifests, split distributions, and source audit reports are publicly hosted and versioned on Hugging Face:
+### Held-out organizer benchmark
 
-👉 [**`zye2/tj-data` Dataset Repository**](https://huggingface.co/datasets/zye2/tj-data)
+The headline benchmark contains **13,841 images** excluded from every training pool:
 
-### Dataset Structure & Split Allocation
+- **4,998 authentic** COCO val2017 images;
+- **8,843 AIGC** WildFake DALL·E Advanced images;
+- one clean condition and 14 transformed conditions;
+- 207,615 evaluations per model across the complete grid.
 
-The declared dataset package contains **122,344 total records** across 29 active forensic and natural cohorts. Preflight verification quarantined 30,455 unmaterializable or conflicting records into `exclusions.parquet`, leaving **87,793 verified, decodable, and clean eligible records**.
+| Model | Parameters | Size | Clean AUROC | Mean transformed | Worst transformed | AIGC recall | Authentic recall |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Quark Normal | 25.1M | 96.1 MB | 0.9921 | 0.9871 | 0.9691 | 97.60% | 92.60% |
+| **Quark Super** | **25.1M** | **96.1 MB** | **0.9947** | **0.9931** | **0.9870** | **99.39%** | **83.77%** |
+| Atom Normal | 89.4M | 341.3 MB | 0.9973 | 0.9945 | 0.9876 | 98.94% | 94.82% |
+| **Atom Super** | **89.4M** | **341.3 MB** | **0.9980** | **0.9967** | **0.9928** | **99.66%** | **93.86%** |
 
-| Manifest / Split | Row Count | Percentage | Class Balance (AI-Pos / Auth) | Dataset Scope & Usage |
-| :--- | :---: | :---: | :---: | :--- |
-| **`train.parquet`** | **51,107** | 58.2% | 28,594 / 22,513 | Canonical training split used by Normal models (`Quark`, `Atom`, Normal Teacher) |
-| **`train_super_all.parquet`** | **87,793** | 100.0% | 49,120 / 38,673 | Full eligible training split used by Super models (`Quark Super`, `Atom Super`, Super Teacher) |
-| `validation.parquet` | 14,617 | 16.6% | 8,187 / 6,430 | Validation split for threshold calibration and model promotion gates |
-| `test.parquet` | 11,129 | 12.7% | 6,233 / 4,896 | In-distribution generalization test benchmark |
-| `test_unseen.parquet` | 10,940 | 12.5% | 10,932 / 8 | Out-of-distribution benchmark evaluating unseen generator families |
-| `calibration.parquet` | 4,096 | 4.7% | 2,294 / 1,802 | Strictly isolated split used exclusively for static INT8 PTQ calibration |
-| `exclusions.parquet` | 30,455 | — | — | Quarantined records (missing remote bytes, unaligned masks, cross-label conflicts) |
+**Normal** variants use the canonical training split. **Super** variants are final-fit models trained across all eligible rows. Quark is the compact browser family; Atom is the higher-accuracy family.
 
-### Cohort Composition
+These results place both families in a competitive accuracy range at edge-deployable scales. Atom gives the strongest ranking and authentic recall. Quark cuts the artifact to 96.1 MB and remains above 0.99 mean transformed AUROC.
 
-The dataset consists of authentic negative anchors and generative positive cohorts across 29 collections:
+<details>
+<summary><strong>Full 15-condition Float32 AUROC matrix</strong></summary>
 
-* **Authentic Negatives (38.7k images):**
-  * *Photography & Portraits (21.8k):* Real camera captures from SID (9.4k), CelebA-HQ human portraits (4.8k), AFHQ animal faces (3.3k), DiffusionForensics natural photo anchors (4.1k), and Open Images v7 (0.2k).
-  * *Art & Illustrations (15.9k):* Public domain museum scans (Art Museums PD 7.6k, Artic 6.3k, Classical Figure Art 1.0k) and hand-drawn Manga109 illustrations (1.0k).
-  * *3D CGI & Gaming (1.0k):* Video game captures (GTA 5 0.5k, fantasy gaming 0.25k) and 3D Blender animation (Sintel 0.25k).
-* **Generative Positives (49.1k images):**
-  * Midjourney v5/v6/Niji (6.6k), FLUX.1 [dev] (5.3k), GPT-Image-Edit (5.0k), Stable Diffusion SD 1.x/2.x/3/XL (4.9k), diffusion baselines (DDPM, DDIM, ADM, LDM, 15.0k), Ideogram v2 (2.9k), Krea 2 (2.4k), Google Nano Banana edited/pro (1.9k), and specialized engines (DALL·E 2, VQDM, Danbooru 2026 AIGC, 5.2k).
+| Model | Clean | JPEG 90 | JPEG 70 | JPEG 50 | JPEG 30 | Blur 0.5 | Blur 1.0 | Blur 2.0 | Resize ½ | Resize ¼ | Noise .02 | Noise .05 | Noise .10 | Colour 20% | Crop 80% |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Quark Normal | 0.9921 | 0.9939 | 0.9963 | 0.9960 | 0.9950 | 0.9911 | 0.9826 | 0.9763 | 0.9786 | 0.9691 | 0.9912 | 0.9889 | 0.9803 | 0.9919 | 0.9885 |
+| Quark Super | 0.9947 | 0.9955 | 0.9968 | 0.9967 | 0.9963 | 0.9947 | 0.9922 | 0.9887 | 0.9907 | 0.9870 | 0.9943 | 0.9928 | 0.9885 | 0.9947 | 0.9942 |
+| Atom Normal | 0.9973 | 0.9978 | 0.9992 | 0.9991 | 0.9988 | 0.9977 | 0.9935 | 0.9901 | 0.9876 | 0.9884 | 0.9965 | 0.9938 | 0.9884 | 0.9972 | 0.9954 |
+| Atom Super | 0.9980 | 0.9976 | 0.9986 | 0.9989 | 0.9989 | 0.9979 | 0.9965 | 0.9958 | 0.9939 | 0.9928 | 0.9975 | 0.9961 | 0.9940 | 0.9979 | 0.9980 |
 
-### Benchmark Isolation & Zero-Leakage Audit
+</details>
 
-* **Zero Sample Overlap:** 0 identical SHA-256 hashes across train, validation, test, and calibration splits.
-* **Zero Duplicate Group Leakage:** All 75,168 perceptual difference hash (dHash) and SHA-256 duplicate clusters are strictly isolated within individual splits.
-* **Strict Unseen Generator Separation:** 0 AI generator leakage into train. The 15 positive generator families in `test_unseen` (FLUX.1 [dev], DALL·E 2, SDXL 1.0, SD v1/v2, IF, LDM, IDDPM, PNDM, VQDM, etc.) are 100% absent from the training splits.
-* **Organizer Demo Exclusion:** 0 overlap (0 file paths, 0 SHA-256 hashes) with the official TechJam demonstration evaluation dataset ($13,841$ images: $4,998$ COCO val2017 authentic + $8,843$ WildFake DALL-E Advanced images).
-* **Forbidden Cohort Rejection:** The forbidden directory `newer image model data(do not use for training)` is completely blocked by fail-closed preflight guards.
+### Error analysis
+
+The operating-threshold trade-off is dominated by false positives on authentic images, not missed AIGC. On clean input, Quark Super produced 811 false positives and 54 false negatives; Atom Super reduced these to 307 and 30. Quarter resizing increased authentic false positives to 1,418 for Quark and 1,197 for Atom while AIGC false negatives remained low at 60 and 15.
+
+Strong downsampling and blur remove camera and texture evidence from authentic images, pushing them toward the AIGC side of the threshold. Conversely, highly realistic synthetic images can preserve camera-like texture and become false negatives. Atom ranks these cases more reliably; Quark makes the browser-size trade-off.
+
+Static INT8 reached 51.1 MB for Quark and 173.3 MB for Atom, but its AUROC degraded materially. Float32 is the supported release format. The graph analysis and PTQ/QAT requirements are in [the INT8 release report](docs/int8_release_evaluation.md).
 
 ---
 
-## 4. Quickstart & Usage
+## Quickstart
 
-### 4.1 Installation
+### Browser demo
 
-This repository uses [uv](https://docs.astral.sh/uv/) to create the project
-virtual environment and install the exact versions recorded in `uv.lock`.
-Install uv once, then run the matching setup sequence for your shell:
+Open **[mechadetect-demo-deploy.vercel.app](https://mechadetect-demo-deploy.vercel.app/)**. The demo defaults to Quark Super. Select another model from the catalog, upload or drop an image, and view its AIGC probability. Inference runs in the browser; the server receives no image tensor for classification.
 
-**Windows PowerShell**
+### Environment setup
+
+This repository uses [uv](https://docs.astral.sh/uv/) and the exact dependency versions in `uv.lock`.
+
+<details>
+<summary><strong>Windows PowerShell</strong></summary>
 
 ```powershell
 irm https://astral.sh/uv/install.ps1 | iex
-uv venv --python 3.11
+git clone https://github.com/dalzyu/MechaDetect.git
+Set-Location MechaDetect
 uv sync --locked --dev
 Copy-Item .env.example .env
-notepad .env
 ```
 
-**POSIX shell (Linux, including the training cluster)**
+</details>
+
+<details>
+<summary><strong>Linux / macOS</strong></summary>
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-uv venv --python 3.11
+git clone https://github.com/dalzyu/MechaDetect.git
+cd MechaDetect
 uv sync --locked --dev
 cp .env.example .env
-$EDITOR .env
 ```
 
-`uv sync` creates (or updates) `.venv`; `--locked` refuses to change
-`uv.lock`, and `--dev` installs the test/lint tools from the `dev` dependency
-group. You do not need to activate the environment when using `uv run`, which
-always executes against this project environment. If you prefer activation:
+</details>
 
-```powershell
-.venv\Scripts\Activate.ps1
-```
+`uv run` executes inside the project environment without shell activation. The lockfile selects CUDA 13.0 PyTorch wheels for training. Prediction falls back to ONNX Runtime CPU when an accelerated provider is unavailable.
 
-```bash
-source .venv/bin/activate
-```
-
-The lockfile selects the CUDA 13.0 PyTorch wheels (`torch==2.13.0` and
-`torchvision==0.28.0`) from the explicit PyTorch index. An NVIDIA driver
-compatible with those wheels is therefore required; this project does not
-provide a CPU or macOS dependency fallback.
-
-Run Python tools reproducibly through uv:
-
-```bash
-uv run python -m aigc_detector.predict --help
-uv run pytest tests/ -q
-```
-
-On PowerShell, the same `uv run ...` commands apply.
-
-### 4.2 Environment Setup
-
-Copy `.env.example` to `.env` and set machine-local storage paths:
-```bash
-TECHJAM_DATA_ROOT=E:/techjam26-runtime/data
-TECHJAM_HF_HOME=E:/techjam26-runtime/huggingface
-TECHJAM_OUTPUT_ROOT=E:/techjam26-runtime/outputs
-```
-
-### 4.3 Preparing the Production Eligible Manifests
-
-Data prefetch and manifest generation are performed prior to DDP:
-
-```bash
-# 1. Prefetch source images to local NVMe
-uv run python scripts/data_prep/acquire_all_images.py \
-  --data-root "$TECHJAM_DATA_ROOT" \
-  --resume
-
-# 2. Freeze immutable eligible Parquet splits and 4,096-row calibration split
-uv run python scripts/data_prep/freeze_production_eligible.py \
-  --data-root "$TECHJAM_DATA_ROOT" \
-  --output-dir splits/production_eligible \
-  --calibration-size 4096 \
-  --strict \
-  --verify-bytes
-```
-
-The builder creates `train.parquet`, `validation.parquet`, `test.parquet`, `test_unseen.parquet`,
-`calibration.parquet`, `exclusions.parquet`, and `audit_report.json`. Production loaders
-fail closed and forbid missing-image fallback substitution.
-
-### 4.4 End-to-end training
-
-Open [`train.ipynb`](train.ipynb) from the repository root. It is the maintained
-training path and runs the complete single-GPU workflow:
-
-1. download the pinned manifest package and acquire source images;
-2. freeze leak-free train, validation, test, and calibration splits;
-3. train the frozen-backbone and unfrozen teacher stages;
-4. evaluate and promote the teacher;
-5. distill Quark (ViT-S) and Atom (ViT-B) sequentially;
-6. run Adversarial Transformation Training on both students;
-7. evaluate clean and transformed images, apply the ATT gate, and export ONNX.
-
-Launch Jupyter without adding notebook packages to the locked training
-environment:
-
-```bash
-uv run --with jupyter jupyter lab train.ipynb
-```
-
-The notebook defaults to the complete run. Set `SMOKE_TEST = True` in its first
-configuration cell to exercise every training path with two updates. A single
-NVIDIA GPU is sufficient; the complete teacher run is long.
-
-All tracks preserve effective batch 48:
-
-| Track | Physical batch | Accumulation |
-|---|---:|---:|
-| Teacher Stage 1 | 6 | 8 |
-| Teacher Stage 2 | 2 | 24 |
-| Quark / ViT-S distillation | 12 | 4 |
-| Atom / ViT-B distillation | 3 | 16 |
-| Quark ATT | 4 | 12 |
-| Atom ATT | 2 | 24 |
-
-The underlying CLIs remain directly usable. For example:
-
-```bash
-uv run python -m aigc_detector.train \
-  --config configs/teacher_dinov3_stage1_clean_frozen.yaml
-```
-
-Resume only with the same world size, physical batch, and accumulation used to
-create the checkpoint.
-
-### 4.5 Evaluating a Checkpoint
-
-
-Run clean evaluation and the complete single-transform robustness grid on a
-candidate production checkpoint:
-
-```bash
-uv run python scripts/evaluate_performance.py \
-  --manifest splits/production_eligible/test_unseen.parquet \
-  --checkpoint /path/to/checkpoint-step-N.pt \
-  --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
-  --output outputs/teacher-clean-unseen.json \
-  --batch-size 1
-
-uv run python scripts/evaluate_performance.py \
-  --manifest splits/production_eligible/test_unseen.parquet \
-  --checkpoint /path/to/checkpoint-step-N.pt \
-  --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
-  --output outputs/teacher-robustness-unseen.json \
-  --robustness \
-  --batch-size 1
-```
-
-### 4.6 Predicting on an image directory
-
-The submission entry point downloads the selected Float32 ONNX artifact from
-Hugging Face on first use, then writes exactly the required `image_path` and
-`pred` fields:
+### Predict one image or a directory
 
 ```bash
 uv run python predict.py \
@@ -339,98 +143,25 @@ uv run python predict.py \
   --output predictions.json
 ```
 
-The interactive chooser offers Atom Super (89.4M parameters) as the default and
-Quark Super (25.1M) as the smaller option. Choose **More** to show Atom Normal
-and Quark Normal, or bypass the prompt with `--model <catalog-id>`. Private
-model access requires `HF_TOKEN`.
-
-### 4.7 Observed runtime verification
-
-On September 1, 2026, the root CLI downloaded and executed real Hugging Face
-artifacts through ONNX Runtime:
-
-| Menu path | Artifact | Input | `pred` | Verdict |
-|---|---|---|---:|---|
-| Default | Atom Super Float32 | `authentic.jpg` | 0.016142 | Original |
-| More → Quark Normal | Quark Normal Float32 | `fully_aigc.png` | 0.976399 | AIGC |
-
-Both runs produced a one-row JSON array containing exactly `image_path` and
-`pred`. The installed ONNX Runtime could not load `cublasLt64_13.dll`, reported
-the unavailable CUDA provider, and completed both runs with its CPU provider.
-These two examples verify artifact download, model loading, preprocessing,
-inference, menu routing, and serialization; they are not an accuracy benchmark.
-
-The real teacher Stage 1 trainer was also launched on the RTX 4080 with the
-pinned DINOv3 ViT-H+/16 weights and a temporary three-image manifest. It
-completed 29 forward, backward, and optimizer updates at physical batch 1 and
-accumulation 1 before intentional cancellation after 2 minutes 3 seconds. This
-verifies the core teacher training path, not the complete notebook: full-corpus
-acquisition, Stage 2, promotion, distillation, ATT, evaluation, and export were
-not executed in that runtime check.
-
-
-### 4.8 Model Export
-
-Export a trained student checkpoint to opset 17 Float32 ONNX:
-
-```bash
-uv run python scripts/export_onnx_webgpu.py \
-  --checkpoint outputs/att_student_small/checkpoint-final.pt \
-  --variant small \
-  --output outputs/models/mechadetect-quark-super-post-att-float32.onnx
-```
-
-### 4.9 Repository checks
-Project checks are available under `tests/`; training does not invoke them.
-
----
-
-## 5. Repository layout
+Without `--model`, the CLI opens this chooser:
 
 ```text
-techjam26/
-├── train.ipynb                     # Complete one-GPU training workflow
-├── predict.py                      # Required directory-to-JSON inference CLI
-├── configs/                        # Teacher, student, and ATT configurations
-├── scripts/
-│   ├── data_prep/
-│   │   ├── acquire_all_images.py
-│   │   └── freeze_production_eligible.py
-│   ├── distill_student.py
-│   ├── train_att.py
-│   ├── evaluate_teacher.py
-│   ├── evaluate_performance.py
-│   ├── promote_teacher.py
-│   ├── check_att_gate.py
-│   └── export_onnx_webgpu.py
-├── src/aigc_detector/              # Model, data, losses, metrics, and training
-├── web/                            # Existing client-side WebGPU/WASM demo
-└── tests/
+Super models:
+  1. Atom Super — 89.4M parameters [default]
+  2. Quark Super — 25.1M parameters
+  3. More — show Normal variants
 ```
 
-## 6. Track 5 expected deliverables
+Choose **More** for Atom Normal and Quark Normal, or bypass the menu:
 
-### Project description and technical stack
+```bash
+uv run python predict.py \
+  --input image.jpg \
+  --output prediction.json \
+  --model quark-super-float32
+```
 
-MechaDetect estimates the probability that an image is fully AI-generated or
-semantically edited by a generative model. Training uses PyTorch, CUDA, and
-Hugging Face Transformers with a DINOv3 ViT-H+/16 teacher; Quark and Atom are
-distilled ViT-S and ViT-B students. Pillow and NumPy implement deterministic
-JPEG, blur, resize, noise, colour, and crop transformations. Pandas and PyArrow
-store the audited manifests. ONNX Runtime provides portable inference.
-
-Development uses Git, VS Code or Jupyter, `uv`, Python 3.11, and NVIDIA CUDA.
-Training data combines public or properly licensed image-forensics sources,
-including SID, WildFake, and DiffusionForensics. Exact hashes, perceptual
-duplicate groups, source revisions, and split membership are recorded. The
-COCO val2017 and WildFake DALL-E Advanced organizer demonstration set is
-explicitly blocked from training.
-
-### Required prediction format
-
-[`predict.py`](predict.py) recursively reads an image directory or accepts one
-image. It outputs a JSON array with only the required fields; `pred` is
-$P(\text{AI-generated or AI-edited})$:
+The output contract contains exactly `image_path` and `pred`, where `pred` is $P(\text{AIGC})$:
 
 ```json
 [
@@ -441,111 +172,302 @@ $P(\text{AI-generated or AI-edited})$:
 ]
 ```
 
-### Robustness evaluation summary
+Supported inputs: JPEG, PNG, WebP, and AVIF. Model files are cached atomically under `.cache/mechadetect/`.
 
-The organizer demonstration benchmark contains 13,841 held-out images: 4,998
-authentic COCO val2017 images and 8,843 WildFake DALL-E Advanced images. All
-four Float32 students were evaluated on every image under clean input and 14
-transform conditions.
+---
 
-**Final-fit protocol.** The Super students (`Quark Super`, `Atom Super`) and
-the Super Teacher are final-fit models: they train on `train_super_all.parquet`,
-which contains all 87,793 eligible rows. The canonical train / validation /
-test / calibration splits are subsets of those eligible rows, so Super training
-necessarily spans them. This does not contaminate the results reported here:
-every metric in this section is measured on the organizer demonstration
-benchmark, which is disjoint from all training splits and excluded from
-training by the zero-leakage audit (§3). Treat the Super numbers as
-deployment characterization on a held-out benchmark, not as scientific
-generalization from the internal splits.
+## How it works
 
-| Model | Clean AUROC | Mean transformed AUROC | Worst transformed AUROC | Worst condition |
-| :--- | ---: | ---: | ---: | :--- |
-| Quark Normal | 0.9921 | 0.9871 | 0.9691 | quarter resize |
-| **Quark Super** | **0.9947** | **0.9931** | **0.9870** | quarter resize |
-| Atom Normal | 0.9973 | 0.9945 | 0.9876 | half resize |
-| **Atom Super** | **0.9980** | **0.9967** | **0.9928** | quarter resize |
+```mermaid
+flowchart LR
+    A[Curated authentic and AIGC data] --> B[872.6M DINOv3 ViT-H+ teacher]
+    B --> C[Knowledge distillation]
+    C --> D[Quark ViT-S<br/>25.1M]
+    C --> E[Atom ViT-B<br/>89.4M]
+    D --> F[Adversarial Transformation Training]
+    E --> F
+    F --> G[Float32 ONNX]
+    G --> H[Browser WebGPU / WASM]
+    G --> I[Python CLI / ONNX Runtime]
+```
 
-| Condition | Quark Super AUROC | Atom Super AUROC |
-| :--- | ---: | ---: |
-| Clean | 0.9947 | 0.9980 |
-| JPEG quality 30 | 0.9963 | 0.9989 |
-| Gaussian blur 2.0 | 0.9887 | 0.9958 |
-| Quarter resize | 0.9870 | 0.9928 |
-| Gaussian noise 0.10 | 0.9885 | 0.9940 |
-| Colour jitter 20% | 0.9947 | 0.9979 |
-| Centre crop 80% | 0.9942 | 0.9980 |
+A controlled backbone tournament selected DINOv3 ViT-H+/16. The PE-Spatial and Gemma comparisons, shortcut probes, confidence intervals, and selection rationale live in the [backbone findings](docs/backbone_bakeoff_findings.md) and [decision record](docs/backbone_bakeoff_decision.md).
 
-### Error analysis
+<details>
+<summary><strong>Full model and training specification</strong></summary>
 
-At the fixed operating threshold, the main failure mode is false positives on
-authentic images after strong blur or downsampling—not missed synthetic
-images. On clean input, Quark Super produced 811 false positives and 54 false
-negatives; Atom Super reduced these to 307 false positives and 30 false
-negatives. Quarter resize increased false positives to 1,418 for Quark Super
-and 1,197 for Atom Super, while false negatives remained low at 60 and 15.
+### Input and target
 
-This indicates that aggressive resampling removes camera/detail evidence and
-pushes authentic images toward the AI-positive side of the threshold. The
-larger Atom model ranks transformed examples more reliably, but costs 341 MB
-instead of 96 MB. Quark is therefore the practical browser default; Atom is
-the accuracy-first option. Applications should treat uncertain scores as
-review signals rather than proof and should calibrate the threshold for their
-false-positive tolerance.
+- RGB input tensor: `Float32[batch, 3, 224, 224]`.
+- ImageNet mean and standard-deviation normalization.
+- Binary target: authentic = 0; fully generated or generatively edited = 1.
+- Output: `[P(authentic), P(AIGC)]`.
 
-### Browser/WebGPU measurement
+### Shared detector architecture
 
-The Quark Super Float32 artifact was measured in a headed Chrome 152 browser
-session on this Windows/RTX 4080 workstation. ONNX Runtime Web 1.20.1 reported
-the WebGPU execution provider. After five warm-up runs, two repeated
-30-inference measurements produced p50 latencies of **21.3 ms** and **21.9 ms**
-(approximately **21.6 ms** across runs; mean 22.4 ms). These are steady-state
-`session.run` measurements for one preprocessed `224 × 224` tensor and exclude
-model download, image decoding, resizing, browser upload, and UI scheduling.
-They are not directly comparable with the native CUDA figures above because
-the execution providers and runtimes differ.
+1. DINOv3 ViT backbone with patch size 16.
+2. Strip one CLS and four register tokens, retaining 196 patch tokens.
+3. `LayerNorm + Linear(encoder_dim → 512)` token adapter.
+4. Global evidence head:
+   - four learned query vectors;
+   - four-head cross-attention;
+   - mean and standard-deviation token summaries;
+   - 3,072 → 256 GELU/dropout projection.
+5. Edit-localization head:
+   - token classifier;
+   - softmax attention pooling;
+   - top-5% patch pooling;
+   - learned global query;
+   - 1,536 → 256 GELU/dropout projection.
+6. Concatenate 256 global and 256 local features.
+7. `Linear(512 → 1)` AIGC logit and sigmoid probability.
 
-The benchmark used the same 96.1 MB Float32 ONNX artifact selected by the
-browser catalog. The browser demo still uses WebGPU when available and falls
-back to WebAssembly when it is not.
+### Model scales
 
-### Submission checklist
+| Variant | Backbone | Encoder dim | Complete parameters | Data scope |
+|---|---|---:|---:|---|
+| Normal Teacher | DINOv3 ViT-H+/16 | 1,280 | 872,606,207 | Canonical train |
+| Super Teacher | DINOv3 ViT-H+/16 | 1,280 | 872,606,207 | All eligible rows |
+| Quark / Quark Super | DINOv3 ViT-S/16 | 384 | 25,089,666 | Canonical / all eligible |
+| Atom / Atom Super | DINOv3 ViT-B/16 | 768 | 89,350,914 | Canonical / all eligible |
 
-- **Written description:** the overview, method, stack, data, results, error
-  analysis, and limitations are present in this README for transfer to Devpost.
-- **Public repository:** source, configs, [`train.ipynb`](train.ipynb), and the
-  required [`predict.py`](predict.py) interface are included.
-- **Demo video:** record the existing web demo and `predict.py` end-to-end,
-  upload it publicly to YouTube, and link it from Devpost. This external step
-  cannot be completed inside the repository.
-- **Robustness summary:** included above.
-- **Error analysis:** included above.
+### Teacher training
 
-## 7. Known limitations
+- **Stage 1:** frozen ViT-H+ backbone, clean images, train task heads.
+- **Stage 2:** unfrozen backbone, paired original/transformed views, BF16, gradient checkpointing, and EMA.
+- Optional teacher spectral expert: ConvNeXt-Tiny RGB/residual stream plus fixed high-pass kernels and a 32-bin radial FFT energy projection.
 
-- The output is a probabilistic screening score, not cryptographic provenance,
-  proof of authorship, a watermark check, or a copyright decision.
-- Strong resize, crop, or blur can remove evidence and increase false positives
-  on authentic images.
-- Generator families and post-processing pipelines continue to evolve; the
-  model requires monitoring and periodic evaluation on new held-out sources.
-- The 872.6M-parameter teacher is practical for offline training but not
-  constrained deployment. Quark exists specifically for the browser path.
-- The browser catalog currently resolves public, immutable Hugging Face
-  artifacts. Production deployments still require approved model licensing and
-  redistribution terms; access should be rechecked if the hosting policy
-  changes.
+### Distillation
 
-## 8. Team Contributions
+Students learn from hard binary targets, teacher soft predictions, and teacher feature alignment. Quark and Atom train independently and retain the same detector-head contract. The production student exports omit the spectral branch to reduce memory and keep browser execution portable.
 
-Fill in each member before Track 5 submission. The inference command
-([`predict.py`](predict.py), §4.6) and the Devpost description source (§6) are
-already in place; the two remaining external items are this table and the
-demo video (record the web demo + `predict.py` end-to-end, upload to YouTube,
-link from Devpost).
+### Adversarial Transformation Training
 
-| Member | Role | Contributions |
-| :--- | :--- | :--- |
-| _TBD_ | _TBD_ | _TBD_ |
+For each row, ATT samples three perturbation candidates from JPEG, blur, resize, noise, colour, and crop families. It scores candidates under `torch.no_grad()`, selects the hardest, and optimizes the clean/hard pair. Membership guards restrict mining and training to the intended training split.
 
-Names and role allocation are not invented or attributed without confirmation.
+### Losses and promotion
+
+The objective combines original and transformed classification, prediction consistency, feature consistency, teacher soft targets, teacher feature alignment, optional mask focal/dice terms, and EMA consistency. Promotion checks clean ranking, class recall, worst-transformation AUROC, manifest identity, and checkpoint identity.
+
+### Export
+
+Quark and Atom export as Float32 ONNX opset 17 with PyTorch/ONNX parity checks. The browser catalog uses immutable Hugging Face revision URLs and validates artifact SHA-256 and size. Lattice uses opset 18 and four external-data shards because the teacher-scale graph exceeds the inline ONNX size limit.
+
+</details>
+
+---
+
+## Data and leakage controls
+
+Versioned manifests and source audits are published at **[zye2/tj-data](https://huggingface.co/datasets/zye2/tj-data)**. The declared package contains 122,344 records across 29 active cohorts. Preflight quarantined 30,455 unmaterializable or conflicting rows, leaving **87,793 verified eligible records**.
+
+| Manifest | Rows | AIGC / authentic | Purpose |
+|---|---:|---:|---|
+| `train.parquet` | 51,107 | 28,594 / 22,513 | Canonical Normal-model training |
+| `train_super_all.parquet` | 87,793 | 49,120 / 38,673 | Full eligible Super-model final fit |
+| `validation.parquet` | 14,617 | 8,187 / 6,430 | Threshold calibration and promotion |
+| `test.parquet` | 11,129 | 6,233 / 4,896 | In-distribution evaluation |
+| `test_unseen.parquet` | 10,940 | 10,932 / 8 | Unseen-generator stress evaluation |
+| `calibration.parquet` | 4,096 | 2,294 / 1,802 | Isolated INT8 calibration only |
+| `exclusions.parquet` | 30,455 | — | Missing bytes, mask failures, and conflicts |
+
+### Source and license records
+
+Authentic cohorts include camera photography, portraits, public-domain art, Manga109 illustrations, game captures, and Blender animation. AIGC cohorts include Midjourney, FLUX, GPT Image, Stable Diffusion families, Ideogram, Krea, DALL·E, diffusion baselines, and generative edits.
+
+Each cohort records its origin, source revision, license or governing terms, attribution requirements, and redistribution mode. Users must follow each source's terms rather than assuming one repository-wide dataset license.
+
+### Leakage controls
+
+- SHA-256 identity checks across train, validation, test, and calibration.
+- 75,168 SHA-256/perceptual duplicate groups isolated to one split.
+- Source-image groups kept together.
+- Unseen generator families excluded from canonical training.
+- Fail-closed missing-image and mask validation.
+- Immutable source revisions and manifest digests.
+- Zero organizer-benchmark overlap by file path and SHA-256.
+- Explicit rejection of forbidden evaluation cohorts.
+
+### Final-fit protocol
+
+Normal models use `train.parquet`. Super models use `train_super_all.parquet`, which contains all 87,793 eligible rows and therefore includes the canonical validation, test, and calibration subsets. Canonical split metrics are not untouched Super-model holdouts.
+
+The headline results remain valid because every reported metric comes from the separate 13,841-image organizer benchmark, which is excluded from all training pools. The Super numbers are deployment characterization on that disjoint benchmark.
+
+The complete data contract is in [`docs/training_dataset_specification.md`](docs/training_dataset_specification.md).
+
+---
+
+## Training
+
+### Notebook-first workflow
+
+Open the maintained end-to-end workflow from the repository root:
+
+```bash
+uv run --with jupyter jupyter lab train.ipynb
+```
+
+The notebook executes:
+
+1. locked environment and CUDA verification;
+2. immutable manifest download;
+3. source-image acquisition and byte verification;
+4. leak-free split freezing;
+5. teacher Stage 1;
+6. teacher Stage 2;
+7. teacher evaluation and promotion;
+8. sequential Quark and Atom distillation;
+9. ATT for both students;
+10. clean and transformed evaluation;
+11. ATT promotion gates;
+12. Float32 ONNX export and parity checks.
+
+`SMOKE_TEST = False` runs the full configured workflow. `SMOKE_TEST = True` limits training stages to two updates for pipeline verification. One CUDA GPU is sufficient; complete teacher training is long.
+
+| Track | Physical batch | Accumulation | Effective batch |
+|---|---:|---:|---:|
+| Teacher Stage 1 | 6 | 8 | 48 |
+| Teacher Stage 2 | 2 | 24 | 48 |
+| Quark distillation | 12 | 4 | 48 |
+| Atom distillation | 3 | 16 | 48 |
+| Quark ATT | 4 | 12 | 48 |
+| Atom ATT | 2 | 24 | 48 |
+
+<details>
+<summary><strong>Advanced: run individual stages directly</strong></summary>
+
+```bash
+# Teacher Stage 1
+uv run python -m aigc_detector.train \
+  --config configs/teacher_dinov3_stage1_clean_frozen.yaml
+
+# Teacher Stage 2
+uv run python -m aigc_detector.train \
+  --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
+  --initial-checkpoint /path/to/stage1-checkpoint.pt
+
+# Quark distillation
+uv run python scripts/distill_student.py \
+  --student small \
+  --student-config configs/student_dinov3_small_distill.yaml \
+  --teacher-config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
+  --teacher-checkpoint /path/to/checkpoint-promoted.pt \
+  --teacher-promotion-report /path/to/promotion_report.json \
+  --manifest splits/production_eligible/train.parquet \
+  --val-manifest splits/production_eligible/validation.parquet \
+  --output-dir outputs/quark_distilled
+
+# Quark ATT
+uv run python scripts/train_att.py \
+  --variant small \
+  --student-checkpoint outputs/quark_distilled/checkpoint-promoted.pt \
+  --manifest splits/production_eligible/train.parquet \
+  --config configs/att_student_small.yaml \
+  --output-dir outputs/quark_att
+
+# ONNX export
+uv run python scripts/export_onnx_webgpu.py \
+  --checkpoint outputs/quark_att/checkpoint-promoted.pt \
+  --variant small \
+  --stage normal_post_att \
+  --config configs/att_student_small.yaml \
+  --output outputs/models/mechadetect-quark-normal-post-att-float32.onnx
+```
+
+Repeat the student stages with `base` and the corresponding Atom configs.
+
+</details>
+
+Real Atom/Quark artifact inference and the teacher Stage 1 execution path have been exercised. The trainer loaded the pinned ViT-H+ weights and completed 29 optimizer updates on an RTX 4080 before intentional cancellation. This validates those paths, not the complete notebook. See the [consolidated training record](docs/training_run_consolidated.md) and [teacher plan](docs/teacher_training_plan.md).
+
+---
+
+## Repository map
+
+```text
+MechaDetect/
+├── predict.py                  # Required image/directory → JSON CLI
+├── train.ipynb                 # Maintained end-to-end training workflow
+├── configs/                    # Teacher, student, and ATT configurations
+├── scripts/
+│   ├── data_prep/              # Acquisition and immutable split freezing
+│   ├── distill_student.py
+│   ├── train_att.py
+│   ├── evaluate_performance.py
+│   ├── check_att_gate.py
+│   └── export_onnx_webgpu.py
+├── src/aigc_detector/          # Models, datasets, losses, metrics, runtime
+├── web/                        # Browser WebGPU/WASM application
+└── docs/                       # Experiments, training, data, and INT8 reports
+```
+
+---
+
+## Limitations
+
+**Anime and screenshot bias.** These domains do not contain enough counterexamples across both classes. Authentic anime-style images are underrepresented. The screenshot cohort contains generated positives without enough authentic screenshots. The model can therefore learn that a visual domain itself implies AIGC or authentic content instead of relying only on generation evidence. Dedicated per-domain rates have not yet been quantified.
+
+Strong blur and downsampling remove camera and texture evidence and increase authentic false positives. Thresholds should be calibrated for the application's false-positive cost.
+
+A MechaDetect score is a screening signal. It is not cryptographic provenance, proof of authorship, a copyright decision, or a watermark check. Generator families and post-processing pipelines continue to change, so deployed models require periodic evaluation on new held-out sources.
+
+Atom requires a 341.3 MB download; Quark requires 96.1 MB. Browser provider availability, shader compilation, memory, and latency vary by device. The 21.3–21.9 ms warmed WebGPU result is an RTX 4080 measurement, not a low-end-device claim.
+
+---
+
+## Technical appendix
+
+### Stack and versions
+
+| Layer | Technology |
+|---|---|
+| Language and environment | Python 3.11, uv, `uv.lock` |
+| Training | PyTorch 2.13.0, CUDA 13.0, BF16 |
+| Models | Transformers 5.10.1, DINOv3 |
+| Data | pandas 3.x, PyArrow, Pillow, NumPy |
+| Export | ONNX opset 17/18 |
+| Native inference | ONNX Runtime |
+| Browser inference | ONNX Runtime Web, WebGPU, WebAssembly |
+| Artifact hosting | Hugging Face Hub |
+| Demo hosting | Vercel |
+
+### Artifact catalog
+
+All browser artifacts use immutable Hugging Face revision `82ce5621828f2db7aa224663671b6aaf9cd0839b`.
+
+| Catalog ID | Parameters | Size | Opset | Target | SHA-256 |
+|---|---:|---:|---:|---|---|
+| `quark-super-float32` | 25,089,666 | 96.1 MB | 17 | Production browser default | `fa70a4deaac42346b7803c1dd58723d3326c58141e0d84b4c97de627faa2ab2e` |
+| `quark-normal-float32` | 25,089,666 | 96.1 MB | 17 | Browser baseline | `7b89ca7e24a9eee1d70f5403e0a7d42c33f992905109c1901da6e88e6c5e2275` |
+| `atom-super-float32` | 89,350,914 | 341.3 MB | 17 | Accuracy-first CLI/desktop | `8cddfb640328fda6d2e1e4387bf1c073456388bcbbbd3726395769e96a959e1c` |
+| `atom-normal-float32` | 89,350,914 | 341.3 MB | 17 | Desktop baseline | `2a3ea6faee1d01ce157ba1f8377df574a0fcce186baf30c458849cd32a4df224` |
+| `mechadetect-lattice-normal-float32` | 872,606,180 | 3.2 GB | 18 | Workstation WebGPU | `ae8baa9d68eea80c64710568f07a1fb8dc5c2a1b52d4cba36c86c6c9f8297b62` |
+| `mechadetect-lattice-super-float32` | 872,606,180 | 3.2 GB | 18 | Workstation WebGPU | `dc6e61f6eee2814337cdf845fdccd695ef1cfab3c4b494bcd14718f59f0bae87` |
+
+Teacher and student backbones are pinned to their Hugging Face revisions. The ViT-H+ teacher uses revision `c807c9eeea853df70aec4069e6f56b28ddc82acc`; the notebook pins dataset package revision `e38715a99268236b1c91ac649c38fc31a3d39867`.
+
+### Benchmark protocol
+
+| Item | Contract |
+|---|---|
+| Population | 4,998 authentic COCO val2017 + 8,843 WildFake DALL·E Advanced |
+| Training overlap | Zero file-path and SHA-256 overlap |
+| Input | Normalized Float32 RGB, `[batch, 3, 224, 224]` |
+| Output | `[P(authentic), P(AIGC)]` |
+| Conditions | Clean + JPEG, blur, resize, noise, colour, and crop grid |
+| Ranking metric | AUROC per condition; mean and worst transformed AUROC |
+| Operating metrics | AIGC recall and authentic recall at catalog threshold 0.5 |
+| Native runtime benchmark | ONNX Runtime 1.29.0 on RTX 4080 and Core i9-13900KF |
+| Browser latency | Five warm-ups, two 30-inference RTX 4080 WebGPU runs; p50 21.3/21.9 ms |
+
+Native batch-1 timings exclude image decoding, resizing, browser upload, and UI scheduling. Browser timings are provider- and hardware-specific.
+
+### Documentation index
+
+- [Backbone bake-off findings](docs/backbone_bakeoff_findings.md)
+- [Backbone decision and checkpoint handoff](docs/backbone_bakeoff_decision.md)
+- [Teacher training plan](docs/teacher_training_plan.md)
+- [Consolidated training record](docs/training_run_consolidated.md)
+- [Training dataset specification](docs/training_dataset_specification.md)
+- [Static INT8 release evaluation](docs/int8_release_evaluation.md)
