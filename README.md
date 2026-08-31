@@ -19,6 +19,7 @@
   <strong><a href="https://mechadetect-demo-deploy.vercel.app/">Open the live browser demo</a></strong>
   · <a href="#quickstart">Run the CLI</a>
   · Demo video — link pending
+  · <strong><a href="https://huggingface.co/zye2/mechadetect-models">Download the model weights</a></strong>
 </p>
 
 | Model | Parameters | Float32 size | Clean AUROC | Mean transformed AUROC | Primary surface |
