@@ -80,16 +80,16 @@ The architecture is parameterized across three scales:
 
 | Variant | Role | Backbone Identifier | Encoder Dim | Parameters | Training Data Scope |
 | :--- | :--- | :--- | :---: | :---: | :--- |
-| **Normal Teacher** | Primary Distillation Source | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | 872.6M | Canonical `train` split (22.5k rows) |
-| **Super Teacher** | Full-Data Adaptation | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | 872.6M | All available rows (41k rows) |
-| **Quark** | Post-ATT Base Student (Normal) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | Canonical `train` split |
-| **Quark Super** | Post-ATT Base Student (Super) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | All rows (`train_super_all.parquet`) |
-| **Atom** | Post-ATT Small Student (Normal) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | Canonical `train` split |
-| **Atom Super** | Post-ATT Small Student (Super) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | All rows (`train_super_all.parquet`) |
+| **Normal Teacher** | Primary Distillation Source | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | 872.6M | Canonical `train` split (51.1k rows) |
+| **Super Teacher** | Full-Data Adaptation | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | 872.6M | All eligible rows (87.8k rows) |
+| **Quark** | Post-ATT Base Student (Normal) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | Canonical `train` split (51.1k rows) |
+| **Quark Super** | Post-ATT Base Student (Super) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | All eligible rows (87.8k rows) |
+| **Atom** | Post-ATT Small Student (Normal) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | Canonical `train` split (51.1k rows) |
+| **Atom Super** | Post-ATT Small Student (Super) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | All eligible rows (87.8k rows) |
 
 * **Teacher Variants:**
-  * **Normal Teacher (Stage 2):** Trained on the canonical `train` split (22.5k rows), providing the primary source for student distillation.
-  * **Super Teacher (Full-Data):** Trained across all available rows (41k rows) for maximum data coverage.
+  * **Normal Teacher (Stage 2):** Trained on the canonical `train` split (51.1k rows), providing the primary source for student distillation.
+  * **Super Teacher (Full-Data):** Trained across all eligible rows (87.8k rows) for maximum data coverage.
 * **Student Variants:**
   * **Normal Students (`Atom`, `Quark`):** Distilled and hardened with Adversarial Transformation Training (ATT) on the canonical `train` split.
   * **Super Students (`Atom Super`, `Quark Super`):** Distilled and hardened with Adversarial Transformation Training (ATT) across all available rows (`train_super_all.parquet`).
