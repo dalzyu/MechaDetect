@@ -82,17 +82,18 @@ The architecture is parameterized across three scales:
 | :--- | :--- | :--- | :---: | :---: | :--- |
 | **Normal Teacher** | Primary Distillation Source | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | 872.6M | Canonical `train` split (22.5k rows) |
 | **Super Teacher** | Full-Data Adaptation | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | 872.6M | All available rows (41k rows) |
-| **Quark** | Base Distilled Student | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | Canonical `train` split |
-| **Quark Super** | Post-ATT Base Student | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | All rows (`train_super_all.parquet`) |
-| **Atom** | Small Distilled Student | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | Canonical `train` split |
-| **Atom Super** | Post-ATT Small Student | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | All rows (`train_super_all.parquet`) |
+| **Quark** | Post-ATT Base Student (Normal) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | Canonical `train` split |
+| **Quark Super** | Post-ATT Base Student (Super) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | All rows (`train_super_all.parquet`) |
+| **Atom** | Post-ATT Small Student (Normal) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | Canonical `train` split |
+| **Atom Super** | Post-ATT Small Student (Super) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | All rows (`train_super_all.parquet`) |
 
 * **Teacher Variants:**
   * **Normal Teacher (Stage 2):** Trained on the canonical `train` split (22.5k rows), providing the primary source for student distillation.
   * **Super Teacher (Full-Data):** Trained across all available rows (41k rows) for maximum data coverage.
 * **Student Variants:**
-  * **Normal Students (`Atom`, `Quark`):** Distilled directly from the teacher on the canonical `train` split.
-  * **Super Students (`Atom Super`, `Quark Super`):** Trained across all rows (`train_super_all.parquet`) with Adversarial Transformation Training (ATT). During training, the model evaluates 3 candidate perturbations (JPEG, blur, resize, noise, color, crop) per row under `torch.no_grad()` and optimizes against the most challenging candidate alongside the original image to maximize corruption robustness.
+  * **Normal Students (`Atom`, `Quark`):** Distilled and hardened with Adversarial Transformation Training (ATT) on the canonical `train` split.
+  * **Super Students (`Atom Super`, `Quark Super`):** Distilled and hardened with Adversarial Transformation Training (ATT) across all available rows (`train_super_all.parquet`).
+  * **Adversarial Transformation Training (ATT):** Both Normal and Super students undergo ATT. During training, the model evaluates 3 candidate perturbations (JPEG, blur, resize, noise, color, crop) per row under `torch.no_grad()` and optimizes against the most challenging candidate alongside the original image to maximize corruption robustness.
 * **Browser Runtime & WebGPU Export:** The delivered client-side artifact (`web/model/mechadetect-atom-super-post-att-float32.onnx`, 100.8 MB) uses the Atom Super float32 export. It executes via `forward_batched_tokens`, compiling directly into WebGPU compute shaders with WebAssembly fallback.
 * **Optional Dual-Stream Spectral Expert:** For training experiments on spatial residuals, an optional frequency-domain ConvNeXt-Tiny stream processes RGB plus fixed high-pass spatial residuals (`conv2d` with discrete derivative kernels) and a 32-bin radial 2D FFT energy projection, gated via learned sigmoid parameters. Production student ONNX exports omit this branch to minimize client memory and enable pure browser execution.
 
@@ -104,12 +105,12 @@ MechaDetect produces both full-precision and statically quantized ONNX artifacts
 | :--- | :--- | :---: | :--- | :---: | :--- | :--- |
 | **Atom Super** | **Float32** | 17 | Direct export | **100.8 MB** | **Browser (WebGPU / WASM)** | **Production Default** |
 | **Atom Super** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 53.6 MB | Constrained edge devices | Available |
-| **Atom** | Float32 | 17 | Direct export | 100.8 MB | Clean baseline evaluation | Available |
-| **Atom** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 53.6 MB | Constrained edge devices | Available |
+| **Atom (Normal)** | Float32 | 17 | Direct export | 100.8 MB | Clean baseline evaluation | Available |
+| **Atom (Normal)** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 53.6 MB | Constrained edge devices | Available |
 | **Quark Super** | Float32 | 17 | Direct export | 357.9 MB | Desktop / Server edge | Available |
 | **Quark Super** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 181.7 MB | Low-memory edge servers | Available |
-| **Quark** | Float32 | 17 | Direct export | 357.9 MB | Clean baseline evaluation | Available |
-| **Quark** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 181.7 MB | Low-memory edge servers | Available |
+| **Quark (Normal)** | Float32 | 17 | Direct export | 357.9 MB | Clean baseline evaluation | Available |
+| **Quark (Normal)** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 181.7 MB | Low-memory edge servers | Available |
 
 * **Float32 ONNX (Primary Release):** Exported under ONNX opset 17 with vectorized batched token extraction (`forward_batched_tokens`). The browser default is `Atom Super Float32` ($100.8\text{ MB}$), providing numerically stable inference across WebGPU compute shaders and WebAssembly.
 * **Calibrated Static INT8 (QDQ):** Post-Training Quantization (PTQ) inserts explicit `QuantizeLinear` and `DequantizeLinear` (QDQ) operator pairs on convolutional and linear blocks while preserving sensitive operations in float32.
