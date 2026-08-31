@@ -76,22 +76,27 @@ fully synthetic images and localized generative edits share a single positive la
              • P(authentic) = 1 - P(AI-positive)
 ```
 
-### Model Family & Hierarchy
+### Model Family & Training Lineage
 
-The architecture is parameterized across three scales:
+The architecture is parameterized across three scales, with distinct training regimes for teachers and students:
 
-| Variant | Role | Backbone Identifier | Encoder Dim | Parameter Count | Deployment Target |
+| Variant | Role | Backbone Identifier | Encoder Dim | Parameter Count | Training Data Scope |
 | :--- | :--- | :--- | :---: | :---: | :--- |
-| **Teacher** | Stage 1/2 Distillation Source | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | ~840.6M | Cluster GPU (Training only) |
-| **Quark** | Base Distilled Student | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | ~89.8M | Workstation / Edge Server |
-| **Quark Super** | Post-ATT Base Student | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | ~89.8M | Robustness Hardened |
-| **Atom** | Small Distilled Student | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | Lightweight Edge |
-| **Atom Super** | Post-ATT Small Student | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25,089,666 | **Browser Default (WebGPU)** |
+| **Normal Teacher (Stage 2)** | Canonical Distillation Source | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | ~840.6M | **`train` split only** (22,483 rows; strict validation hold-out) |
+| **Full-Data Teacher (Checkpoint 2)** | Historical Adaptation Ablation | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | ~840.6M | **All available rows** (41,035 rows; demoted due to zero validation hold-out) |
+| **Quark** | Base Distilled Student | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | ~89.8M | `train` split only (distilled from Stage 2 teacher) |
+| **Quark Super** | Post-ATT Base Student | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | ~89.8M | `train` split only (ATT adversarial minimax hardening) |
+| **Atom** | Small Distilled Student | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | `train` split only (distilled from Stage 2 teacher) |
+| **Atom Super** | Post-ATT Small Student | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25,089,666 | `train` split only (**Browser Default WebGPU export**) |
 
-* **Adversarial Transformation Training (ATT):** The Super variants maintain the exact parameter counts and tensor geometries of their base students. During ATT, models are hardened against 6 perturbation families (JPEG, blur, resize, noise, color, crop) through an online candidate generator, non-differentiable worst-case candidate selection, and prediction consistency regularization.
+* **Teacher Lineage ("Normal" vs "Full-Data / Super"):**
+  * **Normal Teacher (Stage 2):** Trained strictly on the `train` split ($22,483$ rows) with held-out validation ($8,217$ rows). This is the canonical source for student distillation.
+  * **Full-Data / Checkpoint 2 Teacher:** Trained across **all $41,035$ available executable rows** (unioning train, validation, test, and authentic meme archives) with zero validation hold-out (`validation_rows: 0`). Because training on all rows eliminates clean validation gating, Checkpoint 2 was demoted from the forward distillation pipeline and retained strictly as an ablation archive.
+* **Student Lineage ("Base" vs "Super"):**
+  * Both `Atom`/`Quark` and `Atom Super`/`Quark Super` train strictly on `splits/production_eligible/train.parquet` to protect the evaluation splits.
+  * For students, "Super" designates **Adversarial Transformation Training (ATT)** (`stage: super_post_att`). The student evaluates 3 online candidate perturbations (JPEG, blur, resize, noise, color, crop) under `torch.no_grad()` and backpropagates only the hardest candidate alongside the untransformed clean original, enforcing corruption invariance.
 * **Browser Runtime & WebGPU Export:** The delivered client-side artifact (`web/model/mechadetect-atom-super-post-att-float32.onnx`, 100.8 MB) uses the Atom Super float32 export. It executes via `forward_batched_tokens`, compiling directly into WebGPU compute shaders with WebAssembly fallback.
 * **Optional Dual-Stream Spectral Expert:** For training experiments on spatial residuals, an optional frequency-domain ConvNeXt-Tiny stream processes RGB plus fixed high-pass spatial residuals (`conv2d` with discrete derivative kernels) and a 32-bin radial 2D FFT energy projection, gated via learned sigmoid parameters. Production student ONNX exports omit this branch to minimize client memory and enable pure browser execution.
----
 
 ## 3. Quickstart & Usage
 
