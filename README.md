@@ -94,7 +94,7 @@ The architecture is parameterized across three scales:
   * **Normal Students (`Atom`, `Quark`):** Distilled and hardened with Adversarial Transformation Training (ATT) on the canonical `train` split.
   * **Super Students (`Atom Super`, `Quark Super`):** Distilled and hardened with Adversarial Transformation Training (ATT) across all available rows (`train_super_all.parquet`).
   * **Adversarial Transformation Training (ATT):** Both Normal and Super students undergo ATT. During training, the model evaluates 3 candidate perturbations (JPEG, blur, resize, noise, color, crop) per row under `torch.no_grad()` and optimizes against the most challenging candidate alongside the original image to maximize corruption robustness.
-* **Browser Runtime & WebGPU Export:** The delivered client-side artifact (`web/model/mechadetect-atom-super-post-att-float32.onnx`, 100.8 MB) uses the Atom Super float32 export. It executes via `forward_batched_tokens`, compiling directly into WebGPU compute shaders with WebAssembly fallback.
+* **Browser Runtime & WebGPU Export:** The delivered client-side artifact (`web/model/mechadetect-atom-super-post-att-float32.onnx`, 96.1 MB) uses the Atom Super float32 export. It executes via `forward_batched_tokens`, compiling directly into WebGPU compute shaders with WebAssembly fallback.
 * **Optional Dual-Stream Spectral Expert:** For training experiments on spatial residuals, an optional frequency-domain ConvNeXt-Tiny stream processes RGB plus fixed high-pass spatial residuals (`conv2d` with discrete derivative kernels) and a 32-bin radial 2D FFT energy projection, gated via learned sigmoid parameters. Production student ONNX exports omit this branch to minimize client memory and enable pure browser execution.
 
 ### Quantization & Precision Formats
@@ -103,16 +103,16 @@ MechaDetect produces both full-precision and statically quantized ONNX artifacts
 
 | Model Variant | Precision Format | Opset | Calibration Data | File Size | Primary Target / Runtime | Status |
 | :--- | :--- | :---: | :--- | :---: | :--- | :--- |
-| **Atom Super** | **Float32** | 17 | Direct export | **100.8 MB** | **Browser (WebGPU / WASM)** | **Production Default** |
-| **Atom Super** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 53.6 MB | Constrained edge devices | Available |
-| **Atom (Normal)** | Float32 | 17 | Direct export | 100.8 MB | Clean baseline evaluation | Available |
-| **Atom (Normal)** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 53.6 MB | Constrained edge devices | Available |
-| **Quark Super** | Float32 | 17 | Direct export | 357.9 MB | Desktop / Server edge | Available |
-| **Quark Super** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 181.7 MB | Low-memory edge servers | Available |
-| **Quark (Normal)** | Float32 | 17 | Direct export | 357.9 MB | Clean baseline evaluation | Available |
-| **Quark (Normal)** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 181.7 MB | Low-memory edge servers | Available |
+| **Atom Super** | **Float32** | 17 | Direct export | **96.1 MB** | **Browser (WebGPU / WASM)** | **Production Default** |
+| **Atom Super** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 51.1 MB | Constrained edge devices | Available |
+| **Atom (Normal)** | Float32 | 17 | Direct export | 96.1 MB | Clean baseline evaluation | Available |
+| **Atom (Normal)** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 51.1 MB | Constrained edge devices | Available |
+| **Quark Super** | Float32 | 17 | Direct export | 341.3 MB | Desktop / Server edge | Available |
+| **Quark Super** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 173.3 MB | Low-memory edge servers | Available |
+| **Quark (Normal)** | Float32 | 17 | Direct export | 341.3 MB | Clean baseline evaluation | Available |
+| **Quark (Normal)** | Static INT8 (QDQ) | 17 | `calibration.parquet` (4,096 rows) | 173.3 MB | Low-memory edge servers | Available |
 
-* **Float32 ONNX (Primary Release):** Exported under ONNX opset 17 with vectorized batched token extraction (`forward_batched_tokens`). The browser default is `Atom Super Float32` ($100.8\text{ MB}$), providing numerically stable inference across WebGPU compute shaders and WebAssembly.
+* **Float32 ONNX (Primary Release):** Exported under ONNX opset 17 with vectorized batched token extraction (`forward_batched_tokens`). The browser default is `Atom Super Float32` (**96.1 MB**), providing numerically stable inference across WebGPU compute shaders and WebAssembly.
 * **Calibrated Static INT8 (QDQ):** Post-Training Quantization (PTQ) inserts explicit `QuantizeLinear` and `DequantizeLinear` (QDQ) operator pairs on convolutional and linear blocks while preserving sensitive operations in float32.
 * **Calibration Dataset Contract:** Quantization calibration is performed on the $4,096$-row `calibration.parquet` split. This split is strictly isolated from all training, validation, and benchmark test sets.
 * **Graph Structure Integrity:** The static INT8 pipeline strictly enforces true static QDQ representation, rejecting weight-only packing (`MatMulNBits`) and dynamic-only quantization.
@@ -443,6 +443,59 @@ AI-generated or AI-edited:
 The manifests retain fully generated and tampered subtypes for diagnostics and
 optional localization supervision. The image-level model is binary, so the
 exported score covers both.
+
+### Organizer Demonstration Benchmark Results
+
+The completed organizer benchmark uses `metadata/organizer_demo_document_count.csv`: **13,841 images** consisting of **4,998 authentic COCO val2017 images** and **8,843 AIGC WildFake DALL-E Advanced images**. The demo set was excluded from the production-eligible training manifest by path and SHA-256 audit. Each artifact was evaluated on all 13,841 images under 15 conditions: clean, JPEG quality 90/70/50/30, Gaussian blur sigma 0.5/1.0/2.0, resize to 0.50x/0.25x followed by upscaling, Gaussian noise sigma 0.02/0.05/0.10, color jitter ±20%, and center crop 80%.
+
+| Model | Format | Clean AUROC | Mean transformed AUROC | Worst transformed AUROC | Worst condition | Clean AIGC recall | Clean authentic recall |
+| :--- | :--- | ---: | ---: | ---: | :--- | ---: | ---: |
+| Atom (Normal) | Float32 | 0.9921 | 0.9871 | 0.9691 | `resize_quarter` | 97.60% | 92.60% |
+| Atom (Normal) | Static INT8 | 0.5942 | 0.5422 | 0.3785 | `resize_quarter` | 76.44% | 34.73% |
+| **Atom Super** | **Float32** | **0.9947** | **0.9931** | **0.9870** | `resize_quarter` | **99.39%** | **83.77%** |
+| Atom Super | Static INT8 | 0.7141 | 0.6793 | 0.5380 | `resize_quarter` | 87.55% | 35.57% |
+| Quark (Normal) | Float32 | 0.9973 | 0.9945 | 0.9876 | `resize_half` | 98.94% | 94.82% |
+| Quark (Normal) | Static INT8 | 0.6780 | 0.6735 | 0.6200 | `resize_half` | 38.81% | 84.13% |
+| **Quark Super** | **Float32** | **0.9980** | **0.9967** | **0.9928** | `resize_quarter` | **99.66%** | **93.86%** |
+| Quark Super | Static INT8 | 0.7125 | 0.7138 | 0.6644 | `resize_half` | 63.12% | 67.07% |
+
+Full per-condition AUROC:
+
+| Model | clean | jpeg90 | jpeg70 | jpeg50 | jpeg30 | blur0.5 | blur1.0 | blur2.0 | resize_half | resize_quarter | noise0.02 | noise0.05 | noise0.10 | color_jitter20 | crop80 |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Atom (Normal) Float32 | 0.9921 | 0.9939 | 0.9963 | 0.9960 | 0.9950 | 0.9911 | 0.9826 | 0.9763 | 0.9786 | 0.9691 | 0.9912 | 0.9889 | 0.9803 | 0.9919 | 0.9885 |
+| Atom (Normal) Static INT8 | 0.5942 | 0.5929 | 0.5812 | 0.5703 | 0.5311 | 0.5823 | 0.5474 | 0.4699 | 0.5423 | 0.3785 | 0.5849 | 0.5437 | 0.4902 | 0.5905 | 0.5860 |
+| Atom Super Float32 | 0.9947 | 0.9955 | 0.9968 | 0.9967 | 0.9963 | 0.9947 | 0.9922 | 0.9887 | 0.9907 | 0.9870 | 0.9943 | 0.9928 | 0.9885 | 0.9947 | 0.9942 |
+| Atom Super Static INT8 | 0.7141 | 0.7122 | 0.7089 | 0.7003 | 0.6711 | 0.7107 | 0.6944 | 0.6216 | 0.6890 | 0.5380 | 0.7085 | 0.6798 | 0.6549 | 0.7107 | 0.7098 |
+| Quark (Normal) Float32 | 0.9973 | 0.9978 | 0.9992 | 0.9991 | 0.9988 | 0.9977 | 0.9935 | 0.9901 | 0.9876 | 0.9884 | 0.9965 | 0.9938 | 0.9884 | 0.9972 | 0.9954 |
+| Quark (Normal) Static INT8 | 0.6780 | 0.6841 | 0.6804 | 0.6902 | 0.6858 | 0.6605 | 0.6251 | 0.6633 | 0.6200 | 0.6239 | 0.6759 | 0.7037 | 0.7699 | 0.6756 | 0.6704 |
+| Quark Super Float32 | 0.9980 | 0.9976 | 0.9986 | 0.9989 | 0.9989 | 0.9979 | 0.9965 | 0.9958 | 0.9939 | 0.9928 | 0.9975 | 0.9961 | 0.9940 | 0.9979 | 0.9980 |
+| Quark Super Static INT8 | 0.7125 | 0.7165 | 0.7202 | 0.7140 | 0.7206 | 0.6928 | 0.6685 | 0.7394 | 0.6644 | 0.6675 | 0.7210 | 0.7343 | 0.8160 | 0.7134 | 0.7046 |
+
+Full-precision exports are the accuracy variants in this run: Quark Super Float32 reached **0.9980 clean AUROC** and **0.9928 worst transformed AUROC**; Atom Super Float32 reached **0.9870 worst transformed AUROC** while remaining the browser-sized release. Static INT8 reduces the on-disk footprint to 51.1 MB for Atom and 173.3 MB for Quark, with lower detection AUROC in this benchmark.
+
+### Inference Speed & Footprint
+
+Measured independently per ONNX artifact with ONNX Runtime graph optimizations enabled. GPU results use the NVIDIA GeForce RTX 4080 and CUDAExecutionProvider with batch size 64; CPU results use the Intel Core i9-13900KF with 16 intra-op threads and batch size 32. Single-image latency is measured at batch size 1. Inputs are synthetic 224 × 224 RGB tensors, so image decode, resize, upload, and browser scheduling are not included.
+
+| Model | Format | File size | GPU p50 batch 1 | GPU throughput batch 64 | CPU p50 batch 1 | CPU throughput batch 32 |
+| :--- | :--- | ---: | ---: | ---: | ---: | ---: |
+| Atom (Normal) | Float32 | 96.1 MB | 6.32 ms | 1,495.2 img/s | 23.01 ms | 69.3 img/s |
+| Atom (Normal) | Static INT8 | 51.1 MB | 5.65 ms | 1,265.6 img/s | 21.46 ms | 77.2 img/s |
+| **Atom Super** | **Float32** | **96.1 MB** | **6.50 ms** | **1,554.6 img/s** | **22.07 ms** | **72.3 img/s** |
+| Atom Super | Static INT8 | 51.1 MB | 5.53 ms | 1,266.4 img/s | 18.88 ms | 79.6 img/s |
+| Quark (Normal) | Float32 | 341.3 MB | 6.95 ms | 538.9 img/s | 48.16 ms | 22.7 img/s |
+| Quark (Normal) | Static INT8 | 173.3 MB | 6.31 ms | 460.5 img/s | 38.46 ms | 28.9 img/s |
+| Quark Super | Float32 | 341.3 MB | 7.00 ms | 534.7 img/s | 49.26 ms | 22.5 img/s |
+| Quark Super | Static INT8 | 173.3 MB | 6.41 ms | 456.9 img/s | 38.67 ms | 28.7 img/s |
+
+The Atom family is the lightweight deployment path: the Float32 artifact is 96.1 MB and the static INT8 artifact is 51.1 MB, with roughly 1.3k–1.6k images/s batched on this GPU. Reproduce the measurements with:
+
+```bash
+uv run python scripts/benchmark_model_speed.py \
+  --models-dir outputs/models \
+  --output-json outputs/benchmark_results.json
+```
 
 ### Delivered artifacts and evaluation status
 
