@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="web/mechaduck_transparent.png" width="190" alt="MechaDetect MechaDuck mascot">
+  <img src="mechaduck_transparent.png" width="190" alt="MechaDetect MechaDuck mascot">
 </p>
 
 <h1 align="center">MechaDetect</h1>
