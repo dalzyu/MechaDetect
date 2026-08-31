@@ -303,3 +303,28 @@ Promotion gate (simplified for deadline):
 - AI-negative recall @ 0.5 > 0.82
 
 If Teacher Iteration 2 is not promoted by Aug 31 EOD, distill from Iteration 1 Checkpoint 2 (`models/teachers/iteration1/checkpoint2/model-weights.safetensors`) directly. Its AUROC (0.9590) and corruption stability are usable; only the 0.5-threshold recall is weak. Calibrate the threshold on validation before distilling.
+
+## 12. September 1 local execution check
+
+A later local check exercised the current one-GPU teacher code on an NVIDIA RTX
+4080. The check used the pinned DINOv3 ViT-H+/16 weights and a temporary
+three-row manifest containing one authentic, one tampered, and one fully-AIGC
+image. The runtime used BF16, physical batch 1, accumulation 1, no checkpoint
+interval, and no validation interval.
+
+Observed facts:
+
+- model and pretrained weights loaded successfully;
+- the trainer reported `training devices=1 per_gpu_batch=1
+  gradient_accumulation=1`;
+- 29 forward, backward, and optimizer updates completed;
+- observed loss started at 0.5666 on update 1 and rapidly overfit the
+  deliberately tiny verification population;
+- the process was intentionally cancelled after 2 minutes 3 seconds;
+- no checkpoint from this transient check is a publication or promotion
+  candidate.
+
+The check verifies the current Stage 1 execution path. It does not amend the
+historical run metrics above and does not establish that the complete
+`train.ipynb` pipeline, Stage 2, promotion, student distillation, ATT, or export
+has been run end to end.

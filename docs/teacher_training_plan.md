@@ -1,7 +1,7 @@
 # DINOv3 Teacher Training Plan
 
 **Default topology:** one CUDA GPU with BF16 support
-**Optional topology:** explicit DDP through `GPU_DEVICES`
+**Optional topology:** explicit DDP through `torchrun`
 **Historical run reference:** [`docs/training_run_consolidated.md`](training_run_consolidated.md)
 
 ---
@@ -113,3 +113,17 @@ Do not resume a checkpoint under a different world size or batch geometry.
 The completed August 2026 delivery skipped teacher evaluation and promotion at
 operator request. Those checkpoints are final training outputs, not
 promotion-gated or state-of-the-art-evaluated models.
+
+## 7. Local runtime verification
+
+On September 1, 2026, the maintained trainer loaded the pinned DINOv3
+ViT-H+/16 weights and ran Teacher Stage 1 on an RTX 4080 using a temporary
+three-image manifest. With physical batch 1, accumulation 1, BF16, and the
+encoder frozen, it completed 29 real forward, backward, and optimizer updates.
+The process was intentionally cancelled after 2 minutes 3 seconds.
+
+This is an execution-path check only. It proves model construction, pretrained
+weight loading, manifest materialization, preprocessing, CUDA execution, loss
+calculation, backpropagation, and optimizer stepping. It does not constitute a
+trained checkpoint, quality result, promotion result, or complete execution of
+[`train.ipynb`](../train.ipynb).

@@ -344,7 +344,32 @@ Quark Super (25.1M) as the smaller option. Choose **More** to show Atom Normal
 and Quark Normal, or bypass the prompt with `--model <catalog-id>`. Private
 model access requires `HF_TOKEN`.
 
-### 4.7 Model Export
+### 4.7 Observed runtime verification
+
+On September 1, 2026, the root CLI downloaded and executed real Hugging Face
+artifacts through ONNX Runtime:
+
+| Menu path | Artifact | Input | `pred` | Verdict |
+|---|---|---|---:|---|
+| Default | Atom Super Float32 | `authentic.jpg` | 0.016142 | Original |
+| More → Quark Normal | Quark Normal Float32 | `fully_aigc.png` | 0.976399 | AIGC |
+
+Both runs produced a one-row JSON array containing exactly `image_path` and
+`pred`. The installed ONNX Runtime could not load `cublasLt64_13.dll`, reported
+the unavailable CUDA provider, and completed both runs with its CPU provider.
+These two examples verify artifact download, model loading, preprocessing,
+inference, menu routing, and serialization; they are not an accuracy benchmark.
+
+The real teacher Stage 1 trainer was also launched on the RTX 4080 with the
+pinned DINOv3 ViT-H+/16 weights and a temporary three-image manifest. It
+completed 29 forward, backward, and optimizer updates at physical batch 1 and
+accumulation 1 before intentional cancellation after 2 minutes 3 seconds. This
+verifies the core teacher training path, not the complete notebook: full-corpus
+acquisition, Stage 2, promotion, distillation, ATT, evaluation, and export were
+not executed in that runtime check.
+
+
+### 4.8 Model Export
 
 Export a trained student checkpoint to opset 17 Float32 ONNX:
 
@@ -355,7 +380,7 @@ uv run python scripts/export_onnx_webgpu.py \
   --output outputs/models/mechadetect-quark-super-post-att-float32.onnx
 ```
 
-### 4.8 Repository checks
+### 4.9 Repository checks
 Project checks are available under `tests/`; training does not invoke them.
 
 ---
