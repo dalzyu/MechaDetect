@@ -26,8 +26,6 @@
 | **Quark Super** | 25.1M | 96.1 MB | 0.9947 | 0.9931 | Browser WebGPU/WASM |
 | **Atom Super** | 89.4M | 341.3 MB | 0.9980 | 0.9967 | Accuracy-first CLI/desktop |
 
-**Warmed RTX 4080 WebGPU p50:** 21.3–21.9 ms after five warm-up runs, measured across two 30-inference runs. The browser defaults to Quark Super for download size; `predict.py` defaults to Atom Super for accuracy.
-
 <p align="center">
   <img src="docs/assets/mechadetect-demo.gif" width="960" alt="MechaDetect browser demo classifying an authentic image and an AIGC image">
 </p>
