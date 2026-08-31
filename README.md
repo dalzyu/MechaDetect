@@ -100,7 +100,18 @@ The architecture is parameterized across three scales:
 
 ### Quantization & Precision Formats
 
-MechaDetect produces both full-precision and statically quantized artifacts:
+MechaDetect produces both full-precision and statically quantized ONNX artifacts across its student variants:
+
+| Model Variant | Precision Format | Opset | Calibration Data | File Size | Primary Target / Runtime | Status |
+| :--- | :--- | :---: | :--- | :---: | :--- | :--- |
+| **Atom Super** | **Float32** | 17 | Direct export | **100.8 MB** | **Browser (WebGPU / WASM)** | **Production Default** |
+| **Atom Super** | Static INT8 (QDQ) | 17 | `calibration.parquet` ($4,096$ rows) | ~26 MB | Constrained edge devices | Available |
+| **Atom** | Float32 | 17 | Direct export | 100.8 MB | Clean baseline evaluation | Available |
+| **Atom** | Static INT8 (QDQ) | 17 | `calibration.parquet` ($4,096$ rows) | ~26 MB | Constrained edge devices | Available |
+| **Quark Super** | Float32 | 17 | Direct export | 358.4 MB | Desktop / Server edge | Available |
+| **Quark Super** | Static INT8 (QDQ) | 17 | `calibration.parquet` ($4,096$ rows) | ~92 MB | Low-memory edge servers | Available |
+| **Quark** | Float32 | 17 | Direct export | 358.4 MB | Clean baseline evaluation | Available |
+| **Quark** | Static INT8 (QDQ) | 17 | `calibration.parquet` ($4,096$ rows) | ~92 MB | Low-memory edge servers | Available |
 
 * **Float32 ONNX (Primary Release):** Exported under ONNX opset 17 with vectorized batched token extraction (`forward_batched_tokens`). The browser default is `Atom Super Float32` ($100.8\text{ MB}$), providing numerically stable inference across WebGPU compute shaders and WebAssembly.
 * **Calibrated Static INT8 (QDQ):** Post-Training Quantization (PTQ) inserts explicit `QuantizeLinear` and `DequantizeLinear` (QDQ) operator pairs on convolutional and linear blocks while preserving sensitive operations in float32.
