@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static file server for the NanoGuard client-side WebGPU demo.
+"""Static file server for the MechaDetect client-side WebGPU demo.
 
 The server never performs inference. It only serves the frontend and ONNX
 model, with optional TLS for browsers that require a secure context for
@@ -17,7 +17,7 @@ import ssl
 WEB_DIR = Path(__file__).resolve().parent
 
 
-class NanoGuardHandler(http.server.SimpleHTTPRequestHandler):
+class MechaDetectHandler(http.server.SimpleHTTPRequestHandler):
     """Static file handler delivering HTML, JS, CSS, and ONNX model assets."""
 
     def __init__(self, *args, **kwargs):
@@ -45,7 +45,7 @@ class DualStackThreadingServer(http.server.ThreadingHTTPServer):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Serve the NanoGuard WebGPU demo to local or remote devices."
+        description="Serve the MechaDetect WebGPU demo to local or remote devices."
     )
     parser.add_argument(
         "legacy_port",
@@ -92,12 +92,12 @@ def create_server(host: str, port: int) -> http.server.ThreadingHTTPServer:
 
     try:
         if ":" in host or host in ("", "localhost"):
-            return DualStackThreadingServer((host, port), NanoGuardHandler)
+            return DualStackThreadingServer((host, port), MechaDetectHandler)
     except OSError as exc:
         print(f"[Server] Dual-stack fallback to IPv4: {exc}")
     return http.server.ThreadingHTTPServer(
         (host or "0.0.0.0", port),
-        NanoGuardHandler,
+        MechaDetectHandler,
     )
 
 
@@ -124,7 +124,7 @@ def main() -> None:
     httpd.allow_reuse_address = True
     display_host = args.host if args.host not in ("", "0.0.0.0", "::") else "<this-PC-LAN-IP>"
     print("\n========================================================")
-    print("  NanoGuard Static Server (Pure Client-Side WebGPU)")
+    print("  MechaDetect Static Server (Client-Side WebGPU)")
     print(f"  Local URL: http://127.0.0.1:{args.port}")
     print(f"  Device URL: {scheme}://{display_host}:{args.port}")
     print("  Server ML Compute: 0% (Zero server inference)")

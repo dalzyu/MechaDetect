@@ -70,7 +70,7 @@ async function initClientModel() {
     if (!modelInfo || !modelInfo.path || modelInfo.path === 'not_configured' || typeof modelInfo.calibrated_threshold !== 'number') {
       elements.processingBanner.classList.remove('active');
       elements.statusPillText.textContent = 'Model pending orchestration setup';
-      console.warn('[NanoGuard] Valid model not configured or evaluated. Waiting for orchestration to populate metadata.json.');
+      console.warn('[MechaDetect] Valid model not configured or evaluated. Waiting for orchestration to populate metadata.json.');
       state.isLoading = false;
       return;
     }
@@ -129,7 +129,7 @@ async function initClientModel() {
         throw new Error('Forced WASM or WebGPU adapter not available');
       }
     } catch (epErr) {
-      console.warn('[NanoGuard] Primary WebGPU notice, initializing WASM provider:', epErr);
+      console.warn('[MechaDetect] Primary WebGPU notice, initializing WASM provider:', epErr);
       state.ortSession = await ort.InferenceSession.create(modelBuffer.buffer, {
         executionProviders: ['wasm'],
         graphOptimizationLevel: 'all',
@@ -139,11 +139,11 @@ async function initClientModel() {
     state.isReady = true;
     elements.statusPillText.textContent = `Detection runs locally with ${state.activeProvider}`;
     elements.processingBanner.classList.remove('active');
-    console.log(`[NanoGuard] Model initialized successfully on ${state.activeProvider} (Zero server compute)!`);
+    console.log(`[MechaDetect] Model initialized successfully on ${state.activeProvider}; inference stays in the browser.`);
   } catch (err) {
     state.loadError = err;
     const msg = err?.message || String(err);
-    console.error('[NanoGuard] Model initialization error:', err);
+    console.error('[MechaDetect] Model initialization error:', err);
     elements.processingBanner.classList.remove('active');
     elements.statusPillText.textContent = 'Model initialization failed';
   } finally {
@@ -237,7 +237,7 @@ async function executeInference(img, filename) {
   const scorePercent = Math.round(confidence * 100);
   const label = isAigc ? 'AIGC' : 'Original';
 
-  console.log(`[NanoGuard] Client result for "${filename}":`, {
+  console.log(`[MechaDetect] Client result for "${filename}":`, {
     P_Authentic: pAuth.toFixed(4),
     P_AIGC: pAigc.toFixed(4),
     Verdict: label,
@@ -337,7 +337,7 @@ async function loadImage(file) {
     try {
       return await createImageBitmap(file);
     } catch (bitmapErr) {
-      console.warn('[NanoGuard] createImageBitmap notice, falling back to ObjectURL:', bitmapErr);
+      console.warn('[MechaDetect] createImageBitmap notice, falling back to ObjectURL:', bitmapErr);
     }
   }
 
@@ -396,7 +396,7 @@ async function handleFiles(files) {
       insertCard(result, dataUrl, file.name);
     } catch (err) {
       const errorMsg = err?.message || (typeof err === 'string' ? err : JSON.stringify(err)) || String(err);
-      console.error(`[NanoGuard] Error analyzing ${file.name}:`, err);
+      console.error(`[MechaDetect] Error analyzing ${file.name}:`, err);
       alert(`Could not analyze ${file.name}: ${errorMsg}`);
     }
   }
@@ -454,7 +454,7 @@ async function loadMetadataAndInit() {
     state.metadata = data;
 
     if (!data.students || data.students.length === 0) {
-      console.warn('[NanoGuard] Metadata is empty. Pending orchestration.');
+      console.warn('[MechaDetect] Metadata is empty. Pending orchestration.');
       elements.modelSelect.innerHTML = '<option value="">No models available</option>';
       elements.modelSelect.disabled = true;
       elements.statusPillText.textContent = 'Model pending orchestration setup';
