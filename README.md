@@ -51,8 +51,6 @@ The deployed demo downloads a Float32 ONNX model, then processes image tensors i
 
 ## Results
 
-### Held-out organizer benchmark
-
 The headline benchmark contains **13,841 images** excluded from every training pool:
 
 - **4,998 authentic** COCO val2017 images;
@@ -89,7 +87,7 @@ The operating-threshold trade-off is dominated by false positives on authentic i
 
 Strong downsampling and blur remove camera and texture evidence from authentic images, pushing them toward the AIGC side of the threshold. Conversely, highly realistic synthetic images can preserve camera-like texture and become false negatives. Atom ranks these cases more reliably; Quark makes the browser-size trade-off.
 
-Static INT8 reached 51.1 MB for Quark and 173.3 MB for Atom, but its AUROC degraded materially. Float32 is the supported release format. The graph analysis and PTQ/QAT requirements are in [the INT8 release report](docs/int8_release_evaluation.md).
+Static INT8 reached 51.1 MB for Quark and 173.3 MB for Atom, but its AUROC degraded beyond usuability. Therefore, we were not able to ship it by the deadline of the competition. The graph analysis and PTQ/QAT requirements are in [the INT8 release report](docs/int8_release_evaluation.md).
 
 ---
 
@@ -405,10 +403,6 @@ MechaDetect/
 **Anime and screenshot bias.** These domains do not contain enough counterexamples across both classes. Authentic anime-style images are underrepresented. The screenshot cohort contains generated positives without enough authentic screenshots. The model can therefore learn that a visual domain itself implies AIGC or authentic content instead of relying only on generation evidence. Dedicated per-domain rates have not yet been quantified.
 
 Strong blur and downsampling remove camera and texture evidence and increase authentic false positives. Thresholds should be calibrated for the application's false-positive cost.
-
-A MechaDetect score is a screening signal. It is not cryptographic provenance, proof of authorship, a copyright decision, or a watermark check. Generator families and post-processing pipelines continue to change, so deployed models require periodic evaluation on new held-out sources.
-
-Atom requires a 341.3 MB download; Quark requires 96.1 MB. Browser provider availability, shader compilation, memory, and latency vary by device. The 21.3–21.9 ms warmed WebGPU result is an RTX 4080 measurement, not a low-end-device claim.
 
 ---
 
