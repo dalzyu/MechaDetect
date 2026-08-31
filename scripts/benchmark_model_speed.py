@@ -142,7 +142,7 @@ def main() -> None:
     for m in models:
         name = m.stem.replace("mechadetect-", "")
         file_size_mb = round(m.stat().st_size / (1024 * 1024), 1)
-        params = "25.1M" if "atom" in name else "89.4M"
+        params = "25.1M" if "quark" in name else "89.4M"
 
         print(f"\nBenchmarking {name} ({file_size_mb} MB, {params} params)...")
         model_result: dict[str, Any] = {

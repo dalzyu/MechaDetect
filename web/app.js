@@ -626,7 +626,7 @@ async function handleFiles(files) {
 
 /**
  * Build <optgroup>-organised selector from the catalog.
- * Grouping key: "${family} ${scope}" (e.g. "Atom Super").
+ * Grouping key: "${family} ${scope}" (e.g. "Quark Super").
  * Groups appear in catalog declaration order; models within each group do too.
  * Extensible: any catalog entry with a family+scope key gets its own group
  * automatically — no code change needed for new families (e.g. Lattice).

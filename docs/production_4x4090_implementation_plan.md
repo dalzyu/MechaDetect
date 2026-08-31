@@ -7,7 +7,7 @@ The maintained training entry point is now `scripts/launch_production.sh`, which
 defaults to one GPU and scales accumulation for explicit DDP device lists. The
 August 2026 delivery completed training and artifact upload, but skipped model
 evaluation/promotion at operator request. Static INT8 artifacts remain
-experimental; Atom Super float32 is the browser default. Read
+experimental; Quark Super float32 is the browser default. Read
 `production_training_and_delivery_plan.md` for current commands and status.
 
 ## Objective

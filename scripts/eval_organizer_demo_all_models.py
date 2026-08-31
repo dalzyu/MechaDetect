@@ -4,14 +4,14 @@
 Evaluates all model variants (quantized and unquantized alike) across the official
 organizer demonstration benchmark in a single pipelined pass:
 - Models:
-    1. Atom Super Float32
-    2. Atom Super Static INT8
-    3. Atom Normal Float32
-    4. Atom Normal Static INT8
-    5. Quark Super Float32
-    6. Quark Super Static INT8
-    7. Quark Normal Float32
-    8. Quark Normal Static INT8
+    1. Quark Super Float32
+    2. Quark Super Static INT8
+    3. Quark Normal Float32
+    4. Quark Normal Static INT8
+    5. Atom Super Float32
+    6. Atom Super Static INT8
+    7. Atom Normal Float32
+    8. Atom Normal Static INT8
 - Population: 13,841 images (COCO val2017 authentic + WildFake DALL-E Advanced)
 - 15 Conditions: clean, jpeg90/70/50/30, blur0.5/1.0/2.0, resize_half/quarter,
                  noise0.02/0.05/0.10, color_jitter20, crop80

@@ -82,17 +82,17 @@ The architecture is parameterized across three scales:
 | :--- | :--- | :--- | :---: | :---: | :--- |
 | **Normal Teacher** | Primary Distillation Source | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | 872.6M | Canonical `train` split (51.1k rows) |
 | **Super Teacher** | Full-Data Adaptation | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | 872.6M | All eligible rows (87.8k rows) |
-| **Quark** | Post-ATT Base Student (Normal) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | Canonical `train` split (51.1k rows) |
-| **Quark Super** | Post-ATT Base Student (Super) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | All eligible rows (87.8k rows) |
-| **Atom** | Post-ATT Small Student (Normal) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | Canonical `train` split (51.1k rows) |
-| **Atom Super** | Post-ATT Small Student (Super) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | All eligible rows (87.8k rows) |
+| **Atom** | Post-ATT Base Student (Normal) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | Canonical `train` split (51.1k rows) |
+| **Atom Super** | Post-ATT Base Student (Super) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89.4M | All eligible rows (87.8k rows) |
+| **Quark** | Post-ATT Small Student (Normal) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | Canonical `train` split (51.1k rows) |
+| **Quark Super** | Post-ATT Small Student (Super) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | All eligible rows (87.8k rows) |
 
 * **Teacher Variants:**
   * **Normal Teacher (Stage 2):** Trained on the canonical `train` split (51.1k rows), providing the primary source for student distillation.
   * **Super Teacher (Full-Data):** Trained across all eligible rows (87.8k rows) for maximum data coverage.
 * **Student Variants:**
-  * **Normal Students (`Atom`, `Quark`):** Distilled and hardened with Adversarial Transformation Training (ATT) on the canonical `train` split.
-  * **Super Students (`Atom Super`, `Quark Super`):** Distilled and hardened with Adversarial Transformation Training (ATT) across all available rows (`train_super_all.parquet`).
+  * **Normal Students (`Quark`, `Atom`):** Distilled and hardened with Adversarial Transformation Training (ATT) on the canonical `train` split.
+  * **Super Students (`Quark Super`, `Atom Super`):** Distilled and hardened with Adversarial Transformation Training (ATT) across all available rows (`train_super_all.parquet`).
   * **Adversarial Transformation Training (ATT):** Both Normal and Super students undergo ATT. During training, the model evaluates 3 candidate perturbations (JPEG, blur, resize, noise, color, crop) per row under `torch.no_grad()` and optimizes against the most challenging candidate alongside the original image to maximize corruption robustness.
 * **Browser Runtime & WebGPU Export:** The browser catalog resolves six immutable Float32 ONNX artifacts from `zye2/mechadetect-models` on Hugging Face; model weights are not stored in this Git repository. ONNX Runtime Web executes them with WebGPU and WebAssembly fallback.
 * **Optional Dual-Stream Spectral Expert:** For training experiments on spatial residuals, an optional frequency-domain ConvNeXt-Tiny stream processes RGB plus fixed high-pass spatial residuals (`conv2d` with discrete derivative kernels) and a 32-bin radial 2D FFT energy projection, gated via learned sigmoid parameters. Production student ONNX exports omit this branch to minimize client memory and enable pure browser execution.
@@ -103,10 +103,10 @@ The public browser release uses Float32 ONNX artifacts:
 
 | Model Variant | Precision | Opset | File Size | Primary Target / Runtime | Status |
 | :--- | :--- | :---: | :---: | :--- | :--- |
-| **Atom Super** | **Float32** | 17 | **96.1 MB** | **Browser (WebGPU / WASM)** | **Production Default** |
-| **Atom (Normal)** | Float32 | 17 | 96.1 MB | Browser baseline | Available |
-| **Quark Super** | Float32 | 17 | 341.3 MB | Desktop / Server edge | Available |
-| **Quark (Normal)** | Float32 | 17 | 341.3 MB | Desktop / Server edge | Available |
+| **Quark Super** | **Float32** | 17 | **96.1 MB** | **Browser (WebGPU / WASM)** | **Production Default** |
+| **Quark (Normal)** | Float32 | 17 | 96.1 MB | Browser baseline | Available |
+| **Atom Super** | Float32 | 17 | 341.3 MB | Desktop / Server edge | Available |
+| **Atom (Normal)** | Float32 | 17 | 341.3 MB | Desktop / Server edge | Available |
 
 Float32 exports use vectorized batched token extraction (`forward_batched_tokens`). Static INT8 artifacts are excluded from the release because the current post-training quantization policy does not satisfy the numerical-quality gate. See [Static INT8 Release Evaluation](docs/int8_release_evaluation.md) for complete results, the diagnosed activation-range failure, the PTQ-versus-QAT tradeoff, and the requirements for a future INT8 release.
 
@@ -124,8 +124,8 @@ The declared dataset package contains **122,344 total records** across 29 active
 
 | Manifest / Split | Row Count | Percentage | Class Balance (AI-Pos / Auth) | Dataset Scope & Usage |
 | :--- | :---: | :---: | :---: | :--- |
-| **`train.parquet`** | **51,107** | 58.2% | 28,594 / 22,513 | Canonical training split used by Normal models (`Atom`, `Quark`, Normal Teacher) |
-| **`train_super_all.parquet`** | **87,793** | 100.0% | 49,120 / 38,673 | Full eligible training split used by Super models (`Atom Super`, `Quark Super`, Super Teacher) |
+| **`train.parquet`** | **51,107** | 58.2% | 28,594 / 22,513 | Canonical training split used by Normal models (`Quark`, `Atom`, Normal Teacher) |
+| **`train_super_all.parquet`** | **87,793** | 100.0% | 49,120 / 38,673 | Full eligible training split used by Super models (`Quark Super`, `Atom Super`, Super Teacher) |
 | `validation.parquet` | 14,617 | 16.6% | 8,187 / 6,430 | Validation split for threshold calibration and model promotion gates |
 | `test.parquet` | 11,129 | 12.7% | 6,233 / 4,896 | In-distribution generalization test benchmark |
 | `test_unseen.parquet` | 10,940 | 12.5% | 10,932 / 8 | Out-of-distribution benchmark evaluating unseen generator families |
@@ -249,10 +249,10 @@ of 48 through gradient accumulation:
 |---|---:|---:|---:|
 | Teacher Stage 1 | 6 | 8 | 48 |
 | Teacher Stage 2 | 2 | 24 | 48 |
-| Atom / ViT-S distillation | 12 | 4 | 48 |
-| Quark / ViT-B distillation | 3 | 16 | 48 |
-| Atom ATT | 4 | 12 | 48 |
-| Quark ATT | 2 | 24 | 48 |
+| Quark / ViT-S distillation | 12 | 4 | 48 |
+| Atom / ViT-B distillation | 3 | 16 | 48 |
+| Quark ATT | 4 | 12 | 48 |
+| Atom ATT | 2 | 24 | 48 |
 
 Prepare the workstation and run the resumable teacher → students → ATT flow:
 
@@ -337,7 +337,7 @@ Export a trained student checkpoint to opset 17 Float32 ONNX:
 uv run python scripts/export_onnx_webgpu.py \
   --checkpoint outputs/att_student_small/checkpoint-final.pt \
   --variant small \
-  --output outputs/models/mechadetect-atom-super-post-att-float32.onnx
+  --output outputs/models/mechadetect-quark-super-post-att-float32.onnx
 ```
 
 ### 4.8 Repository checks
@@ -433,21 +433,21 @@ The completed organizer benchmark uses `metadata/organizer_demo_document_count.c
 
 | Model | Format | Clean AUROC | Mean transformed AUROC | Worst transformed AUROC | Worst condition | Clean AIGC recall | Clean authentic recall |
 | :--- | :--- | ---: | ---: | ---: | :--- | ---: | ---: |
-| Atom (Normal) | Float32 | 0.9921 | 0.9871 | 0.9691 | `resize_quarter` | 97.60% | 92.60% |
-| **Atom Super** | **Float32** | **0.9947** | **0.9931** | **0.9870** | `resize_quarter` | **99.39%** | **83.77%** |
-| Quark (Normal) | Float32 | 0.9973 | 0.9945 | 0.9876 | `resize_half` | 98.94% | 94.82% |
-| **Quark Super** | **Float32** | **0.9980** | **0.9967** | **0.9928** | `resize_quarter` | **99.66%** | **93.86%** |
+| Quark (Normal) | Float32 | 0.9921 | 0.9871 | 0.9691 | `resize_quarter` | 97.60% | 92.60% |
+| **Quark Super** | **Float32** | **0.9947** | **0.9931** | **0.9870** | `resize_quarter` | **99.39%** | **83.77%** |
+| Atom (Normal) | Float32 | 0.9973 | 0.9945 | 0.9876 | `resize_half` | 98.94% | 94.82% |
+| **Atom Super** | **Float32** | **0.9980** | **0.9967** | **0.9928** | `resize_quarter` | **99.66%** | **93.86%** |
 
 Full per-condition AUROC:
 
 | Model | clean | jpeg90 | jpeg70 | jpeg50 | jpeg30 | blur0.5 | blur1.0 | blur2.0 | resize_half | resize_quarter | noise0.02 | noise0.05 | noise0.10 | color_jitter20 | crop80 |
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Atom (Normal) Float32 | 0.9921 | 0.9939 | 0.9963 | 0.9960 | 0.9950 | 0.9911 | 0.9826 | 0.9763 | 0.9786 | 0.9691 | 0.9912 | 0.9889 | 0.9803 | 0.9919 | 0.9885 |
-| Atom Super Float32 | 0.9947 | 0.9955 | 0.9968 | 0.9967 | 0.9963 | 0.9947 | 0.9922 | 0.9887 | 0.9907 | 0.9870 | 0.9943 | 0.9928 | 0.9885 | 0.9947 | 0.9942 |
-| Quark (Normal) Float32 | 0.9973 | 0.9978 | 0.9992 | 0.9991 | 0.9988 | 0.9977 | 0.9935 | 0.9901 | 0.9876 | 0.9884 | 0.9965 | 0.9938 | 0.9884 | 0.9972 | 0.9954 |
-| Quark Super Float32 | 0.9980 | 0.9976 | 0.9986 | 0.9989 | 0.9989 | 0.9979 | 0.9965 | 0.9958 | 0.9939 | 0.9928 | 0.9975 | 0.9961 | 0.9940 | 0.9979 | 0.9980 |
+| Quark (Normal) Float32 | 0.9921 | 0.9939 | 0.9963 | 0.9960 | 0.9950 | 0.9911 | 0.9826 | 0.9763 | 0.9786 | 0.9691 | 0.9912 | 0.9889 | 0.9803 | 0.9919 | 0.9885 |
+| Quark Super Float32 | 0.9947 | 0.9955 | 0.9968 | 0.9967 | 0.9963 | 0.9947 | 0.9922 | 0.9887 | 0.9907 | 0.9870 | 0.9943 | 0.9928 | 0.9885 | 0.9947 | 0.9942 |
+| Atom (Normal) Float32 | 0.9973 | 0.9978 | 0.9992 | 0.9991 | 0.9988 | 0.9977 | 0.9935 | 0.9901 | 0.9876 | 0.9884 | 0.9965 | 0.9938 | 0.9884 | 0.9972 | 0.9954 |
+| Atom Super Float32 | 0.9980 | 0.9976 | 0.9986 | 0.9989 | 0.9989 | 0.9979 | 0.9965 | 0.9958 | 0.9939 | 0.9928 | 0.9975 | 0.9961 | 0.9940 | 0.9979 | 0.9980 |
 
-Quark Super Float32 reached **0.9980 clean AUROC** and **0.9928 worst transformed AUROC**. Atom Super Float32 reached **0.9870 worst transformed AUROC** while remaining the browser-sized release.
+Atom Super Float32 reached **0.9980 clean AUROC** and **0.9928 worst transformed AUROC**. Quark Super Float32 reached **0.9870 worst transformed AUROC** while remaining the browser-sized release.
 
 ### Inference Speed & Footprint
 
@@ -455,12 +455,12 @@ Measured independently per ONNX artifact with ONNX Runtime graph optimizations e
 
 | Model | Format | File size | GPU p50 batch 1 | GPU throughput batch 64 | CPU p50 batch 1 | CPU throughput batch 32 |
 | :--- | :--- | ---: | ---: | ---: | ---: | ---: |
-| Atom (Normal) | Float32 | 96.1 MB | 6.32 ms | 1,495.2 img/s | 23.01 ms | 69.3 img/s |
-| **Atom Super** | **Float32** | **96.1 MB** | **6.50 ms** | **1,554.6 img/s** | **22.07 ms** | **72.3 img/s** |
-| Quark (Normal) | Float32 | 341.3 MB | 6.95 ms | 538.9 img/s | 48.16 ms | 22.7 img/s |
-| Quark Super | Float32 | 341.3 MB | 7.00 ms | 534.7 img/s | 49.26 ms | 22.5 img/s |
+| Quark (Normal) | Float32 | 96.1 MB | 6.32 ms | 1,495.2 img/s | 23.01 ms | 69.3 img/s |
+| **Quark Super** | **Float32** | **96.1 MB** | **6.50 ms** | **1,554.6 img/s** | **22.07 ms** | **72.3 img/s** |
+| Atom (Normal) | Float32 | 341.3 MB | 6.95 ms | 538.9 img/s | 48.16 ms | 22.7 img/s |
+| Atom Super | Float32 | 341.3 MB | 7.00 ms | 534.7 img/s | 49.26 ms | 22.5 img/s |
 
-The Atom family is the lightweight deployment path: the Float32 artifact is 96.1 MB and reaches roughly 1.5k images/s batched on this GPU. Reproduce the measurements with:
+The Quark family is the lightweight deployment path: the Float32 artifact is 96.1 MB and reaches roughly 1.5k images/s batched on this GPU. Reproduce the measurements with:
 
 ```bash
 uv run python scripts/benchmark_model_speed.py \
@@ -470,7 +470,7 @@ uv run python scripts/benchmark_model_speed.py \
 
 ### Delivered artifacts and evaluation status
 
-Teacher, Atom, Quark, Atom Super, and Quark Super checkpoints have been trained and delivered. The web demo defaults to the Atom Super Float32 export for optimal WebGPU performance and numerical consistency across browsers.
+Teacher, Quark, Atom, Quark Super, and Atom Super checkpoints have been trained and delivered. The web demo defaults to the Quark Super Float32 export for optimal WebGPU performance and numerical consistency across browsers.
 
 ---
 

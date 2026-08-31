@@ -43,15 +43,15 @@ training scope. Lattice is labelled for workstation-class hardware.
 
 | Family | Scope  | Precision | Size | Notes |
 |--------|--------|-----------|------|-------|
-| Atom   | Super  | Float32   | 96 MB | **Default.** Recommended. |
-| Atom   | Normal | Float32   | 96 MB | |
-| Quark  | Super  | Float32   | 341 MB | Larger backbone; slower to load. |
-| Quark  | Normal | Float32   | 341 MB | |
+| Quark   | Super  | Float32   | 96 MB | **Default.** Recommended. |
+| Quark   | Normal | Float32   | 96 MB | |
+| Atom  | Super  | Float32   | 341 MB | Larger backbone; slower to load. |
+| Atom  | Normal | Float32   | 341 MB | |
 | Lattice | Normal | Float32 · Workstation | ~3.3 GB + shards | WebGPU preferred; spectral-free browser path. |
 | Lattice | Super  | Float32 · Workstation | ~3.3 GB + shards | WebGPU preferred; spectral-free browser path. |
 
-**Atom** uses a ViT-Small backbone (~25 M parameters).
-**Quark** uses a ViT-Base backbone (~87 M parameters).
+**Quark** uses a ViT-Small backbone (~25 M parameters).
+**Atom** uses a ViT-Base backbone (~87 M parameters).
 **Lattice** uses DINOv3 ViT-H+/16 (872,606,180 parameters, 32 layers, 1280
 encoder dimensions). Its checkpoint config enables a spectral expert, but the
 exported browser graph follows `ProvenanceModel.forward_tensor`, which does not
@@ -126,10 +126,10 @@ or model switch.
 
 ## First-Load Engine Compilation
 
-WebGPU compiles shaders on first use. For Atom Float32 expect 5–20 s on first
+WebGPU compiles shaders on first use. For Quark Float32 expect 5–20 s on first
 load depending on browser GPU driver caching behaviour. Subsequent loads of the
 same model on the same browser benefit from the driver's shader cache. WASM
-single-threaded inference for Atom Float32 is typically 800–1500 ms per image.
+single-threaded inference for Quark Float32 is typically 800–1500 ms per image.
 
 ---
 

@@ -820,7 +820,7 @@ def update_web_catalog(metadata_list: list[dict[str, Any]], remote_revision: str
         with catalog_path.open(encoding="utf-8") as handle:
             catalog = json.load(handle)
     else:
-        catalog = {"default_model": "atom-super-float32", "students": []}
+        catalog = {"default_model": "quark-super-float32", "students": []}
     existing = []
     repository = metadata_list[0]["repository"]
     for source_entry in catalog.get("students", []):
@@ -840,7 +840,7 @@ def update_web_catalog(metadata_list: list[dict[str, Any]], remote_revision: str
     combined = existing + lattice_entries
     if len(combined) != 6:
         raise RuntimeError(f"Expected final six usable Float32 catalog entries, found {len(combined)}")
-    catalog = {"default_model": "atom-super-float32", "students": combined}
+    catalog = {"default_model": "quark-super-float32", "students": combined}
     with catalog_path.open("w", encoding="utf-8", newline="\n") as handle:
         json.dump(catalog, handle, indent=2)
         handle.write("\n")

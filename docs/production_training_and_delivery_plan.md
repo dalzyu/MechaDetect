@@ -14,7 +14,7 @@
 MechaDetect is a robust binary AI-provenance detector (Track 5) distinguishing authentic human imagery (`ai_positive = 0`) from both fully generated and AI-edited imagery (`ai_positive = 1`).
 
 The training path uses an 872.6M-parameter DINOv3 ViT-H+/16 teacher and two
-independent students. Atom is the 25.1M-parameter ViT-S browser model. Quark is
+independent students. Quark is the 25.1M-parameter ViT-S browser model. Atom is
 the higher-capacity ViT-B model. On one GPU, their distillation and ATT stages
 run sequentially; explicit disjoint device pools allow parallel execution.
 
@@ -23,8 +23,8 @@ run sequentially; explicit disjoint device pools allow parallel execution.
 | Model Role | Base Backbone | Complete Detector Params | Target Runtime |
 |---|---|---:|---|
 | **Teacher** | DINOv3 ViT-H+/16 (840.6M) | **872.6M** (872,606,207 values) | Training / Distillation Only |
-| **Atom / ViT-S** | DINOv3 ViT-S/16 (~21M) | **25.1M** (25,089,666 values) | Browser WebGPU/WASM |
-| **Quark / ViT-B** | DINOv3 ViT-B/16 (~86M) | ~89M complete | Desktop / higher-capacity edge |
+| **Quark / ViT-S** | DINOv3 ViT-S/16 (~21M) | **25.1M** (25,089,666 values) | Browser WebGPU/WASM |
+| **Atom / ViT-B** | DINOv3 ViT-B/16 (~86M) | ~89M complete | Desktop / higher-capacity edge |
 
 ---
 
@@ -72,7 +72,7 @@ explicit Vast/RTX-4090 workflow and is not the default.
          │ (clean AUROC > 0.96, both recalls >= 0.82)
          ├──────────────────────────────────────────┐
          ▼                                          ▼
-[Atom Distillation]                            [Quark Distillation]
+[Quark Distillation]                            [Atom Distillation]
          │                                          │
          ├──────────────────────────────────────────┘
          ▼
@@ -80,7 +80,7 @@ explicit Vast/RTX-4090 workflow and is not the default.
          │ (recalls >= 0.82, AUROC within 2pp clean / 3pp robust of teacher)
          ├──────────────────────────────────────────┐
          ▼                                          ▼
-[Atom ATT Hardening]                           [Quark ATT Hardening]
+[Quark ATT Hardening]                           [Atom ATT Hardening]
          │                                          │
          ├──────────────────────────────────────────┘
          ▼
@@ -119,10 +119,10 @@ The checked-in configs target one GPU and preserve an effective record batch of
 | **Teacher Stage 1** | GPU 0 | 6 | 8 | 48 |
 | **Teacher Stage 2** | GPU 0 | 2 | 24 | 48 |
 | **Teacher Stage 2 OOM fallback** | GPU 0 | 1 | 48 | 48 |
-| **Atom distillation** | GPU 0 | 12 | 4 | 48 |
-| **Quark distillation** | GPU 0 | 3 | 16 | 48 |
-| **Atom ATT** | GPU 0 | 4 | 12 | 48 |
-| **Quark ATT** | GPU 0 | 2 | 24 | 48 |
+| **Quark distillation** | GPU 0 | 12 | 4 | 48 |
+| **Atom distillation** | GPU 0 | 3 | 16 | 48 |
+| **Quark ATT** | GPU 0 | 4 | 12 | 48 |
+| **Atom ATT** | GPU 0 | 2 | 24 | 48 |
 
 Student and ATT launchers run both tracks sequentially by default.
 `--parallel-tracks` requires disjoint device pools. Resume requires the same
@@ -153,7 +153,7 @@ world size and batch geometry as the checkpoint.
 - **Opset:** ONNX opset 17.
 - **Quantization mode:** calibrated static INT8 QDQ using all 4,096 calibration rows.
 - **Graph result:** all four INT8 exports passed the static-quantization structure checks.
-- **Runtime result:** Atom Super float32 agreed between WebGPU and forced WASM and is the browser default. The INT8 candidate executed on both providers but produced materially different probabilities, so INT8 remains experimental.
+- **Runtime result:** Quark Super float32 agreed between WebGPU and forced WASM and is the browser default. The INT8 candidate executed on both providers but produced materially different probabilities, so INT8 remains experimental.
 
 ---
 
