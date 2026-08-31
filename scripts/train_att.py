@@ -21,6 +21,7 @@ import json
 import logging
 import math
 import os
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 from random import Random
@@ -477,7 +478,7 @@ def train_att(
     if not dry_run and torch.cuda.is_available() and world_size != required_ws:
         raise RuntimeError(
             f"ATT requires world_size={required_ws}, got {world_size}. "
-            "Use launch_att_tracks.py or launch with matching torchrun processes."
+            "Launch with a matching torchrun process count."
         )
     device = torch.device(f"cuda:{local_rank}" if torch.cuda.is_available() else "cpu")
     # Build student model
@@ -519,12 +520,14 @@ def train_att(
     )
 
     physical_batch_size = int(cfg["training"]["physical_batch_size"])
+    num_workers = int(cfg["training"].get("num_workers", 4 if sys.platform != "win32" else 0))
     loader = DataLoader(
         dataset,
         batch_size=physical_batch_size,
         sampler=sampler,
         shuffle=False,
-        num_workers=int(cfg["training"].get("num_workers", 2)),
+        num_workers=num_workers,
+        persistent_workers=num_workers > 0,
         collate_fn=collate_att_batch,
         pin_memory=torch.cuda.is_available(),
     )

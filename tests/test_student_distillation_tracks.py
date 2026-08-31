@@ -19,11 +19,6 @@ from scripts.distill_student import (
     verify_checkpoint_eligibility,
     verify_teacher_promotion,
 )
-from scripts.launch_students_distill import (
-    TRACK_SPECS,
-    build_track_command,
-    select_default_student_model,
-)
 
 CONFIG_ROOT = Path(__file__).resolve().parents[1] / "configs"
 
@@ -155,8 +150,6 @@ def test_student_distillation_defaults_share_gpu_but_isolate_ports_and_outputs()
     assert small["training"]["master_port"] == 29501
     assert base["training"]["master_port"] == 29502
     assert small["paths"]["output_root"] != base["paths"]["output_root"]
-    assert TRACK_SPECS["small"]["port"] == 29501
-    assert TRACK_SPECS["base"]["port"] == 29502
 
 
 def test_student_config_builder_sets_single_gpu_attributes() -> None:
@@ -183,58 +176,6 @@ def test_student_config_builder_sets_single_gpu_attributes() -> None:
     assert "max_updates" not in cfg_base["training"]
 
 
-# ---------------------------------------------------------------------------
-# 4. Launch Helper Verification
-# ---------------------------------------------------------------------------
-
-
-def test_build_track_command_supports_explicit_two_gpu_ddp() -> None:
-    """An explicit world size of two builds a torch distributed command."""
-    cmd = build_track_command(
-        "small",
-        teacher_config="configs/teacher.yaml",
-        teacher_checkpoint="outputs/teacher/checkpoint-promoted.pt",
-        manifest="splits/train.parquet",
-        output_dir="outputs/student_small",
-        val_manifest="splits/val.parquet",
-        teacher_promotion_report="outputs/teacher/promotion_report.json",
-        epochs=2,
-        world_size=2,
-        physical_batch_size=12,
-        gradient_accumulation=2,
-        dry_run=False,
-    )
-
-    cmd_str = " ".join(cmd)
-    assert "-m torch.distributed.run --nproc_per_node=2 --master_port=29501" in cmd_str
-    assert "--student small" in cmd_str
-    assert "--teacher-config configs/teacher.yaml" in cmd_str
-    assert "--teacher-checkpoint outputs/teacher/checkpoint-promoted.pt" in cmd_str
-    assert "--manifest splits/train.parquet" in cmd_str
-    assert "--val-manifest splits/val.parquet" in cmd_str
-    assert "--teacher-promotion-report outputs/teacher/promotion_report.json" in cmd_str
-    assert "--epochs 2" in cmd_str
-    assert "--world-size 2" in cmd_str
-    assert "--physical-batch-size 12" in cmd_str
-    assert "--gradient-accumulation 2" in cmd_str
-
-
-def test_build_track_command_defaults_to_direct_single_process() -> None:
-    cmd = build_track_command(
-        "base",
-        teacher_config="configs/teacher.yaml",
-        teacher_checkpoint="outputs/teacher/checkpoint-promoted.pt",
-        manifest="splits/train.parquet",
-        output_dir="outputs/student_base",
-        dry_run=True,
-    )
-    cmd_str = " ".join(cmd)
-    assert "torch.distributed.run" not in cmd_str
-    assert "--world-size 1" in cmd_str
-    assert "--physical-batch-size 3" in cmd_str
-    assert "--gradient-accumulation 16" in cmd_str
-    assert "--student base" in cmd_str
-    assert "--dry-run" in cmd_str
 
 
 # ---------------------------------------------------------------------------
@@ -361,113 +302,6 @@ def test_calibrate_validation_threshold_maximizes_balanced_accuracy() -> None:
     assert bal_acc >= 0.85, f"Balanced accuracy {bal_acc} should be high on well-separated data"
 
 
-# ---------------------------------------------------------------------------
-# 7. Default Model Selection Decision Logic
-# ---------------------------------------------------------------------------
-
-
-def test_select_default_student_model_picks_vit_s_by_default() -> None:
-    """ViT-S is default unless ViT-B gains >= 1pp worst-transform AUROC or fixes ViT-S recall."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmp = Path(tmpdir)
-        small_rep = tmp / "small_promotion_report.json"
-        base_rep = tmp / "base_promotion_report.json"
-
-        # Case 1: Both pass, ViT-B gain is 0.005 (< 0.01 threshold) -> Select ViT-S
-        small_rep.write_text(
-            json.dumps(
-                {
-                    "passed": True,
-                    "checkpoint_path": "outputs/small/ckpt.pt",
-                    "metrics": {
-                        "clean": {
-                            "ai_positive_auroc": 0.965,
-                            "ai_positive_recall": 0.85,
-                            "authentic_recall": 0.86,
-                        },
-                        "worst": {"worst_auroc": 0.900},
-                    },
-                }
-            )
-        )
-        base_rep.write_text(
-            json.dumps(
-                {
-                    "passed": True,
-                    "checkpoint_path": "outputs/base/ckpt.pt",
-                    "metrics": {
-                        "clean": {
-                            "ai_positive_auroc": 0.970,
-                            "ai_positive_recall": 0.86,
-                            "authentic_recall": 0.87,
-                        },
-                        "worst": {"worst_auroc": 0.905},  # Gain: 0.005 < 0.010
-                    },
-                }
-            )
-        )
-
-        res = select_default_student_model(small_rep, base_rep, output_dir=tmp)
-        assert res["selected_model"] == "small"
-        assert "default edge model" in res["decision_reason"]
-
-        # Case 2: ViT-B gain is 0.015 (>= 0.010 threshold) -> Select ViT-B
-        base_rep.write_text(
-            json.dumps(
-                {
-                    "passed": True,
-                    "checkpoint_path": "outputs/base/ckpt.pt",
-                    "metrics": {
-                        "clean": {
-                            "ai_positive_auroc": 0.975,
-                            "ai_positive_recall": 0.88,
-                            "authentic_recall": 0.89,
-                        },
-                        "worst": {"worst_auroc": 0.915},  # Gain: 0.015 >= 0.010
-                    },
-                }
-            )
-        )
-        res = select_default_student_model(small_rep, base_rep, output_dir=tmp)
-        assert res["selected_model"] == "base"
-        assert "exceeds 1.0pp threshold" in res["decision_reason"]
-
-        # Case 3: ViT-S failed recall gate, ViT-B passed -> Select ViT-B
-        small_rep.write_text(
-            json.dumps(
-                {
-                    "passed": False,
-                    "checkpoint_path": "outputs/small/ckpt.pt",
-                    "metrics": {
-                        "clean": {
-                            "ai_positive_auroc": 0.965,
-                            "ai_positive_recall": 0.79,
-                            "authentic_recall": 0.85,
-                        },
-                        "worst": {"worst_auroc": 0.900},
-                    },
-                }
-            )
-        )
-        base_rep.write_text(
-            json.dumps(
-                {
-                    "passed": True,
-                    "checkpoint_path": "outputs/base/ckpt.pt",
-                    "metrics": {
-                        "clean": {
-                            "ai_positive_auroc": 0.968,
-                            "ai_positive_recall": 0.84,
-                            "authentic_recall": 0.85,
-                        },
-                        "worst": {"worst_auroc": 0.902},  # Gain: 0.002, but fixes recall!
-                    },
-                }
-            )
-        )
-        res = select_default_student_model(small_rep, base_rep, output_dir=tmp)
-        assert res["selected_model"] == "base"
-        assert "failed recall gate" in res["decision_reason"]
 
 
 # ---------------------------------------------------------------------------
@@ -505,21 +339,3 @@ def test_distill_student_missing_manifest_fails_closed() -> None:
             variant="small",
             dry_run=True,
         )
-
-
-def test_launch_students_distill_accepts_strict_teacher_gate_flag() -> None:
-    """launch_students_distill CLI accepts --strict-teacher-gate without unrecognized argument error."""
-    import subprocess
-    import sys
-
-    res = subprocess.run(
-        [
-            sys.executable,
-            "scripts/launch_students_distill.py",
-            "--help",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    assert res.returncode == 0
-    assert "--strict-teacher-gate" in res.stdout

@@ -3,7 +3,7 @@
 **Project:** TechJam 2026 — Track 5: AI-Generated & Tampered Image Detection  
 **Canonical Package:** `splits/production_eligible/`  
 **Remote Transparency Repo:** `zye2/tj-data`  
-**Authoritative Plan Reference:** [`docs/production_4x4090_implementation_plan.md`](production_4x4090_implementation_plan.md)  
+**Maintained Workflow:** [`train.ipynb`](../train.ipynb)
 **Historical Run Reference:** [`docs/training_run_consolidated.md`](training_run_consolidated.md)
 
 ---

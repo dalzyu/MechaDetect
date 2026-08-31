@@ -5,7 +5,7 @@
 **Run window:** 2026-08-28/29 (UTC+08)  
 **Status:** Teacher Iteration 1 complete; student distillation intentionally blocked; Vast instance stopped after artifact recovery.
 
-This document is the factual record of the training run. It supersedes optimistic planned counts where the executed materialized data, configuration, or audit protocol differed. The forward-looking corrective plan remains in [`production_training_and_delivery_plan.md`](production_training_and_delivery_plan.md).
+This document is the factual record of the training run. It supersedes planned counts where the executed materialized data, configuration, or audit protocol differed. The maintained forward workflow is [`train.ipynb`](../train.ipynb).
 
 ## 1. Executive outcome
 

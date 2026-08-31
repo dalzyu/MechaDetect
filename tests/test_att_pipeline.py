@@ -17,7 +17,6 @@ from scripts.check_att_gate import (
     build_shared_report,
     evaluate_track_gate,
 )
-from scripts.launch_att_tracks import build_track_command
 
 # Import newly owned ATT scripts and modules
 from scripts.train_att import (
@@ -472,31 +471,6 @@ def test_shared_report_aggregation() -> None:
     assert report_fail["overall_status"] == "REJECTED"
 
 
-# ---------------------------------------------------------------------------
-# 7. Launch command builder tests
-# ---------------------------------------------------------------------------
-
-
-def test_launch_track_command_builder() -> None:
-    cmd = build_track_command(
-        "small",
-        checkpoint="checkpoint.pt",
-        manifest="train.parquet",
-        config="configs/att_student_small.yaml",
-        output_dir="outputs/att_student_small",
-        num_candidates=3,
-        epochs=1,
-        dry_run=True,
-    )
-    cmd_str = " ".join(cmd)
-    assert "torch.distributed.run" not in cmd_str
-    assert "--world-size 1" in cmd_str
-    assert "--variant small" in cmd_str
-    assert "--student-checkpoint checkpoint.pt" in cmd_str
-    assert "--manifest train.parquet" in cmd_str
-    assert "--num-candidates 3" in cmd_str
-    assert "--epochs 1" in cmd_str
-    assert "--dry-run" in cmd_str
 
 
 def test_missing_checkpoint_hard_fails() -> None:

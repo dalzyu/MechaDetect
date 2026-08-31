@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "techjam-aigc-detector"
 version = "0.1.0"
-description = "Robust three-class image provenance detector"
+description = "Robust binary AI-generated and AI-edited image detector"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
 dependencies = [

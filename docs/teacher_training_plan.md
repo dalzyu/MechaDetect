@@ -100,15 +100,15 @@ Checkpoint 2 has been demoted from the forward canonical pipeline. Downstream st
 
 ## 6. Maintained orchestration
 
-The production launcher runs both teacher stages, their external evaluation and
-promotion steps, student distillation, and ATT. It defaults to GPU 0:
+[`train.ipynb`](../train.ipynb) is the maintained one-GPU workflow for both
+teacher stages, external evaluation and promotion, student distillation, ATT,
+and ONNX export:
 
 ```bash
-bash scripts/launch_production.sh
+uv run --with jupyter jupyter lab train.ipynb
 ```
 
-Set `GPU_DEVICES=0,1` (or another explicit list) for DDP. Do not resume a
-checkpoint under a different world size or batch geometry.
+Do not resume a checkpoint under a different world size or batch geometry.
 
 The completed August 2026 delivery skipped teacher evaluation and promotion at
 operator request. Those checkpoints are final training outputs, not

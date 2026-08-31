@@ -55,4 +55,5 @@ web/model/*.onnx
 web/model/*.onnx.data-*
 web/model/*.metadata.json
 /outputs/*
+!/outputs/benchmark_results.json
 /splits/final_teacher_dataset/

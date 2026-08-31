@@ -18,7 +18,7 @@ import torch
 import torch.nn.functional as F
 from PIL import Image
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 from aigc_detector.config import load_config
 from aigc_detector.constants import Provenance, Transformation
@@ -52,8 +52,8 @@ from aigc_detector.train import (
 )
 from aigc_detector.transforms import TransformSpec, apply_transform
 
-# Canonical single-GPU presets. Each track keeps the effective record batch at 48;
-# launch_students_distill.py scales accumulation when an explicit multi-GPU pool is used.
+# Canonical one-GPU presets. Each track keeps the effective record batch at 48.
+
 STUDENT_PRESETS: dict[str, dict[str, Any]] = {
     "small": {
         "encoder_id": "facebook/dinov3-vits16-pretrain-lvd1689m",
@@ -178,14 +178,14 @@ def _resolve_data_root(config: dict, manifest_path: Path) -> Path:
 def verify_teacher_promotion(
     teacher_checkpoint: Path,
     teacher_promotion_report: Path | None,
-    manifest_path: Path,
+    validation_manifest_path: Path,
 ) -> dict[str, Any]:
     """Verify that the teacher checkpoint passed promotion, validating SHA and contract metrics.
 
     Production always requires a promoted teacher report and matching checkpoint SHA256.
     """
     teacher_sha256 = compute_file_sha256(teacher_checkpoint)
-    manifest_digest_val = compute_manifest_digest(manifest_path)
+    validation_digest = compute_manifest_digest(validation_manifest_path)
 
     report_path = teacher_promotion_report
     if report_path is None or not report_path.is_file():
@@ -248,18 +248,17 @@ def verify_teacher_promotion(
     clean_auroc = float(clean_auroc)
     worst_auroc = float(worst_auroc)
 
-    # Verify manifest digest if present
     expected_manifest_digest = report_data.get("manifest_digest")
-    if expected_manifest_digest and expected_manifest_digest != manifest_digest_val:
+    if expected_manifest_digest and expected_manifest_digest != validation_digest:
         raise RuntimeError(
-            f"Manifest digest mismatch between teacher report ({expected_manifest_digest}) "
-            f"and current training manifest ({manifest_digest_val})"
+            f"Validation manifest digest mismatch between teacher report "
+            f"({expected_manifest_digest}) and {validation_manifest_path} ({validation_digest})"
         )
 
     return {
         "teacher_checkpoint": str(teacher_checkpoint),
         "teacher_checkpoint_sha256": teacher_sha256,
-        "manifest_digest": manifest_digest_val,
+        "manifest_digest": validation_digest,
         "teacher_passed": True,
         "report_path": str(report_path),
         "teacher_clean_auroc": clean_auroc,
@@ -337,8 +336,38 @@ def _slice_provenance_output(
     )
 
 
-# Canonical validation threshold calibration is provided by aigc_detector.metrics.calibrate_validation_threshold
-# (re-exported here for backwards compatibility with existing callers and tests).
+class _StudentValidationDataset(Dataset):
+    """Load and deterministically transform one validation image per worker."""
+
+    def __init__(
+        self,
+        rows: list[dict[str, Any]],
+        transform_spec: TransformSpec | None,
+        render_policy: str,
+    ) -> None:
+        self.rows = rows
+        self.transform_spec = transform_spec
+        self.render_policy = RenderPolicy(render_policy)
+
+    def __len__(self) -> int:
+        return len(self.rows)
+
+    def __getitem__(self, index: int) -> tuple[Image.Image, int]:
+        record = self.rows[index]
+        with Image.open(record["image_path"]) as image:
+            rendered = render_for_model(image.convert("RGB"), self.render_policy)
+        if self.transform_spec is not None:
+            rendered = apply_transform(rendered, self.transform_spec, Random(42 + index))
+        return rendered, int(record["ai_positive"])
+
+
+def _collate_student_validation(
+    batch: list[tuple[Image.Image, int]],
+) -> tuple[list[Image.Image], torch.Tensor]:
+    images, targets = zip(*batch, strict=True)
+    return list(images), torch.tensor(targets, dtype=torch.float32)
+
+
 
 
 def evaluate_student_validation(
@@ -389,21 +418,22 @@ def evaluate_student_validation(
     condition_scores: dict[str, torch.Tensor] = {}
     condition_targets: dict[str, torch.Tensor] = {}
 
+    workers = min(4, os.cpu_count() or 1)
     for cond_name, transform_spec in STUDENT_EVALUATION_CONDITIONS.items():
         targets: list[int] = []
         scores: list[float] = []
-        for i in range(0, len(records), batch_size):
-            batch_records = records[i : i + batch_size]
-            images: list[Image.Image] = []
-            for r in batch_records:
-                with Image.open(r["image_path"]) as img:
-                    rgb = img.convert("RGB")
-                    rendered = render_for_model(rgb, RenderPolicy(render_policy))
-                    if transform_spec is not None:
-                        rendered = apply_transform(rendered, transform_spec, Random(42 + i))
-                    images.append(rendered)
-                targets.append(r["ai_positive"])
+        loader = DataLoader(
+            _StudentValidationDataset(records, transform_spec, render_policy),
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=workers,
+            pin_memory=torch.cuda.is_available(),
+            persistent_workers=workers > 0,
+            collate_fn=_collate_student_validation,
+        )
 
+        for images, batch_targets in loader:
+            targets.extend(batch_targets.tolist())
             with torch.no_grad():
                 out = student(images)
                 probs = out.probabilities
@@ -412,7 +442,6 @@ def evaluate_student_validation(
                 else:
                     ai_scores = torch.sigmoid(out.ai_positive_logit).view(-1).tolist()
                 scores.extend(ai_scores)
-
         target_tensor = torch.tensor(targets, dtype=torch.float32)
         score_tensor = torch.tensor(scores, dtype=torch.float32)
 
@@ -616,6 +645,17 @@ def train_student(
         data_root=resolved_data_root,
         allow_missing=not require_mat,
     )
+    validation_manifest = Path(
+        val_manifest or config["paths"].get("val_manifest", "")
+    )
+    if not validation_manifest.is_absolute():
+        validation_manifest = project_root / validation_manifest
+    if not skip_teacher_gate and not validation_manifest.is_file():
+        raise FileNotFoundError(
+            f"Validation manifest is required to verify the teacher promotion report: "
+            f"{validation_manifest}"
+        )
+
 
     teacher_verification = (
         {
@@ -630,7 +670,7 @@ def train_student(
         else verify_teacher_promotion(
             teacher_checkpoint,
             teacher_promotion_report,
-            manifest_path,
+            validation_manifest,
         )
     )
 
@@ -640,7 +680,7 @@ def train_student(
     if not dry_run and torch.cuda.is_available() and world_size != ws:
         raise RuntimeError(
             f"Student distillation requires world_size={ws}, got {world_size}. "
-            "Use launch_students_distill.py or launch with matching torchrun processes."
+            "Launch with a matching torchrun process count."
         )
     if torch.cuda.is_available():
         torch.set_float32_matmul_precision("high")
@@ -677,6 +717,8 @@ def train_student(
     # Build frozen teacher
     teacher = build_model(teacher_config).to(device).eval()
     _load_checkpoint(teacher, teacher_checkpoint)
+    if torch.cuda.is_available():
+        teacher = torch.compile(teacher, mode="reduce-overhead")
     for parameter in teacher.parameters():
         parameter.requires_grad_(False)
 
@@ -951,8 +993,8 @@ def train_student(
 
     if is_primary:
         # External validation evaluation and promotion gate check across candidate checkpoints
-        val_eval_manifest = val_manifest or config["paths"].get("val_manifest")
-        if val_eval_manifest is None or not Path(val_eval_manifest).is_file():
+        val_eval_manifest = validation_manifest
+        if not val_eval_manifest.is_file():
             raise FileNotFoundError(
                 f"Validation manifest is required for student promotion evaluation: {val_eval_manifest}"
             )

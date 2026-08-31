@@ -240,39 +240,42 @@ The builder creates `train.parquet`, `validation.parquet`, `test.parquet`, `test
 `calibration.parquet`, `exclusions.parquet`, and `audit_report.json`. Production loaders
 fail closed and forbid missing-image fallback substitution.
 
-### 4.4 Training
+### 4.4 End-to-end training
 
-The maintained path starts on one CUDA GPU and keeps an effective record batch
-of 48 through gradient accumulation:
+Open [`train.ipynb`](train.ipynb) from the repository root. It is the maintained
+training path and runs the complete single-GPU workflow:
 
-| Track | Physical batch | Accumulation | Effective batch |
-|---|---:|---:|---:|
-| Teacher Stage 1 | 6 | 8 | 48 |
-| Teacher Stage 2 | 2 | 24 | 48 |
-| Quark / ViT-S distillation | 12 | 4 | 48 |
-| Atom / ViT-B distillation | 3 | 16 | 48 |
-| Quark ATT | 4 | 12 | 48 |
-| Atom ATT | 2 | 24 | 48 |
+1. download the pinned manifest package and acquire source images;
+2. freeze leak-free train, validation, test, and calibration splits;
+3. train the frozen-backbone and unfrozen teacher stages;
+4. evaluate and promote the teacher;
+5. distill Quark (ViT-S) and Atom (ViT-B) sequentially;
+6. run Adversarial Transformation Training on both students;
+7. evaluate clean and transformed images, apply the ATT gate, and export ONNX.
 
-Prepare the workstation and run the resumable teacher → students → ATT flow:
-
-```bash
-bash cluster_setup.sh
-bash scripts/launch_production.sh
-```
-
-`GPU_DEVICES=0` is the default. An explicit list enables DDP while the launcher
-reduces accumulation to preserve the same effective batch:
+Launch Jupyter without adding notebook packages to the locked training
+environment:
 
 ```bash
-GPU_DEVICES=0,1 bash scripts/launch_production.sh
+uv run --with jupyter jupyter lab train.ipynb
 ```
 
-Both student tracks and both ATT tracks run sequentially unless their launchers
-receive `--parallel-tracks` with disjoint device pools. This avoids loading two
-large models onto a one-GPU workstation.
+The notebook defaults to the complete run. Set `SMOKE_TEST = True` in its first
+configuration cell to exercise every training path with two updates. A single
+NVIDIA GPU is sufficient; the complete teacher run is long.
 
-Run a teacher stage directly with plain Python:
+All tracks preserve effective batch 48:
+
+| Track | Physical batch | Accumulation |
+|---|---:|---:|
+| Teacher Stage 1 | 6 | 8 |
+| Teacher Stage 2 | 2 | 24 |
+| Quark / ViT-S distillation | 12 | 4 |
+| Atom / ViT-B distillation | 3 | 16 |
+| Quark ATT | 4 | 12 |
+| Atom ATT | 2 | 24 |
+
+The underlying CLIs remain directly usable. For example:
 
 ```bash
 uv run python -m aigc_detector.train \
@@ -280,21 +283,7 @@ uv run python -m aigc_detector.train \
 ```
 
 Resume only with the same world size, physical batch, and accumulation used to
-create the checkpoint:
-
-```bash
-uv run python -m aigc_detector.train \
-  --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
-  --resume /absolute/path/to/checkpoint-step-N.pt
-```
-
-The former `orchestrate_4x4090.sh` state machine remains available for the
-original four-RTX-4090 Vast workflow. It is an explicit specialist path, not the
-default training command.
-
-The operational contracts are documented in
-[`docs/production_training_and_delivery_plan.md`](docs/production_training_and_delivery_plan.md)
-and [`docs/teacher_training_plan.md`](docs/teacher_training_plan.md).
+create the checkpoint.
 
 ### 4.5 Evaluating a Checkpoint
 
@@ -319,15 +308,21 @@ uv run python scripts/evaluate_performance.py \
   --batch-size 1
 ```
 
-### 4.6 Predicting on an Image Directory
-Generate Track 5 predictions (`pred = P(AI-generated or AI-edited)`) for submissions:
+### 4.6 Predicting on an image directory
+
+The submission entry point downloads the selected Float32 ONNX artifact from
+Hugging Face on first use, then writes exactly the required `image_path` and
+`pred` fields:
+
 ```bash
-uv run python -m aigc_detector.predict \
-  --input-dir /path/to/images \
-  --output predictions.json \
-  --config configs/teacher_dinov3_stage2_paired_unfrozen.yaml \
-  --checkpoint /path/to/checkpoint-step-N.pt
+uv run python predict.py \
+  --input /path/to/images \
+  --output predictions.json
 ```
+
+Quark Super is the default because it is the smallest model. Use
+`--model atom-super-float32` for the larger student. Private model access
+requires `HF_TOKEN`.
 
 ### 4.7 Model Export
 
@@ -345,146 +340,127 @@ Project checks are available under `tests/`; training does not invoke them.
 
 ---
 
-## 5. Repository Layout
+## 5. Repository layout
 
 ```text
 techjam26/
-├── configs/                       # Production and experiment configurations
-│   ├── teacher_dinov3_stage1_clean_frozen.yaml
-│   ├── teacher_dinov3_stage2_paired_unfrozen.yaml
-│   ├── student_dinov3_small_distill.yaml
-│   ├── student_dinov3_base_distill.yaml
-│   ├── att_student_small.yaml
-│   └── att_student_base.yaml
-├── docs/                          # Architecture decisions, empirical findings, and plans
-│   ├── production_training_and_delivery_plan.md # Authoritative delivery record
-│   ├── training_dataset_specification.md        # Dataset caps and provenance rules
-│   ├── teacher_training_plan.md                 # Teacher stage specifications
-│   └── backbone_bakeoff_findings.md             # 3-way empirical bake-off report
-├── scripts/                       # Training, evaluation, and export entry points
-│   ├── launch_production.sh       # Resumable 1-GPU production pipeline orchestrator
-│   ├── launch_students_distill.py # Sequential student distillation runner
-│   ├── launch_att_tracks.py       # Sequential ATT track runner
-│   ├── distill_student.py         # Knowledge distillation training engine
-│   ├── train_att.py               # Adversarial transformation training engine
-│   ├── evaluate_teacher.py        # Checkpoint evaluation and metrics reporting
-│   ├── promote_teacher.py         # Validation gating and promotion verification
-│   └── export_onnx_webgpu.py      # ONNX export with parity verification
-├── src/aigc_detector/             # Reusable core library package
-│   ├── model.py                   # ProvenanceModel, ProvenanceHead, backbones, adapters
-│   ├── train.py                   # Optimization loop, LLRD, EMA, checkpoint save/restore
-│   ├── predict.py                 # Binary batch inference and submission formatting
-│   ├── dataset.py                 # PairedImageDataset, CachedFeatureDataset
-│   ├── sampling.py                # DeterministicDistributedCoverageSampler
-│   ├── preprocessing.py           # Standardized geometry and image normalization
-│   ├── transforms.py              # Perturbation pipeline (JPEG, blur, noise, resize, crop)
-│   ├── losses.py                  # BCE, consistency, and mask losses
-│   ├── metrics.py                 # AUROC, AUPRC, balanced accuracy, confusion matrix
-│   ├── runtime.py                 # Distributed runtime setup and environment loading
-│   └── static_int8.py             # Calibration and PTQ static quantization engine
-├── web/                           # Client-side WebGPU browser application
-│   ├── index.html                 # UI layout and screening interface
-│   ├── app.js                     # ONNX Runtime Web WebGPU/WASM controller
-│   ├── serve.py                   # Static server with COOP/COEP isolation headers
-│   └── model/
-│       └── metadata.json          # Remote Hugging Face model catalog
-└── tests/                         # Unit and integration test suite
+├── train.ipynb                     # Complete one-GPU training workflow
+├── predict.py                      # Required directory-to-JSON inference CLI
+├── configs/                        # Teacher, student, and ATT configurations
+├── scripts/
+│   ├── data_prep/
+│   │   ├── acquire_all_images.py
+│   │   └── freeze_production_eligible.py
+│   ├── distill_student.py
+│   ├── train_att.py
+│   ├── evaluate_teacher.py
+│   ├── evaluate_performance.py
+│   ├── promote_teacher.py
+│   ├── check_att_gate.py
+│   └── export_onnx_webgpu.py
+├── src/aigc_detector/              # Model, data, losses, metrics, and training
+├── web/                            # Existing client-side WebGPU/WASM demo
+└── tests/
 ```
 
----
+## 6. Track 5 expected deliverables
 
-## 6. Track 5 Submission Interface
+### Project description and technical stack
 
-### Solution and stack
+MechaDetect estimates the probability that an image is fully AI-generated or
+semantically edited by a generative model. Training uses PyTorch, CUDA, and
+Hugging Face Transformers with a DINOv3 ViT-H+/16 teacher; Quark and Atom are
+distilled ViT-S and ViT-B students. Pillow and NumPy implement deterministic
+JPEG, blur, resize, noise, colour, and crop transformations. Pandas and PyArrow
+store the audited manifests. ONNX Runtime provides portable inference.
 
-The model uses PyTorch for optimization and DDP, Hugging Face Transformers for
-the pinned DINOv3 encoder and image processor, torchvision for the optional
-ConvNeXt spectral branch, Pillow/NumPy for deterministic transformations, and
-pandas/PyYAML for manifests and configuration.
-
-Training data is drawn from SID, WildFake, and DiffusionForensics under their
-respective licenses and usage terms. The production split is grouped by exact
-and perceptual duplicate identity and separates unseen generator families.
-COCO val2017 and DALL-E Advanced organizer demonstration data is explicitly
-blocked from training.
+Development uses Git, VS Code or Jupyter, `uv`, Python 3.11, and NVIDIA CUDA.
+Training data combines public or properly licensed image-forensics sources,
+including SID, WildFake, and DiffusionForensics. Exact hashes, perceptual
+duplicate groups, source revisions, and split membership are recorded. The
+COCO val2017 and WildFake DALL-E Advanced organizer demonstration set is
+explicitly blocked from training.
 
 ### Required prediction format
 
-`python -m aigc_detector.predict` recursively reads an image directory and
-writes a JSON array. `pred` is the combined probability that an image is fully
-AI-generated or AI-edited:
+[`predict.py`](predict.py) recursively reads an image directory or accepts one
+image. It outputs a JSON array with only the required fields; `pred` is
+$P(\text{AI-generated or AI-edited})$:
 
 ```json
 [
   {
-    "image_path": "relative/path/example.jpg",
+    "image_path": "images/example.jpg",
     "pred": 0.8731
   }
 ]
 ```
 
-The manifests retain fully generated and tampered subtypes for diagnostics and
-optional localization supervision. The image-level model is binary, so the
-exported score covers both.
+### Robustness evaluation summary
 
-### Organizer Demonstration Benchmark Results
+The organizer demonstration benchmark contains 13,841 held-out images: 4,998
+authentic COCO val2017 images and 8,843 WildFake DALL-E Advanced images. All
+four Float32 students were evaluated on every image under clean input and 14
+transform conditions.
 
-The completed organizer benchmark uses `metadata/organizer_demo_document_count.csv`: **13,841 images** consisting of **4,998 authentic COCO val2017 images** and **8,843 AIGC WildFake DALL-E Advanced images**. The demo set was excluded from the production-eligible training manifest by path and SHA-256 audit. Each artifact was evaluated on all 13,841 images under 15 conditions: clean, JPEG quality 90/70/50/30, Gaussian blur sigma 0.5/1.0/2.0, resize to 0.50x/0.25x followed by upscaling, Gaussian noise sigma 0.02/0.05/0.10, color jitter ±20%, and center crop 80%.
+| Model | Clean AUROC | Mean transformed AUROC | Worst transformed AUROC | Worst condition |
+| :--- | ---: | ---: | ---: | :--- |
+| Quark Normal | 0.9921 | 0.9871 | 0.9691 | quarter resize |
+| **Quark Super** | **0.9947** | **0.9931** | **0.9870** | quarter resize |
+| Atom Normal | 0.9973 | 0.9945 | 0.9876 | half resize |
+| **Atom Super** | **0.9980** | **0.9967** | **0.9928** | quarter resize |
 
-| Model | Format | Clean AUROC | Mean transformed AUROC | Worst transformed AUROC | Worst condition | Clean AIGC recall | Clean authentic recall |
-| :--- | :--- | ---: | ---: | ---: | :--- | ---: | ---: |
-| Quark (Normal) | Float32 | 0.9921 | 0.9871 | 0.9691 | `resize_quarter` | 97.60% | 92.60% |
-| **Quark Super** | **Float32** | **0.9947** | **0.9931** | **0.9870** | `resize_quarter` | **99.39%** | **83.77%** |
-| Atom (Normal) | Float32 | 0.9973 | 0.9945 | 0.9876 | `resize_half` | 98.94% | 94.82% |
-| **Atom Super** | **Float32** | **0.9980** | **0.9967** | **0.9928** | `resize_quarter` | **99.66%** | **93.86%** |
+| Condition | Quark Super AUROC | Atom Super AUROC |
+| :--- | ---: | ---: |
+| Clean | 0.9947 | 0.9980 |
+| JPEG quality 30 | 0.9963 | 0.9989 |
+| Gaussian blur 2.0 | 0.9887 | 0.9958 |
+| Quarter resize | 0.9870 | 0.9928 |
+| Gaussian noise 0.10 | 0.9885 | 0.9940 |
+| Colour jitter 20% | 0.9947 | 0.9979 |
+| Centre crop 80% | 0.9942 | 0.9980 |
 
-Full per-condition AUROC:
+### Error analysis
 
-| Model | clean | jpeg90 | jpeg70 | jpeg50 | jpeg30 | blur0.5 | blur1.0 | blur2.0 | resize_half | resize_quarter | noise0.02 | noise0.05 | noise0.10 | color_jitter20 | crop80 |
-| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Quark (Normal) Float32 | 0.9921 | 0.9939 | 0.9963 | 0.9960 | 0.9950 | 0.9911 | 0.9826 | 0.9763 | 0.9786 | 0.9691 | 0.9912 | 0.9889 | 0.9803 | 0.9919 | 0.9885 |
-| Quark Super Float32 | 0.9947 | 0.9955 | 0.9968 | 0.9967 | 0.9963 | 0.9947 | 0.9922 | 0.9887 | 0.9907 | 0.9870 | 0.9943 | 0.9928 | 0.9885 | 0.9947 | 0.9942 |
-| Atom (Normal) Float32 | 0.9973 | 0.9978 | 0.9992 | 0.9991 | 0.9988 | 0.9977 | 0.9935 | 0.9901 | 0.9876 | 0.9884 | 0.9965 | 0.9938 | 0.9884 | 0.9972 | 0.9954 |
-| Atom Super Float32 | 0.9980 | 0.9976 | 0.9986 | 0.9989 | 0.9989 | 0.9979 | 0.9965 | 0.9958 | 0.9939 | 0.9928 | 0.9975 | 0.9961 | 0.9940 | 0.9979 | 0.9980 |
+At the fixed operating threshold, the main failure mode is false positives on
+authentic images after strong blur or downsampling—not missed synthetic
+images. On clean input, Quark Super produced 811 false positives and 54 false
+negatives; Atom Super reduced these to 307 false positives and 30 false
+negatives. Quarter resize increased false positives to 1,418 for Quark Super
+and 1,197 for Atom Super, while false negatives remained low at 60 and 15.
 
-Atom Super Float32 reached **0.9980 clean AUROC** and **0.9928 worst transformed AUROC**. Quark Super Float32 reached **0.9870 worst transformed AUROC** while remaining the browser-sized release.
+This indicates that aggressive resampling removes camera/detail evidence and
+pushes authentic images toward the AI-positive side of the threshold. The
+larger Atom model ranks transformed examples more reliably, but costs 341 MB
+instead of 96 MB. Quark is therefore the practical browser default; Atom is
+the accuracy-first option. Applications should treat uncertain scores as
+review signals rather than proof and should calibrate the threshold for their
+false-positive tolerance.
 
-### Inference Speed & Footprint
+### Submission checklist
 
-Measured independently per ONNX artifact with ONNX Runtime graph optimizations enabled. GPU results use the NVIDIA GeForce RTX 4080 and CUDAExecutionProvider with batch size 64; CPU results use the Intel Core i9-13900KF with 16 intra-op threads and batch size 32. Single-image latency is measured at batch size 1. Inputs are synthetic 224 × 224 RGB tensors, so image decode, resize, upload, and browser scheduling are not included.
+- **Written description:** the overview, method, stack, data, results, error
+  analysis, and limitations are present in this README for transfer to Devpost.
+- **Public repository:** source, configs, [`train.ipynb`](train.ipynb), and the
+  required [`predict.py`](predict.py) interface are included.
+- **Demo video:** record the existing web demo and `predict.py` end-to-end,
+  upload it publicly to YouTube, and link it from Devpost. This external step
+  cannot be completed inside the repository.
+- **Robustness summary:** included above.
+- **Error analysis:** included above.
 
-| Model | Format | File size | GPU p50 batch 1 | GPU throughput batch 64 | CPU p50 batch 1 | CPU throughput batch 32 |
-| :--- | :--- | ---: | ---: | ---: | ---: | ---: |
-| Quark (Normal) | Float32 | 96.1 MB | 6.32 ms | 1,495.2 img/s | 23.01 ms | 69.3 img/s |
-| **Quark Super** | **Float32** | **96.1 MB** | **6.50 ms** | **1,554.6 img/s** | **22.07 ms** | **72.3 img/s** |
-| Atom (Normal) | Float32 | 341.3 MB | 6.95 ms | 538.9 img/s | 48.16 ms | 22.7 img/s |
-| Atom Super | Float32 | 341.3 MB | 7.00 ms | 534.7 img/s | 49.26 ms | 22.5 img/s |
+## 7. Known limitations
 
-The Quark family is the lightweight deployment path: the Float32 artifact is 96.1 MB and reaches roughly 1.5k images/s batched on this GPU. Reproduce the measurements with:
-
-```bash
-uv run python scripts/benchmark_model_speed.py \
-  --models-dir outputs/models \
-  --output-json outputs/benchmark_results.json
-```
-
-### Delivered artifacts and evaluation status
-
-Teacher, Quark, Atom, Quark Super, and Atom Super checkpoints have been trained and delivered. The web demo defaults to the Quark Super Float32 export for optimal WebGPU performance and numerical consistency across browsers.
-
----
-
-## 7. Known Limitations
-
-- This is a probabilistic detector, not a cryptographic provenance proof,
-  watermark verifier, copyright decision, or authorship certificate.
-- The optional edit-localization output requires localized-edit coverage and
-  mask quality. It is not a second image-level provenance classifier.
-- Heavy crop, resize, blur, or JPEG processing can remove evidence; unusual
-  authentic post-processing can resemble generative artifacts.
-- The DINOv3 teacher is for training and distillation, not constrained deployment.
-
----
+- The output is a probabilistic screening score, not cryptographic provenance,
+  proof of authorship, a watermark check, or a copyright decision.
+- Strong resize, crop, or blur can remove evidence and increase false positives
+  on authentic images.
+- Generator families and post-processing pipelines continue to evolve; the
+  model requires monitoring and periodic evaluation on new held-out sources.
+- The 872.6M-parameter teacher is practical for offline training but not
+  constrained deployment. Quark exists specifically for the browser path.
+- The model repository currently requires Hugging Face authentication. A public
+  browser deployment requires approved model licensing and redistribution terms.
 
 ## 8. Team Contributions
 

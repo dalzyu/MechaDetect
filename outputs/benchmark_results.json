@@ -1,0 +1,184 @@
+{
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 4080",
+    "cpu": "Intel(R) Core(TM) i9-13900KF (24 cores / 32 threads)"
+  },
+  "models": {
+    "quark-normal-post-att-float32": {
+      "file_size_mb": 96.1,
+      "parameters": "25.1M",
+      "gpu": {
+        "device": "NVIDIA GeForce RTX 4080",
+        "single_image_latency_p50_ms": 6.32,
+        "single_image_latency_p95_ms": 8.1,
+        "single_image_latency_p99_ms": 8.61,
+        "single_image_latency_mean_ms": 6.56,
+        "batch_size": 64,
+        "throughput_fps": 1495.2
+      },
+      "cpu": {
+        "device": "CPU (i9-13900KF)",
+        "single_image_latency_p50_ms": 23.01,
+        "single_image_latency_p95_ms": 25.97,
+        "single_image_latency_p99_ms": 26.34,
+        "single_image_latency_mean_ms": 23.05,
+        "batch_size": 32,
+        "throughput_fps": 69.3
+      }
+    },
+    "quark-normal-post-att-static-int8": {
+      "file_size_mb": 51.1,
+      "parameters": "25.1M",
+      "gpu": {
+        "device": "NVIDIA GeForce RTX 4080",
+        "single_image_latency_p50_ms": 5.65,
+        "single_image_latency_p95_ms": 7.11,
+        "single_image_latency_p99_ms": 11.23,
+        "single_image_latency_mean_ms": 5.97,
+        "batch_size": 64,
+        "throughput_fps": 1265.6
+      },
+      "cpu": {
+        "device": "CPU (i9-13900KF)",
+        "single_image_latency_p50_ms": 21.46,
+        "single_image_latency_p95_ms": 23.82,
+        "single_image_latency_p99_ms": 24.73,
+        "single_image_latency_mean_ms": 20.87,
+        "batch_size": 32,
+        "throughput_fps": 77.2
+      }
+    },
+    "quark-super-post-att-float32": {
+      "file_size_mb": 96.1,
+      "parameters": "25.1M",
+      "gpu": {
+        "device": "NVIDIA GeForce RTX 4080",
+        "single_image_latency_p50_ms": 6.5,
+        "single_image_latency_p95_ms": 8.13,
+        "single_image_latency_p99_ms": 8.9,
+        "single_image_latency_mean_ms": 6.64,
+        "batch_size": 64,
+        "throughput_fps": 1554.6
+      },
+      "cpu": {
+        "device": "CPU (i9-13900KF)",
+        "single_image_latency_p50_ms": 22.07,
+        "single_image_latency_p95_ms": 26.2,
+        "single_image_latency_p99_ms": 26.78,
+        "single_image_latency_mean_ms": 22.08,
+        "batch_size": 32,
+        "throughput_fps": 72.3
+      }
+    },
+    "quark-super-post-att-static-int8": {
+      "file_size_mb": 51.1,
+      "parameters": "25.1M",
+      "gpu": {
+        "device": "NVIDIA GeForce RTX 4080",
+        "single_image_latency_p50_ms": 5.53,
+        "single_image_latency_p95_ms": 10.37,
+        "single_image_latency_p99_ms": 13.32,
+        "single_image_latency_mean_ms": 6.14,
+        "batch_size": 64,
+        "throughput_fps": 1266.4
+      },
+      "cpu": {
+        "device": "CPU (i9-13900KF)",
+        "single_image_latency_p50_ms": 18.88,
+        "single_image_latency_p95_ms": 22.46,
+        "single_image_latency_p99_ms": 23.65,
+        "single_image_latency_mean_ms": 19.23,
+        "batch_size": 32,
+        "throughput_fps": 79.6
+      }
+    },
+    "atom-normal-post-att-float32": {
+      "file_size_mb": 341.3,
+      "parameters": "89.4M",
+      "gpu": {
+        "device": "NVIDIA GeForce RTX 4080",
+        "single_image_latency_p50_ms": 6.95,
+        "single_image_latency_p95_ms": 8.04,
+        "single_image_latency_p99_ms": 8.08,
+        "single_image_latency_mean_ms": 7.15,
+        "batch_size": 64,
+        "throughput_fps": 538.9
+      },
+      "cpu": {
+        "device": "CPU (i9-13900KF)",
+        "single_image_latency_p50_ms": 48.16,
+        "single_image_latency_p95_ms": 57.33,
+        "single_image_latency_p99_ms": 58.15,
+        "single_image_latency_mean_ms": 49.3,
+        "batch_size": 32,
+        "throughput_fps": 22.7
+      }
+    },
+    "atom-normal-post-att-static-int8": {
+      "file_size_mb": 173.3,
+      "parameters": "89.4M",
+      "gpu": {
+        "device": "NVIDIA GeForce RTX 4080",
+        "single_image_latency_p50_ms": 6.31,
+        "single_image_latency_p95_ms": 7.22,
+        "single_image_latency_p99_ms": 7.32,
+        "single_image_latency_mean_ms": 6.45,
+        "batch_size": 64,
+        "throughput_fps": 460.5
+      },
+      "cpu": {
+        "device": "CPU (i9-13900KF)",
+        "single_image_latency_p50_ms": 38.46,
+        "single_image_latency_p95_ms": 45.26,
+        "single_image_latency_p99_ms": 46.39,
+        "single_image_latency_mean_ms": 39.28,
+        "batch_size": 32,
+        "throughput_fps": 28.9
+      }
+    },
+    "atom-super-post-att-float32": {
+      "file_size_mb": 341.3,
+      "parameters": "89.4M",
+      "gpu": {
+        "device": "NVIDIA GeForce RTX 4080",
+        "single_image_latency_p50_ms": 7.0,
+        "single_image_latency_p95_ms": 8.12,
+        "single_image_latency_p99_ms": 8.37,
+        "single_image_latency_mean_ms": 7.22,
+        "batch_size": 64,
+        "throughput_fps": 534.7
+      },
+      "cpu": {
+        "device": "CPU (i9-13900KF)",
+        "single_image_latency_p50_ms": 49.26,
+        "single_image_latency_p95_ms": 58.18,
+        "single_image_latency_p99_ms": 59.17,
+        "single_image_latency_mean_ms": 50.22,
+        "batch_size": 32,
+        "throughput_fps": 22.5
+      }
+    },
+    "atom-super-post-att-static-int8": {
+      "file_size_mb": 173.3,
+      "parameters": "89.4M",
+      "gpu": {
+        "device": "NVIDIA GeForce RTX 4080",
+        "single_image_latency_p50_ms": 6.41,
+        "single_image_latency_p95_ms": 7.67,
+        "single_image_latency_p99_ms": 7.87,
+        "single_image_latency_mean_ms": 6.72,
+        "batch_size": 64,
+        "throughput_fps": 456.9
+      },
+      "cpu": {
+        "device": "CPU (i9-13900KF)",
+        "single_image_latency_p50_ms": 38.67,
+        "single_image_latency_p95_ms": 44.96,
+        "single_image_latency_p99_ms": 46.25,
+        "single_image_latency_mean_ms": 39.42,
+        "batch_size": 32,
+        "throughput_fps": 28.7
+      }
+    }
+  }
+}
