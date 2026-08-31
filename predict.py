@@ -32,6 +32,45 @@ def _catalog_model(model_id: str) -> dict:
     raise ValueError(f"Unknown model {model_id!r}. Available models: {available}")
 
 
+def _read_menu(title: str, options: tuple[tuple[str, str], ...]) -> str:
+    print(title)
+    for index, (label, _) in enumerate(options, start=1):
+        suffix = " [default]" if index == 1 else ""
+        print(f"  {index}. {label}{suffix}")
+    while True:
+        try:
+            choice = input("Choose a model [1]: ").strip()
+        except EOFError:
+            choice = ""
+        if not choice:
+            return options[0][1]
+        if choice.isdigit() and 1 <= int(choice) <= len(options):
+            return options[int(choice) - 1][1]
+        print(f"Enter a number from 1 to {len(options)}.", file=sys.stderr)
+
+
+def _choose_model() -> str:
+    choice = _read_menu(
+        "Super models:",
+        (
+            ("Atom Super — 89.4M parameters", "atom-super-float32"),
+            ("Quark Super — 25.1M parameters", "quark-super-float32"),
+            ("More — show Normal variants", "more"),
+        ),
+    )
+    if choice != "more":
+        return choice
+    return _read_menu(
+        "Normal models:",
+        (
+            ("Atom Normal — 89.4M parameters", "atom-normal-float32"),
+            ("Quark Normal — 25.1M parameters", "quark-normal-float32"),
+        ),
+    )
+
+
+
+
 def _token() -> str | None:
     token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_HUB_TOKEN")
     if token:
@@ -182,8 +221,8 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True, help="JSON output path.")
     parser.add_argument(
         "--model",
-        default="quark-super-float32",
-        help="Catalog model ID (default: quark-super-float32).",
+        default=None,
+        help="Catalog model ID. Omit for the interactive chooser; Atom Super is the default.",
     )
     parser.add_argument(
         "--threshold",
@@ -193,6 +232,11 @@ def main() -> None:
     )
     args = parser.parse_args()
     try:
-        predict(args.input, args.output, args.model, args.threshold)
+        model_id = args.model or _choose_model()
+        predict(args.input, args.output, model_id, args.threshold)
     except (OSError, RuntimeError, ValueError) as error:
         parser.error(str(error))
+
+
+if __name__ == "__main__":
+    main()

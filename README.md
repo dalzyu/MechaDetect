@@ -9,6 +9,25 @@ The repository contains the data controls, training code, browser export path,
 and evaluation tools used for TechJam 2026 Track 5. A score is evidence for
 screening; it is not proof of authorship or ownership.
 
+## Headline
+
+MechaDetect distills an 872.6M-parameter DINOv3 ViT-H+/16 forensic teacher
+into **Quark Super**, a 25.1M-parameter browser-deployable detector that
+retains **0.9931 mean AUROC** across real-world image transformations.
+
+Results on the 13,841-image TechJam demonstration benchmark — held out from
+all training splits (4,998 authentic COCO val2017 + 8,843 WildFake DALL·E
+Advanced):
+
+| Model | Params | Size | Target | Clean AUROC | Mean transformed | Worst transformed | AIGC / authentic recall @ calibrated threshold |
+| :--- | ---: | ---: | :--- | ---: | ---: | ---: | ---: |
+| **Quark Super** | 25.1M | 96.1 MB | Browser (WebGPU / WASM) | **0.9947** | **0.9931** | **0.9870** | 99.39% / 83.77% |
+| Atom Super | 89.4M | 341.3 MB | Desktop / server edge | 0.9980 | 0.9967 | 0.9928 | 99.66% / 93.86% |
+
+Quark Super is the production browser default; Atom Super is the accuracy-first
+option for desktop/server edge. Full per-condition robustness and the
+four-student comparison are in [§6](#6-track-5-expected-deliverables).
+
 ---
 
 ## 1. Backbone decision
@@ -320,9 +339,10 @@ uv run python predict.py \
   --output predictions.json
 ```
 
-Quark Super is the default because it is the smallest model. Use
-`--model atom-super-float32` for the larger student. Private model access
-requires `HF_TOKEN`.
+The interactive chooser offers Atom Super (89.4M parameters) as the default and
+Quark Super (25.1M) as the smaller option. Choose **More** to show Atom Normal
+and Quark Normal, or bypass the prompt with `--model <catalog-id>`. Private
+model access requires `HF_TOKEN`.
 
 ### 4.7 Model Export
 
@@ -403,6 +423,17 @@ authentic COCO val2017 images and 8,843 WildFake DALL-E Advanced images. All
 four Float32 students were evaluated on every image under clean input and 14
 transform conditions.
 
+**Final-fit protocol.** The Super students (`Quark Super`, `Atom Super`) and
+the Super Teacher are final-fit models: they train on `train_super_all.parquet`,
+which contains all 87,793 eligible rows. The canonical train / validation /
+test / calibration splits are subsets of those eligible rows, so Super training
+necessarily spans them. This does not contaminate the results reported here:
+every metric in this section is measured on the organizer demonstration
+benchmark, which is disjoint from all training splits and excluded from
+training by the zero-leakage audit (§3). Treat the Super numbers as
+deployment characterization on a held-out benchmark, not as scientific
+generalization from the internal splits.
+
 | Model | Clean AUROC | Mean transformed AUROC | Worst transformed AUROC | Worst condition |
 | :--- | ---: | ---: | ---: | :--- |
 | Quark Normal | 0.9921 | 0.9871 | 0.9691 | quarter resize |
@@ -437,6 +468,22 @@ the accuracy-first option. Applications should treat uncertain scores as
 review signals rather than proof and should calibrate the threshold for their
 false-positive tolerance.
 
+### Browser/WebGPU measurement
+
+The Quark Super Float32 artifact was measured in a headed Chrome 152 browser
+session on this Windows/RTX 4080 workstation. ONNX Runtime Web 1.20.1 reported
+the WebGPU execution provider. After five warm-up runs, two repeated
+30-inference measurements produced p50 latencies of **21.3 ms** and **21.9 ms**
+(approximately **21.6 ms** across runs; mean 22.4 ms). These are steady-state
+`session.run` measurements for one preprocessed `224 × 224` tensor and exclude
+model download, image decoding, resizing, browser upload, and UI scheduling.
+They are not directly comparable with the native CUDA figures above because
+the execution providers and runtimes differ.
+
+The benchmark used the same 96.1 MB Float32 ONNX artifact selected by the
+browser catalog. The browser demo still uses WebGPU when available and falls
+back to WebAssembly when it is not.
+
 ### Submission checklist
 
 - **Written description:** the overview, method, stack, data, results, error
@@ -459,12 +506,21 @@ false-positive tolerance.
   model requires monitoring and periodic evaluation on new held-out sources.
 - The 872.6M-parameter teacher is practical for offline training but not
   constrained deployment. Quark exists specifically for the browser path.
-- The model repository currently requires Hugging Face authentication. A public
-  browser deployment requires approved model licensing and redistribution terms.
+- The browser catalog currently resolves public, immutable Hugging Face
+  artifacts. Production deployments still require approved model licensing and
+  redistribution terms; access should be rechecked if the hosting policy
+  changes.
 
 ## 8. Team Contributions
 
-Contributor identities and role allocation were not provided in this
-repository context. The submitting team must add each member's name and exact
-contributions before Track 5 submission; this repository does not invent or
-attribute work without confirmation.
+Fill in each member before Track 5 submission. The inference command
+([`predict.py`](predict.py), §4.6) and the Devpost description source (§6) are
+already in place; the two remaining external items are this table and the
+demo video (record the web demo + `predict.py` end-to-end, upload to YouTube,
+link from Devpost).
+
+| Member | Role | Contributions |
+| :--- | :--- | :--- |
+| _TBD_ | _TBD_ | _TBD_ |
+
+Names and role allocation are not invented or attributed without confirmation.
