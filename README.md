@@ -40,41 +40,57 @@ Full empirical findings, 16-condition robustness tables, and failure analyses:
 
 ## 2. Model Architecture
 
-The image-level model is binary. A global AI-evidence branch and a token-aware
-edit-localization branch feed one shared AI-positive classifier:
+MechaDetect uses a unified architecture across both its teacher and student models.
+The prediction objective is binary: authentic images are negative ($y=0$), while
+fully synthetic images and localized generative edits share a single positive label
+($y=1$).
 
-```
-[ Input RGB Image ]
+### Architectural Topology
+
+```text
+[ Input RGB Image: 224 × 224 × 3 ]
        │
        ▼
-[ Vision Backbone: DINOv3 ViT-H+/16 ]
-       │  (Output: B × N × 1280 patch tokens)
+[ Vision Backbone: DINOv3 ViT (Patch Size 16) ]
+       │  1 CLS + 4 register prefix tokens stripped
+       │  Output: B × 196 patch tokens × encoder_dim
        ▼
-[ Token Adapter: LayerNorm + Linear(1280 → 512) ]
-       │  (Output: B × N × 512 adapted tokens)
+[ Token Adapter: LayerNorm + Linear(encoder_dim → 512) ]
+       │  Output: B × 196 adapted tokens × 512
        ├───────────────────────────────────────────────┐
        ▼                                               ▼
 [ Global AI-Evidence Head ]                 [ Edit Localization Head ]
-• 4 learned query vectors                   • Token-level linear classifier
-• Multi-head cross-attention                • Top-5% patch pooling
-• Mean + Std summary pooling                • Softmax attention pooling
+• 4 learned query vectors                   • Token classifier (512 → 1 score)
+• Multi-head cross-attention (4 heads)      • Softmax attention pooling (512)
+• Mean (512) + Std (512) summary pooling    • Top-5% patch pooling (k=10 tokens, 512)
+• Concat 6 × 512 = 3072 dims                • 1 learned global query (512)
+• Projection: 3072 → 256 (GELU + Dropout)   • Concat 3 × 512 = 1536 dims
+       │                                    • Projection: 1536 → 256 (GELU + Dropout)
        │                                               │
        └───────────────────────┬───────────────────────┘
                                ▼
              [ Binary AI-Positive Classifier ]
-             • ai_positive_logit
+             • Concat global + local features (256 + 256 = 512 dims)
+             • Linear(512 → 1) → ai_positive_logit
              • P(AI-positive) = sigmoid(logit)
              • P(authentic) = 1 - P(AI-positive)
-             • Fully generated and AI-edited share this target
 ```
 
-The edit-localization branch may receive patch-mask supervision where masks
-exist. It is not trained to distinguish fully generated images from edited
-images.
+### Model Family & Hierarchy
 
-### Optional Dual-Stream Spectral Expert
-For frequency-domain residual detection, an optional ConvNeXt-Tiny stream processes RGB + fixed high-pass spatial residuals (`conv2d` with discrete derivative kernels) augmented with a 32-bin radial 2D FFT energy projection, dynamically fused via learned sigmoid gates.
+The architecture is parameterized across three scales:
 
+| Variant | Role | Backbone Identifier | Encoder Dim | Parameter Count | Deployment Target |
+| :--- | :--- | :--- | :---: | :---: | :--- |
+| **Teacher** | Stage 1/2 Distillation Source | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | ~840.6M | Cluster GPU (Training only) |
+| **Quark** | Base Distilled Student | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | ~89.8M | Workstation / Edge Server |
+| **Quark Super** | Post-ATT Base Student | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | ~89.8M | Robustness Hardened |
+| **Atom** | Small Distilled Student | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25.1M | Lightweight Edge |
+| **Atom Super** | Post-ATT Small Student | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25,089,666 | **Browser Default (WebGPU)** |
+
+* **Adversarial Transformation Training (ATT):** The Super variants maintain the exact parameter counts and tensor geometries of their base students. During ATT, models are hardened against 6 perturbation families (JPEG, blur, resize, noise, color, crop) through an online candidate generator, non-differentiable worst-case candidate selection, and prediction consistency regularization.
+* **Browser Runtime & WebGPU Export:** The delivered client-side artifact (`web/model/mechadetect-atom-super-post-att-float32.onnx`, 100.8 MB) uses the Atom Super float32 export. It executes via `forward_batched_tokens`, compiling directly into WebGPU compute shaders with WebAssembly fallback.
+* **Optional Dual-Stream Spectral Expert:** For training experiments on spatial residuals, an optional frequency-domain ConvNeXt-Tiny stream processes RGB plus fixed high-pass spatial residuals (`conv2d` with discrete derivative kernels) and a 32-bin radial 2D FFT energy projection, gated via learned sigmoid parameters. Production student ONNX exports omit this branch to minimize client memory and enable pure browser execution.
 ---
 
 ## 3. Quickstart & Usage
@@ -264,25 +280,45 @@ Project checks are available under `tests/`; training does not invoke them.
 ```text
 techjam26/
 ├── configs/                       # Production and experiment configurations
-│   ├── bakeoff/                    # Completed backbone tournament configs
 │   ├── teacher_dinov3_stage1_clean_frozen.yaml
 │   ├── teacher_dinov3_stage2_paired_unfrozen.yaml
-│   └── ...
-├── docs/                          # Tournament decisions, findings, and design history
-│   ├── backbone_bakeoff_findings.md # Complete 3-way empirical report
-│   ├── backbone_bakeoff_decision.md # Executive winner decision & catalog
-│   ├── teacher_training_plan.md   # Authoritative two-stage teacher plan
-│   └── archive/                   # Historical execution and PoC plans
-├── outputs/bakeoff/               # Exfiltrated evaluation results and raw JSON metrics
-├── scripts/                       # Essential CLI tools (training, eval, prediction)
-│   ├── model.py                   # Backbones, binary AI head, edit localization
-│   ├── train.py                   # Optimization loop, layerwise decay, EMA, checkpointing
-│   ├── predict.py                 # Binary batch inference and submission export
-│   ├── losses.py                  # Binary BCE, focal BCE, Dice, consistency losses
-│   ├── transforms.py              # Perturbation pipeline (JPEG, blur, noise, resize, crop)
-│   ├── sampling.py                # Generator-balanced stratified sampling
+│   ├── student_dinov3_small_distill.yaml
+│   ├── student_dinov3_base_distill.yaml
+│   ├── att_student_small.yaml
+│   └── att_student_base.yaml
+├── docs/                          # Architecture decisions, empirical findings, and plans
+│   ├── production_training_and_delivery_plan.md # Authoritative delivery record
+│   ├── training_dataset_specification.md        # Dataset caps and provenance rules
+│   ├── teacher_training_plan.md                 # Teacher stage specifications
+│   └── backbone_bakeoff_findings.md             # 3-way empirical bake-off report
+├── scripts/                       # Training, evaluation, and export entry points
+│   ├── launch_production.sh       # Resumable 1-GPU production pipeline orchestrator
+│   ├── launch_students_distill.py # Sequential student distillation runner
+│   ├── launch_att_tracks.py       # Sequential ATT track runner
+│   ├── distill_student.py         # Knowledge distillation training engine
+│   ├── train_att.py               # Adversarial transformation training engine
+│   ├── evaluate_teacher.py        # Checkpoint evaluation and metrics reporting
+│   ├── promote_teacher.py         # Validation gating and promotion verification
+│   └── export_onnx_webgpu.py      # ONNX export with parity verification
+├── src/aigc_detector/             # Reusable core library package
+│   ├── model.py                   # ProvenanceModel, ProvenanceHead, backbones, adapters
+│   ├── train.py                   # Optimization loop, LLRD, EMA, checkpoint save/restore
+│   ├── predict.py                 # Binary batch inference and submission formatting
+│   ├── dataset.py                 # PairedImageDataset, CachedFeatureDataset
+│   ├── sampling.py                # DeterministicDistributedCoverageSampler
 │   ├── preprocessing.py           # Standardized geometry and image normalization
-│   └── metrics.py                 # AUROC, AUPRC, balanced accuracy, confusion matrix
+│   ├── transforms.py              # Perturbation pipeline (JPEG, blur, noise, resize, crop)
+│   ├── losses.py                  # BCE, consistency, and mask losses
+│   ├── metrics.py                 # AUROC, AUPRC, balanced accuracy, confusion matrix
+│   ├── runtime.py                 # Distributed runtime setup and environment loading
+│   └── static_int8.py             # Calibration and PTQ static quantization engine
+├── web/                           # Client-side WebGPU browser application
+│   ├── index.html                 # UI layout and screening interface
+│   ├── app.js                     # ONNX Runtime Web WebGPU/WASM controller
+│   ├── serve.py                   # Static server with COOP/COEP isolation headers
+│   └── model/
+│       ├── metadata.json          # Model catalog and deployment metadata
+│       └── *.onnx                 # Git LFS model artifacts
 └── tests/                         # Unit and integration test suite
 ```
 
