@@ -104,21 +104,6 @@ An in-memory graph ablation preserved the quantized weights but bypassed selecte
 
 This identifies repeated encoder MLP activation quantization as the dominant failure. The final classifier, CUDA provider, source checkpoint identity, and shared image preprocessing are ruled out as primary causes.
 
-## Why PTQ versus QAT matters
-
-We used **post-training quantization (PTQ)**. PTQ observes a calibration sample after training, chooses quantization ranges, and converts the trained graph without changing learned weights. It is fast and inexpensive, but the model never learns to tolerate the resulting rounding and clipping.
-
-**Quantization-aware training (QAT)** simulates quantization during fine-tuning. The model can adjust weights and activation distributions around quantization noise. That makes QAT a strong candidate for transformer blocks whose activation ranges are difficult to calibrate after training.
-
-However, “PTQ bad, QAT good” is too broad:
-
-- Conservative mixed-precision PTQ may work if encoder MLP activations remain Float32.
-- Per-channel weight quantization and percentile or distribution-aware activation calibration may reduce error.
-- Weight-only quantization could reduce storage without repeatedly quantizing residual activations.
-- QAT can still fail if the quantization policy or target runtime is unsuitable.
-
-The immediate failure was the chosen **per-tensor MinMax activation PTQ policy across every transformer MLP**, not PTQ as a category.
-
 ## Why the artifacts were withdrawn
 
 The release quality gate allows at most 0.005 AUROC loss relative to Float32. The observed clean AUROC losses were approximately 0.28–0.40, far beyond that limit. Smaller files and modest CPU speed gains do not compensate for a detector that no longer ranks authentic and AIGC images reliably.
