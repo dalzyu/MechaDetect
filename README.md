@@ -6,7 +6,7 @@
 
 <p align="center"><strong>An 872.6M-parameter forensic teacher distilled into 25.1M and 89.4M edge detectors with 0.9931 and 0.9967 mean transformed AUROC.</strong></p>
 
-<p align="center">AIGC detection runs locally through WebGPU or WebAssembly. Images stay in the browser; model weights are downloaded from Hugging Face, and the server performs no AIGC inference.</p>
+<p align="center">AIGC detection can run locally through WebGPU or WebAssembly. Images stay in the browser; model weights are downloaded from Hugging Face, and the server performs no AIGC inference.</p>
 
 <p align="center">
   <a href="https://mechadetect-demo-deploy.vercel.app/"><img src="https://img.shields.io/badge/Live_Demo-Vercel-000000?logo=vercel" alt="Live demo"></a>
