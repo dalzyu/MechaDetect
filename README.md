@@ -98,6 +98,17 @@ The architecture is parameterized across three scales:
 * **Browser Runtime & WebGPU Export:** The delivered client-side artifact (`web/model/mechadetect-atom-super-post-att-float32.onnx`, 100.8 MB) uses the Atom Super float32 export. It executes via `forward_batched_tokens`, compiling directly into WebGPU compute shaders with WebAssembly fallback.
 * **Optional Dual-Stream Spectral Expert:** For training experiments on spatial residuals, an optional frequency-domain ConvNeXt-Tiny stream processes RGB plus fixed high-pass spatial residuals (`conv2d` with discrete derivative kernels) and a 32-bin radial 2D FFT energy projection, gated via learned sigmoid parameters. Production student ONNX exports omit this branch to minimize client memory and enable pure browser execution.
 
+### Quantization & Precision Formats
+
+MechaDetect produces both full-precision and statically quantized artifacts:
+
+* **Float32 ONNX (Primary Release):** Exported under ONNX opset 17 with vectorized batched token extraction (`forward_batched_tokens`). The browser default is `Atom Super Float32` ($100.8\text{ MB}$), providing numerically stable inference across WebGPU compute shaders and WebAssembly.
+* **Calibrated Static INT8 (QDQ):** Post-Training Quantization (PTQ) inserts explicit `QuantizeLinear` and `DequantizeLinear` (QDQ) operator pairs on convolutional and linear blocks while preserving sensitive operations in float32.
+* **Calibration Dataset Contract:** Quantization calibration is performed on the $4,096$-row `calibration.parquet` split. This split is strictly isolated from all training, validation, and benchmark test sets.
+* **Graph Structure Integrity:** The static INT8 pipeline strictly enforces true static QDQ representation, rejecting weight-only packing (`MatMulNBits`) and dynamic-only quantization.
+
+---
+
 ## 3. Quickstart & Usage
 
 ### 3.1 Installation
@@ -274,8 +285,27 @@ uv run python -m aigc_detector.predict \
   --checkpoint /path/to/checkpoint-step-N.pt
 ```
 
-### 3.7 Repository checks
+### 3.7 Model Export and Quantization
 
+Export a trained student checkpoint to opset 17 Float32 ONNX:
+
+```bash
+uv run python scripts/export_onnx_webgpu.py \
+  --checkpoint outputs/att_student_small/checkpoint-final.pt \
+  --variant small \
+  --output web/model/mechadetect-atom-super-post-att-float32.onnx
+```
+
+Apply calibrated Static INT8 QDQ quantization using the disjoint calibration split:
+
+```bash
+uv run python scripts/calibrate_quantize_int8.py \
+  --input-model web/model/mechadetect-atom-super-post-att-float32.onnx \
+  --calibration-manifest splits/production_eligible/calibration.parquet \
+  --output-model web/model/mechadetect-atom-super-post-att-int8.onnx
+```
+
+### 3.8 Repository checks
 Project checks are available under `tests/`; training does not invoke them.
 
 ---
