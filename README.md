@@ -463,7 +463,7 @@ Native batch-1 timings exclude image decoding, resizing, browser upload, and UI 
 - [Training dataset specification](docs/training_dataset_specification.md)
 - [Static INT8 release evaluation](docs/int8_release_evaluation.md)
 
-###Team Members and Contributions
+### Team Members and Contributions
 
 | Member | Contributions |
 |---|---|
