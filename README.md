@@ -85,9 +85,9 @@ The architecture is parameterized across three scales:
 | **Normal Teacher** | Primary Distillation Source | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | 872,606,207 (~872.6M) | Canonical `train` split ($22,483$ rows) |
 | **Super Teacher** | Full-Data Adaptation | `facebook/dinov3-vith16plus-pretrain-lvd1689m` | 1280 | 872,606,207 (~872.6M) | All available rows ($41,035$ rows) |
 | **Quark** | Base Distilled Student | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89,350,914 (~89.4M) | Canonical `train` split |
-| **Quark Super** | Post-ATT Base Student | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89,350,914 (~89.4M) | Adversarial Transformation Training (ATT) |
+| **Quark Super** | Robustness-Hardened Base Student (Post-ATT) | `facebook/dinov3-vitb16-pretrain-lvd1689m` | 768 | 89,350,914 (~89.4M) | Canonical `train` split |
 | **Atom** | Small Distilled Student | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25,089,666 (~25.1M) | Canonical `train` split |
-| **Atom Super** | Post-ATT Small Student | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25,089,666 (~25.1M) | **Browser Default (WebGPU)** |
+| **Atom Super** | Browser Default Student (Post-ATT, WebGPU) | `facebook/dinov3-vits16-pretrain-lvd1689m` | 384 | 25,089,666 (~25.1M) | Canonical `train` split |
 
 * **Teacher Variants:**
   * **Normal Teacher (Stage 2):** Trained on the canonical `train` split ($22,483$ rows), providing the primary source for student distillation.
