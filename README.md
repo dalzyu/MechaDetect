@@ -139,14 +139,16 @@ The declared dataset package contains **122,344 total records** across 29 active
 | `calibration.parquet` | 4,096 | 4.7% | 2,294 / 1,802 | Strictly isolated split used exclusively for static INT8 PTQ calibration |
 | `exclusions.parquet` | 30,455 | — | — | Quarantined records (missing remote bytes, unaligned masks, cross-label conflicts) |
 
-### Source Cohorts & Negative Diversity
+### Cohort Composition
 
-The dataset contains **38,673 authentic negatives** carefully balanced across real-world photography, non-generative CGI, and historical art to avoid stylistic bias:
+The dataset consists of authentic negative anchors and generative positive cohorts across 29 collections:
 
-* **Real-World Photography & Portraits (21.8k images, 56.3% of negatives):** Real camera photography from the Synthetic Image Detection challenge (SID, 9.4k), CelebA-HQ real human faces (4.8k), AFHQ real animal photography (3.3k), DiffusionForensics natural photo anchors (LSUN, FFHQ, ImageNet, 4.1k), and Google Open Images v7 (0.2k).
-* **Historical Art & Illustrations (15.9k images, 41.1% of negatives):** Pre-AI public domain museum scans (Art Museums PD 7.6k, Artic 6.3k, Classical Figure Art 1.0k) and hand-drawn Manga109 illustrations (1.0k), ensuring the model does not misclassify stylized or painted artwork as AI-generated.
-* **Authentic 3D CGI & Gaming (1.0k images, 2.6% of negatives):** Video game captures (GTA 5 0.5k, fantasy gaming 0.25k) and raytraced Blender 3D animation (Sintel 0.25k), preventing false positives on non-generative digital graphics.
-* **Generative Positive Cohorts (49.1k images):** Broad representation across 29 generative architectures, including Midjourney v5/v6/Niji (6.6k), FLUX.1 [dev] (5.3k), GPT-Image-Edit (5.0k), Stable Diffusion SD 1.x/2.x/3/XL (4.9k), standard diffusion baselines (DDPM, DDIM, ADM, LDM, 15.0k), Ideogram v2 (2.9k), Krea 2 (2.4k), Google Nano Banana edited/pro (1.9k), and specialized cohorts (DALL·E 2, VQDM, Danbooru 2026 AIGC, 5.2k).
+* **Authentic Negatives (38.7k images):**
+  * *Photography & Portraits (21.8k):* Real camera captures from SID (9.4k), CelebA-HQ human portraits (4.8k), AFHQ animal faces (3.3k), DiffusionForensics natural photo anchors (4.1k), and Open Images v7 (0.2k).
+  * *Art & Illustrations (15.9k):* Public domain museum scans (Art Museums PD 7.6k, Artic 6.3k, Classical Figure Art 1.0k) and hand-drawn Manga109 illustrations (1.0k).
+  * *3D CGI & Gaming (1.0k):* Video game captures (GTA 5 0.5k, fantasy gaming 0.25k) and 3D Blender animation (Sintel 0.25k).
+* **Generative Positives (49.1k images):**
+  * Midjourney v5/v6/Niji (6.6k), FLUX.1 [dev] (5.3k), GPT-Image-Edit (5.0k), Stable Diffusion SD 1.x/2.x/3/XL (4.9k), diffusion baselines (DDPM, DDIM, ADM, LDM, 15.0k), Ideogram v2 (2.9k), Krea 2 (2.4k), Google Nano Banana edited/pro (1.9k), and specialized engines (DALL·E 2, VQDM, Danbooru 2026 AIGC, 5.2k).
 
 ### Benchmark Isolation & Zero-Leakage Audit
 
