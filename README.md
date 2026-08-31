@@ -47,8 +47,6 @@ Online platforms need AIGC screening capacity to grow with upload and moderation
 
 The deployed demo downloads a Float32 ONNX model, then processes image tensors inside the browser through WebGPU with WebAssembly fallback. Image bytes are not uploaded for classification. Platforms can add screening without running an inference service for every image.
 
-In this project, **AIGC** includes fully generated images and images whose semantic content was changed by a generative model. Authentic images are negative. JPEG compression, resizing, blur, noise, colour adjustment, and cropping do not change the ground-truth label.
-
 ---
 
 ## Results
