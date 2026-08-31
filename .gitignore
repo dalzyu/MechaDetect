@@ -51,6 +51,8 @@ outputs/**/*.log
 outputs/**/*.pt
 outputs/**/*.pth
 outputs/**/*.ckpt
-web/model/student_*.onnx
+web/model/*.onnx
+web/model/*.onnx.data-*
+web/model/*.metadata.json
 /outputs/*
 /splits/final_teacher_dataset/

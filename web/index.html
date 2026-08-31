@@ -483,6 +483,74 @@
         color: var(--text);
       }
 
+      /* Status pill state variants */
+      .status-pill.status-loading {
+        background: #f4f0ff;
+        border-color: #e5dcff;
+        color: #6858f0;
+      }
+      .status-pill.status-ready {
+        background: #ecfdf5;
+        border-color: #a7f3d0;
+        color: #065f46;
+      }
+      .status-pill.status-error {
+        background: #fef2f2;
+        border-color: #fecaca;
+        color: #991b1b;
+      }
+
+      /* Model selector */
+      .model-select {
+        appearance: none;
+        -webkit-appearance: none;
+        background: #18181b url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a1a1aa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
+        color: #e4e4e7;
+        border: 1px solid #3f3f46;
+        border-radius: 8px;
+        padding: 8px 32px 8px 12px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        min-width: 210px;
+        max-width: 280px;
+        transition: border-color 0.15s;
+      }
+      .model-select:hover { border-color: #6858f0; }
+      .model-select:disabled { opacity: 0.5; cursor: not-allowed; }
+      .model-select optgroup { font-weight: 700; color: #a1a1aa; }
+      .model-select option  { font-weight: 500; color: #e4e4e7; background: #18181b; }
+
+      /* Force WASM label */
+      .wasm-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #a1a1aa;
+        font-size: 0.82rem;
+        font-weight: 500;
+        white-space: nowrap;
+        cursor: pointer;
+        user-select: none;
+      }
+      .wasm-label input[type="checkbox"] { cursor: pointer; accent-color: #6858f0; }
+
+      /* INT8 experimental callout — shown via JS when an INT8 model is selected */
+      #int8Warning {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        color: #92400e;
+        border-radius: 10px;
+        padding: 9px 16px;
+        font-size: 0.83rem;
+        font-weight: 500;
+        margin-bottom: 14px;
+      }
+      #int8Warning.visible { display: flex; }
       /* Responsive Breakpoints */
       @media (max-width: 1180px) {
         .cards-grid {
@@ -528,12 +596,14 @@
         <span class="brand-title">MechaDetect</span>
       </a>
 
-      <div class="controls-wrap" style="display: flex; gap: 1rem; align-items: center;">
-        <label style="color: #a1a1aa; font-size: 0.875rem;">
-          <input type="checkbox" id="forceWasmCheckbox" style="margin-right: 0.25rem;">
+      <div class="controls-wrap" style="display: flex; gap: 0.75rem; align-items: center;">
+        <label class="wasm-label" title="Bypass WebGPU and use WebAssembly instead">
+          <input type="checkbox" id="forceWasmCheckbox">
           Force WASM
         </label>
-        <select id="modelSelect" class="upload-btn" style="background: #18181b; color: white; border: 1px solid #3f3f46; padding: 0.25rem 0.5rem;"></select>
+        <select id="modelSelect" class="model-select" aria-label="Select model" disabled>
+          <option value="">Loading…</option>
+        </select>
         <button class="upload-btn" id="uploadBtn" type="button">Upload</button>
       </div>
     </header>
@@ -557,6 +627,12 @@
           <span id="statusPillText">Awaiting Model...</span>
         </div>
       </section>
+
+      <!-- INT8 Experimental Warning — toggled by JS when an INT8 model is active -->
+      <div id="int8Warning">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Experimental &mdash; Static INT8 has measured accuracy degradation. Results may be unreliable.</span>
+      </div>
 
       <!-- Processing Banner -->
       <div id="processingBanner">

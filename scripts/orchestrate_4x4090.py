@@ -1693,8 +1693,12 @@ class PipelineOrchestrator:
                         f"FATAL: Float deployment artifact is not promoted: {source}",
                     )
                     return False
-                if quantization == "static_int8" and status not in {"promoted", "experimental"}:
-                    return False
+                if quantization == "static_int8" and status != "promoted":
+                    log(
+                        "RUNTIME-BENCHMARK",
+                        f"Skipping unpromoted INT8 deployment artifact: {source}",
+                    )
+                    continue
                 destination = web_model_dir / source.name
                 shutil.copyfile(source, destination)
                 model_id = f"student-{track}-{quantization}"

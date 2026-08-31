@@ -109,7 +109,7 @@ def upload_files_to_hf(
         )
         receipt["files"].append(
             {
-                "local_path": str(vf),
+                "local_name": vf.name,
                 "dest_path": dest_path,
                 "sha256": sha256,
                 "size_bytes": size_bytes,
@@ -147,8 +147,8 @@ def upload_files_to_hf(
             commit_message
             or f"Upload artifacts for {path_in_repo_prefix or 'production run'} at {timestamp}"
         )
-        for item in receipt["files"]:
-            local_p = Path(item["local_path"])
+        for vf, item in zip(valid_files, receipt["files"], strict=True):
+            local_p = vf
             dest_p = item["dest_path"]
             print(f"[upload] Uploading {local_p} -> {dest_p}...")
             api.upload_file(

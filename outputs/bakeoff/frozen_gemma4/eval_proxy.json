@@ -130,7 +130,7 @@
     "peak_allocated_vram_gib": 4.836873531341553
   },
   "three_view": false,
-  "checkpoint": "/workspace/outputs/bakeoff_frozen_gemma4/checkpoint-step-188.pt",
+  "checkpoint": "outputs/bakeoff_frozen_gemma4/checkpoint-step-188.pt",
   "rows": [
     {
       "image_path": "organizer_demo/coco/val2017/000000170545.jpg",

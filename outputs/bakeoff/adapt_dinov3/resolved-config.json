@@ -1,11 +1,11 @@
 {
   "seed": 42,
   "paths": {
-    "data_root": "/workspace/techjam26/data",
+    "data_root": "data",
     "train_manifest": "manifests/ablation12k.csv",
     "val_manifest": "manifests/strict_unseen_probe.csv",
-    "output_root": "/workspace/outputs",
-    "initial_checkpoint": "/workspace/outputs/bakeoff_frozen_dinov3/checkpoint-step-188.pt"
+    "output_root": "outputs",
+    "initial_checkpoint": "outputs/bakeoff_frozen_dinov3/checkpoint-step-188.pt"
   },
   "preprocessing": {
     "policy": "square_jpeg95",

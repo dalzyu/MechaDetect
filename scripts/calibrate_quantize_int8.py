@@ -299,7 +299,7 @@ def calibrate_and_quantize_int8(
         checkpoint_path=float_meta.get("checkpoint_path", ""),
         checkpoint_sha256=float_meta.get("checkpoint_sha256", ""),
         artifact_path=str(output_model_path),
-        parity_verified=True,
+        parity_verified=gate_passed,
         extra={
             "float_artifact_path": str(input_model_path),
             "float_artifact_size_bytes": float_size,

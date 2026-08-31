@@ -287,7 +287,7 @@ models/
             └── model-weights.json
 ```
 
-Large model-only files use Git LFS. Raw archives, generated image payloads, full resume checkpoints, caches, and private runtime data remain excluded from ordinary Git history. The compact model-only files are the weights intended to travel with the repository.
+Large model files are hosted in the Hugging Face model repository and referenced by immutable revision URLs. Raw archives, generated image payloads, full resume checkpoints, caches, private runtime data, and model weights remain excluded from ordinary Git history.
 
 ## 11. Next run gate
 

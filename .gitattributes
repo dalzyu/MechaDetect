@@ -1,3 +1,0 @@
-models/teachers/**/*.safetensors filter=lfs diff=lfs merge=lfs -text
-web/model/*.onnx filter=lfs diff=lfs merge=lfs -text
-*.onnx filter=lfs diff=lfs merge=lfs -text

@@ -1,15 +1,20 @@
 {
-  "default_model": "atom-super-float",
+  "default_model": "atom-super-float32",
   "students": [
     {
-      "id": "atom-super-float",
-      "name": "MechaDetect Atom Super Float32",
-      "path": "model/mechadetect-atom-super-post-att-float32.onnx",
+      "id": "atom-super-float32",
+      "name": "Atom Super Float32",
+      "path": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-atom-super-post-att-float32.onnx",
+      "family": "Atom",
+      "scope": "Super",
       "model_family": "dinov3_vits16",
       "variant": "small",
       "stage": "super_post_att",
       "parameter_count": 25089666,
       "quantization": "float32",
+      "precision_label": "Float32",
+      "size_bytes": 100803251,
+      "size_label": "96 MB",
       "calibrated_threshold": 0.5,
       "input_size": [
         3,
@@ -19,16 +24,294 @@
       "preprocessing_version": "2",
       "manifest_digest": "f99f12b2c5610dc64be513e3adef353cac5ce7e5b8b5f634e885aebcea861e9e",
       "evaluation_status": "experimental",
+      "is_experimental_int8": false,
       "opset_version": 17,
-      "checkpoint_repository": "zye2/mechadetect-models",
-      "checkpoint_revision": "60dd0a6fb67794829344f4185111d2494a839759",
+      "checkpoint_repository": null,
+      "checkpoint_revision": null,
       "checkpoint_file": "checkpoints/mechadetect-atom-super-att-checkpoint-final.pt",
       "checkpoint_sha256": "fd2b2cd44746c5b37132b66f7291722d5817ba739d2351550598ff30c89d8dee",
-      "artifact_path": "model/mechadetect-atom-super-post-att-float32.onnx",
-      "artifact_sha256": "d83135a8b1591d50ce246324b23e921ffaff485a88ea48e928d498d0096ac216",
-      "artifact_size_bytes": 100803337,
+      "artifact_sha256": "3dc88482ba723c991e2964af003ef7ac44f75c6a876600309f1f61a64d17344f",
+      "artifact_size_bytes": 100803251,
       "parity_verified": true,
       "max_abs_diff_pytorch_vs_onnx": 7.152557373046875e-07
+    },
+    {
+      "id": "atom-normal-float32",
+      "name": "Atom Normal Float32",
+      "path": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-atom-normal-post-att-float32.onnx",
+      "family": "Atom",
+      "scope": "Normal",
+      "model_family": "dinov3_vits16",
+      "variant": "small",
+      "stage": "normal_post_att",
+      "parameter_count": 25089666,
+      "quantization": "float32",
+      "precision_label": "Float32",
+      "size_bytes": 100803253,
+      "size_label": "96 MB",
+      "calibrated_threshold": 0.5,
+      "input_size": [
+        3,
+        224,
+        224
+      ],
+      "preprocessing_version": "2",
+      "manifest_digest": "948bd68342efe764be87bb7e44808529815e6bd2e78577913b2c5d57079b1c20",
+      "evaluation_status": "experimental",
+      "is_experimental_int8": false,
+      "opset_version": 17,
+      "checkpoint_repository": null,
+      "checkpoint_revision": null,
+      "checkpoint_file": "checkpoints/mechadetect-atom-normal-att-checkpoint-final.pt",
+      "checkpoint_sha256": "13809d42ee251e25e0d6bd29e36073eeb0049037c63d5dfd4eeaf8bcad257a39",
+      "artifact_sha256": "048956e4f2cef640d487665b5d9ddeea03c171201af8255654f8034e00e4e643",
+      "artifact_size_bytes": 100803253,
+      "parity_verified": true,
+      "max_abs_diff_pytorch_vs_onnx": 2.980232238769531e-07
+    },
+    {
+      "id": "quark-super-float32",
+      "name": "Quark Super Float32",
+      "path": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-quark-super-post-att-float32.onnx",
+      "family": "Quark",
+      "scope": "Super",
+      "model_family": "dinov3_vitb16",
+      "variant": "base",
+      "stage": "super_post_att",
+      "parameter_count": 86859010,
+      "quantization": "float32",
+      "precision_label": "Float32",
+      "size_bytes": 357846807,
+      "size_label": "341 MB",
+      "calibrated_threshold": 0.5,
+      "input_size": [
+        3,
+        224,
+        224
+      ],
+      "preprocessing_version": "2",
+      "manifest_digest": "f99f12b2c5610dc64be513e3adef353cac5ce7e5b8b5f634e885aebcea861e9e",
+      "evaluation_status": "experimental",
+      "is_experimental_int8": false,
+      "opset_version": 17,
+      "checkpoint_repository": null,
+      "checkpoint_revision": null,
+      "checkpoint_file": "checkpoints/mechadetect-quark-super-att-checkpoint-final.pt",
+      "checkpoint_sha256": "20ff2967f4129c5087bccce0e8095a734843717df062d1ba0a8fc4dcec5a4fa8",
+      "artifact_sha256": "5226ed371c1a174015d6ac39f5a7254f675abc6203e55a44d4d4c2e5dc20fdfe",
+      "artifact_size_bytes": 357846807,
+      "parity_verified": true,
+      "max_abs_diff_pytorch_vs_onnx": 1.1920928955078125e-07
+    },
+    {
+      "id": "quark-normal-float32",
+      "name": "Quark Normal Float32",
+      "path": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-quark-normal-post-att-float32.onnx",
+      "family": "Quark",
+      "scope": "Normal",
+      "model_family": "dinov3_vitb16",
+      "variant": "base",
+      "stage": "normal_post_att",
+      "parameter_count": 86859010,
+      "quantization": "float32",
+      "precision_label": "Float32",
+      "size_bytes": 357846809,
+      "size_label": "341 MB",
+      "calibrated_threshold": 0.5,
+      "input_size": [
+        3,
+        224,
+        224
+      ],
+      "preprocessing_version": "2",
+      "manifest_digest": "948bd68342efe764be87bb7e44808529815e6bd2e78577913b2c5d57079b1c20",
+      "evaluation_status": "experimental",
+      "is_experimental_int8": false,
+      "opset_version": 17,
+      "checkpoint_repository": null,
+      "checkpoint_revision": null,
+      "checkpoint_file": "checkpoints/mechadetect-quark-normal-att-checkpoint-final.pt",
+      "checkpoint_sha256": "ea18cbb934f560c81a9f4c5dbedf5c2ad8cb7de84094835cca73649f4c2c2464",
+      "artifact_sha256": "0dc5855511902d72163a2b4de0c802b0c1d9642db7c121809c7ab16c583c1ed4",
+      "artifact_size_bytes": 357846809,
+      "parity_verified": true,
+      "max_abs_diff_pytorch_vs_onnx": 1.1920928955078125e-07
+    },
+    {
+      "id": "mechadetect-lattice-normal-float32",
+      "name": "Lattice Normal Float32 \u00b7 Workstation",
+      "path": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-lattice-normal-float32.onnx",
+      "family": "Lattice",
+      "scope": "Normal",
+      "model_family": "dinov3-vith16plus",
+      "variant": "normal",
+      "stage": "teacher_stage2_2gpu",
+      "parameter_count": 872606180,
+      "quantization": "float32",
+      "precision_label": "Float32 \u00b7 Workstation",
+      "size_bytes": 5260214,
+      "size_label": "3.2 GB \u00b7 WebGPU preferred",
+      "calibrated_threshold": null,
+      "temporary_ui_threshold": 0.5,
+      "threshold_status": "uncalibrated",
+      "preprocessing_version": "2",
+      "manifest_digest": "2d3a0c29aa405f5680dbe0d86ae463e18b92d4f08f23159a79ba59cb6fd9e729",
+      "evaluation_status": "experimental",
+      "is_experimental_int8": false,
+      "experimental_browser_path": true,
+      "browser_path_status": "experimental_spectral_free_forward_tensor",
+      "hardware_class": "workstation-class",
+      "recommended_execution_provider": "WebGPU",
+      "spectral_expert_omitted": true,
+      "browser_warning": "Very large workstation-class Float32 Lattice artifact. WebGPU is preferred. The browser graph follows forward_tensor and omits the configured spectral expert; parity is verified only against that spectral-free path.",
+      "opset_version": 18,
+      "checkpoint_repository": null,
+      "checkpoint_revision": null,
+      "checkpoint_file": "mechadetect-lattice-checkpoint-final.pt",
+      "checkpoint_sha256": "435056b6daa237d0a939f3d35b5d832caea9151dd92d9cf48c4f14fbdd7c7fa3",
+      "artifact_sha256": "ae8baa9d68eea80c64710568f07a1fb8dc5c2a1b52d4cba36c86c6c9f8297b62",
+      "artifact_size_bytes": 5260214,
+      "bundle_size_bytes": 3383490486,
+      "external_data": [
+        {
+          "path": "mechadetect-lattice-normal-float32.onnx.data-00000-of-00004",
+          "url": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-lattice-normal-float32.onnx.data-00000-of-00004",
+          "size_bytes": 992719872,
+          "sha256": "502cc4f29e20fc271cf87efafb56f908f3337aab1c45613ecde74cad840fcf7f"
+        },
+        {
+          "path": "mechadetect-lattice-normal-float32.onnx.data-00001-of-00004",
+          "url": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-lattice-normal-float32.onnx.data-00001-of-00004",
+          "size_bytes": 996147200,
+          "sha256": "1ded71d6bb4363cb70833de77b236472bb595c3d8c25e97fdb92b323212a3273"
+        },
+        {
+          "path": "mechadetect-lattice-normal-float32.onnx.data-00002-of-00004",
+          "url": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-lattice-normal-float32.onnx.data-00002-of-00004",
+          "size_bytes": 996147200,
+          "sha256": "37a9fadbbc07b801354c83bd20ed3f2066a1ffa7af4a25b5781526f2f8bdfbeb"
+        },
+        {
+          "path": "mechadetect-lattice-normal-float32.onnx.data-00003-of-00004",
+          "url": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-lattice-normal-float32.onnx.data-00003-of-00004",
+          "size_bytes": 393216000,
+          "sha256": "149d5c2975987509387a177c5e6359712f203035a988f73183595a7d3cecb7ab"
+        }
+      ],
+      "parity_verified": true,
+      "max_abs_diff_pytorch_vs_onnx": 5.960464477539063e-08,
+      "mean_abs_diff_pytorch_vs_onnx": 1.9868215517249155e-08,
+      "parity_scope": "ProvenanceModel.forward_tensor (spectral-free browser path)",
+      "onnxruntime_probe": {
+        "image": "sample_authentic_imagenet.jpg",
+        "input_shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "output_shape": [
+          1,
+          2
+        ],
+        "passed": true,
+        "probabilities": [
+          0.771515965461731,
+          0.22848406434059143
+        ],
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "runtime": "onnxruntime"
+      }
+    },
+    {
+      "id": "mechadetect-lattice-super-float32",
+      "name": "Lattice Super Float32 \u00b7 Workstation",
+      "path": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-lattice-super-float32.onnx",
+      "family": "Lattice",
+      "scope": "Super",
+      "model_family": "dinov3-vith16plus",
+      "variant": "super",
+      "stage": "teacher_stage2_super_single_gpu",
+      "parameter_count": 872606180,
+      "quantization": "float32",
+      "precision_label": "Float32 \u00b7 Workstation",
+      "size_bytes": 5259574,
+      "size_label": "3.2 GB \u00b7 WebGPU preferred",
+      "calibrated_threshold": null,
+      "temporary_ui_threshold": 0.5,
+      "threshold_status": "uncalibrated",
+      "preprocessing_version": "2",
+      "manifest_digest": "f99f12b2c5610dc64be513e3adef353cac5ce7e5b8b5f634e885aebcea861e9e",
+      "evaluation_status": "experimental",
+      "is_experimental_int8": false,
+      "experimental_browser_path": true,
+      "browser_path_status": "experimental_spectral_free_forward_tensor",
+      "hardware_class": "workstation-class",
+      "recommended_execution_provider": "WebGPU",
+      "spectral_expert_omitted": true,
+      "browser_warning": "Very large workstation-class Float32 Lattice artifact. WebGPU is preferred. The browser graph follows forward_tensor and omits the configured spectral expert; parity is verified only against that spectral-free path.",
+      "opset_version": 18,
+      "checkpoint_repository": null,
+      "checkpoint_revision": null,
+      "checkpoint_file": "mechadetect-lattice-super-checkpoint-final.pt",
+      "checkpoint_sha256": "f99256691fb65bd6af321e7e7c7dff179b29c844c37971bd368baccacc395136",
+      "artifact_sha256": "dc6e61f6eee2814337cdf845fdccd695ef1cfab3c4b494bcd14718f59f0bae87",
+      "artifact_size_bytes": 5259574,
+      "bundle_size_bytes": 3383489846,
+      "external_data": [
+        {
+          "path": "mechadetect-lattice-super-float32.onnx.data-00000-of-00004",
+          "url": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-lattice-super-float32.onnx.data-00000-of-00004",
+          "size_bytes": 992719872,
+          "sha256": "fb9c76b4de5d91cb761672169ca3556d98c6d3a0f86e9a1716e7332e0bf82f03"
+        },
+        {
+          "path": "mechadetect-lattice-super-float32.onnx.data-00001-of-00004",
+          "url": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-lattice-super-float32.onnx.data-00001-of-00004",
+          "size_bytes": 996147200,
+          "sha256": "eaeee43c63b18881ae8a724e8a91545ad90e3b56f054e3c1e9a7c1cad70ef991"
+        },
+        {
+          "path": "mechadetect-lattice-super-float32.onnx.data-00002-of-00004",
+          "url": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-lattice-super-float32.onnx.data-00002-of-00004",
+          "size_bytes": 996147200,
+          "sha256": "f36291b13ed715d838059385df0ccf89e51fccdf276f843c649ec6a397dfb6b1"
+        },
+        {
+          "path": "mechadetect-lattice-super-float32.onnx.data-00003-of-00004",
+          "url": "https://huggingface.co/zye2/mechadetect-models/resolve/daa489649bd6bf03e6faa5cfb7b2d83169a0aaf2/models/mechadetect-lattice-super-float32.onnx.data-00003-of-00004",
+          "size_bytes": 393216000,
+          "sha256": "81b977edb25f36e88e95fd82f912feb649bc04685aa25e7fb3a3b0d83ac79b1a"
+        }
+      ],
+      "parity_verified": true,
+      "max_abs_diff_pytorch_vs_onnx": 5.960464477539063e-08,
+      "mean_abs_diff_pytorch_vs_onnx": 3.973643103449831e-08,
+      "parity_scope": "ProvenanceModel.forward_tensor (spectral-free browser path)",
+      "onnxruntime_probe": {
+        "image": "sample_authentic_imagenet.jpg",
+        "input_shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "output_shape": [
+          1,
+          2
+        ],
+        "passed": true,
+        "probabilities": [
+          0.8720247149467468,
+          0.12797528505325317
+        ],
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "runtime": "onnxruntime"
+      }
     }
   ]
 }

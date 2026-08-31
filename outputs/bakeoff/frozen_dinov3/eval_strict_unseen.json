@@ -442,7 +442,7 @@
     "peak_allocated_vram_gib": 1.6622843742370605
   },
   "three_view": false,
-  "checkpoint": "/workspace/outputs/bakeoff_frozen_dinov3/checkpoint-step-188.pt",
+  "checkpoint": "outputs/bakeoff_frozen_dinov3/checkpoint-step-188.pt",
   "rows": [
     {
       "image_path": "diffusionforensics_subset/test_unseen/fully_aigc/iddpm/7d69044cc5defeb5787d.png",

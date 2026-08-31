@@ -1,11 +1,11 @@
 {
   "seed": 42,
   "paths": {
-    "data_root": "/workspace/techjam26/data",
+    "data_root": "data",
     "train_manifest": "manifests/ablation12k.csv",
     "val_manifest": "manifests/strict_unseen_probe.csv",
-    "output_root": "/workspace/outputs",
-    "feature_cache": "/workspace/feature-cache/dinov3"
+    "output_root": "outputs",
+    "feature_cache": "feature-cache/dinov3"
   },
   "preprocessing": {
     "policy": "square_jpeg95",
