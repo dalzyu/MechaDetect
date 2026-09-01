@@ -18,7 +18,7 @@
 <p align="center">
   <strong><a href="https://mechadetect-demo-deploy.vercel.app/">Open the live browser demo</a></strong>
   · <a href="#quickstart">Run the CLI</a>
-  · Demo video — link pending
+  · <a href="https://www.youtube.com/watch?v=CPjuIoo0Y7s">Demo Video</a>
   · <strong><a href="https://huggingface.co/zye2/mechadetect-models">Download the model weights</a></strong>
 </p>
 
