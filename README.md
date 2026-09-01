@@ -459,7 +459,6 @@ Native batch-1 timings exclude image decoding, resizing, browser upload, and UI 
 - [Backbone bake-off findings](docs/backbone_bakeoff_findings.md)
 - [Backbone decision and checkpoint handoff](docs/backbone_bakeoff_decision.md)
 - [Teacher training plan](docs/teacher_training_plan.md)
-- [Consolidated training record](docs/training_run_consolidated.md)
 - [Training dataset specification](docs/training_dataset_specification.md)
 - [Static INT8 release evaluation](docs/int8_release_evaluation.md)
 
